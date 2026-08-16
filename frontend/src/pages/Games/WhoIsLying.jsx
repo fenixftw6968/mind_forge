@@ -251,7 +251,7 @@ export default function WhoIsLying() {
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                 <div style={{ padding: '1rem 1.25rem', borderRadius: '0.85rem', background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.15)', marginBottom: '1.25rem' }}>
                   <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#06b6d4', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.4rem' }}>Explanation</p>
-                  <p style={{ fontSize: '0.875rem', color: '#a1a1b5', lineHeight: 1.7 }}>{puzzle.answerExplanation}</p>
+                  <p style={{ fontSize: '0.875rem', color: '#a1a1b5', lineHeight: 1.7 }}>{puzzle.explanation || puzzle.answerExplanation}</p>
                 </div>
                 <button onClick={handleNext} className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
                   {index + 1 >= puzzles.length ? 'See Results 🏆' : 'Next Puzzle →'}
@@ -267,7 +267,7 @@ export default function WhoIsLying() {
                     <Lightbulb size={13} /> Hint (-30% XP)
                   </button>
                 ) : <div />}
-                <button onClick={handleSubmit} disabled={!selected} className="btn-primary" style={{ opacity: selected ? 1 : 0.5 }}>
+                <button onClick={handleAnswer} disabled={!selected} className="btn-primary" style={{ opacity: selected ? 1 : 0.5 }}>
                   Submit Answer
                 </button>
               </div>

@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { GameProvider } from './context/GameContext';
 import Navbar from './components/Navbar/Navbar';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
+import GuestRoute from './components/GuestRoute/GuestRoute';
 
 // Pages
 import Home from './pages/Home/Home';
@@ -31,8 +32,8 @@ export default function App() {
           <Routes>
             {/* Public */}
             <Route path="/"       element={<Home />} />
-            <Route path="/login"  element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route path="/login"  element={<GuestRoute><Login /></GuestRoute>} />
+            <Route path="/signup" element={<GuestRoute><Signup /></GuestRoute>} />
 
             {/* Protected */}
             <Route path="/dashboard"       element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
