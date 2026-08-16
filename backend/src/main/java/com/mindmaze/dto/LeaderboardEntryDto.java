@@ -1,0 +1,16 @@
+package com.mindmaze.dto;
+
+import lombok.*;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class LeaderboardEntryDto {
+    private Integer rank;
+    private String username;
+    private Integer level;
+    private Integer xp;
+    private Integer streak;
+}

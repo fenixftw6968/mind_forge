@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: mindmaze-db
+    environment:
+      POSTGRES_DB: mindmaze
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mindmaze"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: mindmaze-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_URL=jdbc:postgresql://ep-tiny-cell-ayjc5n7d-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require
+      - DB_USERNAME=neondb_owner
+      - DB_PASSWORD=npg_Dc0ej4mHaPEs
+      - JWT_SECRET=mindmaze-super-secret-key-change-in-production-at-least-64-chars-long-2024
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+    # Optional: If you want to use the local 'db' container, change DB_URL to 'jdbc:postgresql://db:5432/mindmaze'
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: mindmaze-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
