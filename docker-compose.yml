@@ -23,6 +23,10 @@ services:
     container_name: mindmaze-backend
     ports:
       - "8080:8080"
+    networks:
+      default:
+        aliases:
+          - mindmapmatiks.railway.internal
     environment:
       - DB_URL=jdbc:postgresql://ep-tiny-cell-ayjc5n7d-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require
       - DB_USERNAME=neondb_owner
