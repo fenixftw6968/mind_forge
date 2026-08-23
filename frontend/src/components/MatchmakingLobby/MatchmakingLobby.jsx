@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Swords, Loader2, X, CheckCircle, ShieldAlert, Sparkles, User, Trophy } from 'lucide-react';
+import { Swords, Loader2, X, CheckCircle, ShieldAlert, Sparkles, User, Trophy, Bot, RefreshCw } from 'lucide-react';
 import api from '../../utils/api';
 import { getRankFromRating } from '../../utils/rankUtils';
 
@@ -13,7 +13,7 @@ export default function MatchmakingLobby({
   friendTarget = null,
   onMatchReady,
 }) {
-  const [status, setStatus] = useState('QUEUING'); // 'QUEUING', 'FOUND', 'COUNTDOWN', 'ERROR'
+  const [status, setStatus] = useState('QUEUING'); // 'QUEUING', 'WAITING_FRIEND', 'FOUND', 'COUNTDOWN', 'TIMEOUT_PROMPT', 'DECLINED', 'ERROR'
   const [matchData, setMatchData] = useState(null);
   const [countdown, setCountdown] = useState(3);
   const [queueTime, setQueueTime] = useState(0);
@@ -22,7 +22,7 @@ export default function MatchmakingLobby({
   // Queue timer
   useEffect(() => {
     let interval;
-    if (isOpen && status === 'QUEUING') {
+    if (isOpen && (status === 'QUEUING' || status === 'WAITING_FRIEND')) {
       interval = setInterval(() => {
         setQueueTime(t => t + 1);
       }, 1000);
@@ -46,36 +46,37 @@ export default function MatchmakingLobby({
     const startQueue = async () => {
       try {
         if (mode === 'RANKED') {
+          setStatus('QUEUING');
           const res = await api.post(`/api/matches/queue?gameSlug=${gameSlug}`);
           const match = res.data;
           setMatchData(match);
 
-          if (match.status === 'READY' || match.player2Id) {
+          if (match.status === 'READY' || (match.player1Id && match.player2Id)) {
             handleMatchFound(match);
           } else {
-            // Poll for opponent or bot fallback after 6s
-            let pollCount = 0;
+            // Poll for opponent every 1.5s
+            let elapsedPolls = 0;
             pollInterval = setInterval(async () => {
-              pollCount++;
+              elapsedPolls++;
               try {
                 const pollRes = await api.get(`/api/matches/${match.id}`);
                 const currentMatch = pollRes.data;
                 setMatchData(currentMatch);
 
-                if (currentMatch.status === 'READY' || (currentMatch.player2Id && currentMatch.player1Id)) {
+                if (currentMatch.status === 'READY' || (currentMatch.player1Id && currentMatch.player2Id)) {
                   clearInterval(pollInterval);
                   handleMatchFound(currentMatch);
-                } else if (pollCount >= 6) {
-                  // Fallback match with simulated skilled challenger if no real user in queue
+                } else if (elapsedPolls >= 16) { // ~24 seconds timeout
                   clearInterval(pollInterval);
-                  handleSimulatedMatch(match);
+                  setStatus('TIMEOUT_PROMPT');
                 }
               } catch (e) {
                 console.error("Match status poll error", e);
               }
-            }, 1200);
+            }, 1500);
           }
         } else if (mode === 'FRIEND' && friendTarget) {
+          setStatus('WAITING_FRIEND');
           const res = await api.post('/api/matches/invite', {
             friendId: friendTarget.userId || friendTarget.id,
             gameSlug: gameSlug
@@ -93,6 +94,14 @@ export default function MatchmakingLobby({
               if (currentMatch.status === 'READY' || currentMatch.player2Ready) {
                 clearInterval(pollInterval);
                 handleMatchFound(currentMatch);
+              } else if (currentMatch.status === 'CANCELLED') {
+                clearInterval(pollInterval);
+                if (currentMatch.cancelledReason === 'DECLINED') {
+                  setStatus('DECLINED');
+                } else {
+                  setError("Friend invitation was cancelled.");
+                  setStatus('ERROR');
+                }
               }
             } catch (e) {
               console.error("Friend match poll error", e);
@@ -126,19 +135,55 @@ export default function MatchmakingLobby({
     }, 1500);
   };
 
-  const handleSimulatedMatch = async (match) => {
-    // If waiting too long in queue, auto-create a friendly bot challenger
-    const simulatedOpponent = {
-      ...match,
+  const handleSimulatedMatch = async () => {
+    // Player opted to play vs AI Bot
+    const botOpponent = {
+      ...matchData,
       player2Id: 999999,
       player2Username: 'ChallengerBot_99',
-      player2Rating: Math.max(100, (match.player1Rating || 500) + Math.floor(Math.random() * 40 - 20)),
+      player2Rating: Math.max(100, (matchData?.player1Rating || 500) + Math.floor(Math.random() * 40 - 20)),
       player2Rank: 'Knight',
       player2Ready: true,
+      isBotMatch: true,
       status: 'READY'
     };
-    setMatchData(simulatedOpponent);
-    handleMatchFound(simulatedOpponent);
+    setMatchData(botOpponent);
+    handleMatchFound(botOpponent);
+  };
+
+  const handleContinueWaiting = () => {
+    setStatus('QUEUING');
+    setQueueTime(0);
+    // Restart polling
+    let elapsedPolls = 0;
+    const pollInterval = setInterval(async () => {
+      elapsedPolls++;
+      try {
+        if (!matchData?.id) return;
+        const pollRes = await api.get(`/api/matches/${matchData.id}`);
+        const currentMatch = pollRes.data;
+        setMatchData(currentMatch);
+
+        if (currentMatch.status === 'READY' || (currentMatch.player1Id && currentMatch.player2Id)) {
+          clearInterval(pollInterval);
+          handleMatchFound(currentMatch);
+        } else if (elapsedPolls >= 16) {
+          clearInterval(pollInterval);
+          setStatus('TIMEOUT_PROMPT');
+        }
+      } catch (e) {
+        console.error("Match status poll error", e);
+      }
+    }, 1500);
+  };
+
+  const handleCancelInvitation = async () => {
+    if (matchData?.id) {
+      try {
+        await api.post(`/api/matches/${matchData.id}/cancel`);
+      } catch (e) {}
+    }
+    onClose();
   };
 
   const startCountdown = (match) => {
@@ -188,9 +233,9 @@ export default function MatchmakingLobby({
           }}
         >
           {/* Close / Cancel Button */}
-          {status === 'QUEUING' && (
+          {(status === 'QUEUING' || status === 'WAITING_FRIEND' || status === 'TIMEOUT_PROMPT') && (
             <button
-              onClick={onClose}
+              onClick={status === 'WAITING_FRIEND' ? handleCancelInvitation : onClose}
               style={{
                 position: 'absolute',
                 top: '1.25rem',
@@ -239,10 +284,10 @@ export default function MatchmakingLobby({
               </div>
 
               <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', fontFamily: 'var(--font-display)', marginBottom: '0.4rem' }}>
-                {mode === 'RANKED' ? 'Finding Competitive Opponent...' : `Inviting ${friendTarget?.username || 'Friend'}...`}
+                Finding Ranked Opponent...
               </h2>
               <p style={{ color: '#64748B', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
-                Searching for players near your rating in {gameTitle}
+                Searching for available players near your Elo rating in {gameTitle}
               </p>
 
               <div style={{
@@ -282,6 +327,206 @@ export default function MatchmakingLobby({
             </motion.div>
           )}
 
+          {/* WAITING FOR FRIEND ACCEPTANCE STATE */}
+          {status === 'WAITING_FRIEND' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <div style={{ position: 'relative', width: '90px', height: '90px', margin: '0 auto 1.5rem' }}>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    borderRadius: '50%',
+                    border: '3px dashed #10B981',
+                  }}
+                />
+                <div style={{
+                  position: 'absolute',
+                  inset: '8px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <User size={32} color="#059669" />
+                </div>
+              </div>
+
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', fontFamily: 'var(--font-display)', marginBottom: '0.4rem' }}>
+                Invitation Sent!
+              </h2>
+              <p style={{ color: '#64748B', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                Waiting for <strong style={{ color: '#0F172A' }}>{friendTarget?.username || 'your friend'}</strong> to accept the challenge...
+              </p>
+
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                padding: '0.45rem 1.25rem',
+                borderRadius: '999px',
+                fontSize: '0.875rem',
+                fontWeight: 700,
+                color: '#334155',
+                marginBottom: '1.5rem'
+              }}>
+                <Loader2 size={16} className="animate-spin" color="#059669" />
+                Waiting: {Math.floor(queueTime / 60)}:{(queueTime % 60).toString().padStart(2, '0')}
+              </div>
+
+              <div>
+                <button
+                  onClick={handleCancelInvitation}
+                  style={{
+                    padding: '0.65rem 1.5rem',
+                    borderRadius: '0.75rem',
+                    background: '#FFF1F2',
+                    border: '1px solid #FECDD3',
+                    color: '#E11D48',
+                    fontWeight: 700,
+                    fontSize: '0.875rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel Invitation
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* TIMEOUT PROMPT: PLAY BOT OR WAIT */}
+          {status === 'TIMEOUT_PROMPT' && (
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+              <div style={{
+                width: '72px',
+                height: '72px',
+                borderRadius: '50%',
+                background: '#FFFBEB',
+                border: '2px solid #FDE68A',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1.25rem',
+                color: '#D97706'
+              }}>
+                <Bot size={36} />
+              </div>
+
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', fontFamily: 'var(--font-display)', marginBottom: '0.4rem' }}>
+                No Ranked Opponent Found Yet
+              </h2>
+              <p style={{ color: '#64748B', fontSize: '0.875rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
+                Queue search timed out. Would you like to continue searching for a live player, or challenge an AI Bot?
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <button
+                  onClick={handleSimulatedMatch}
+                  style={{
+                    padding: '0.75rem 1.25rem',
+                    borderRadius: '0.75rem',
+                    background: '#4F46E5',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)'
+                  }}
+                >
+                  <Bot size={18} /> Play vs AI Bot (Unranked)
+                </button>
+
+                <button
+                  onClick={handleContinueWaiting}
+                  style={{
+                    padding: '0.75rem 1.25rem',
+                    borderRadius: '0.75rem',
+                    background: '#F1F5F9',
+                    color: '#334155',
+                    fontWeight: 700,
+                    fontSize: '0.875rem',
+                    border: '1px solid #E2E8F0',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <RefreshCw size={16} /> Keep Searching for Players
+                </button>
+
+                <button
+                  onClick={onClose}
+                  style={{
+                    padding: '0.6rem 1.25rem',
+                    borderRadius: '0.75rem',
+                    background: 'transparent',
+                    color: '#94A3B8',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel Matchmaking
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* DECLINED STATE */}
+          {status === 'DECLINED' && (
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+              <div style={{
+                width: '72px',
+                height: '72px',
+                borderRadius: '50%',
+                background: '#FFF1F2',
+                border: '2px solid #FECDD3',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1.25rem',
+                color: '#E11D48'
+              }}>
+                <X size={36} />
+              </div>
+
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', fontFamily: 'var(--font-display)', marginBottom: '0.4rem' }}>
+                Invitation Declined
+              </h2>
+              <p style={{ color: '#64748B', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                {friendTarget?.username || 'Your friend'} declined the match invitation.
+              </p>
+
+              <button
+                onClick={onClose}
+                style={{
+                  padding: '0.65rem 1.5rem',
+                  borderRadius: '0.75rem',
+                  background: '#0F172A',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '0.875rem',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+            </motion.div>
+          )}
+
           {/* OPPONENT FOUND STATE */}
           {status === 'FOUND' && (
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
@@ -301,10 +546,10 @@ export default function MatchmakingLobby({
               </div>
 
               <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', fontFamily: 'var(--font-display)', marginBottom: '0.35rem' }}>
-                Match Found!
+                Match Ready!
               </h2>
               <p style={{ color: '#64748B', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
-                Prepare your mind. Synchronizing puzzle data...
+                Synchronizing challenge puzzles...
               </p>
 
               {/* Player vs Player card */}
@@ -333,12 +578,14 @@ export default function MatchmakingLobby({
                 </div>
 
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Opponent</div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>
+                    {matchData?.isBotMatch ? 'AI Challenger' : 'Opponent'}
+                  </div>
                   <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>
                     {matchData?.player2Username || 'Challenger'}
                   </div>
-                  <div style={{ fontSize: '0.775rem', color: '#E11D48', fontWeight: 600 }}>
-                    {matchData?.player2Rating || 500} pts
+                  <div style={{ fontSize: '0.775rem', color: matchData?.isBotMatch ? '#64748B' : '#E11D48', fontWeight: 600 }}>
+                    {matchData?.isBotMatch ? '🤖 Bot Match' : `${matchData?.player2Rating || 500} pts`}
                   </div>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { KeyRound, Lightbulb, CheckCircle2, XCircle, Sparkles, Delete, Swords, Users, Clock, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useGame } from '../../context/GameContext';
@@ -13,6 +13,7 @@ import PlayModeModal from '../../components/PlayModeModal/PlayModeModal';
 import MatchmakingLobby from '../../components/MatchmakingLobby/MatchmakingLobby';
 import CompetitiveResults from '../../components/CompetitiveResults/CompetitiveResults';
 import SocialDrawer from '../../components/SocialDrawer/SocialDrawer';
+import ExitModal from '../../components/ExitModal/ExitModal';
 import { getDailyQuestionSet } from '../../services/dailyQuestionService';
 import { codeBreakerQuestions } from '../../data/codeBreakerQuestions';
 import api from '../../utils/api';
@@ -24,12 +25,14 @@ export default function CodeBreaker() {
   const { user, refreshUser } = useAuth();
   const { showXPPopup } = useGame();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Mode state
   const [showModeModal, setShowModeModal] = useState(true);
   const [playMode, setPlayMode] = useState('PRACTICE'); // 'PRACTICE' | 'RANKED' | 'FRIEND'
   const [showMatchmaking, setShowMatchmaking] = useState(false);
   const [showSocialDrawer, setShowSocialDrawer] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
   const [invitedFriend, setInvitedFriend] = useState(null);
   const [currentMatch, setCurrentMatch] = useState(null);
   const [competitiveResult, setCompetitiveResult] = useState(null);
@@ -59,6 +62,14 @@ export default function CodeBreaker() {
     { onComplete: () => handleSubmit(true) }
   );
 
+  // Auto-start match if accepted from invite
+  useEffect(() => {
+    if (location.state?.acceptedMatch) {
+      handleMatchReady(location.state.acceptedMatch);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   const handleSelectMode = (mode) => {
     setPlayMode(mode);
     setShowModeModal(false);
@@ -68,6 +79,20 @@ export default function CodeBreaker() {
     } else if (mode === 'FRIEND') {
       setShowSocialDrawer(true);
     }
+  };
+
+  const handleExitGame = async () => {
+    setShowExitModal(false);
+    if (currentMatch?.id) {
+      try {
+        await api.post(`/api/matches/${currentMatch.id}/abandon`);
+      } catch (e) {}
+    } else if (showMatchmaking) {
+      try {
+        await api.post('/api/matches/queue/cancel?gameSlug=code-breaker');
+      } catch (e) {}
+    }
+    navigate('/games');
   };
 
   const handleMatchReady = (match) => {
@@ -351,9 +376,16 @@ export default function CodeBreaker() {
           total={puzzles.length}
           score={score}
           difficulty={difficulty}
-          onExit={() => navigate('/games')}
+          onExit={() => setShowExitModal(true)}
           formattedTime={formattedTime}
           urgency={urgency}
+        />
+
+        {/* Exit Game Confirmation Modal */}
+        <ExitModal
+          isOpen={showExitModal}
+          onCancel={() => setShowExitModal(false)}
+          onConfirm={handleExitGame}
         />
 
         <AnimatePresence mode="wait">

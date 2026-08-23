@@ -9,6 +9,7 @@ import XPPopup from '../../components/XPPopup/XPPopup';
 import DifficultySelector from '../../components/DifficultySelector/DifficultySelector';
 import GameProgress from '../../components/GameProgress/GameProgress';
 import GameResults from '../../components/GameResults/GameResults';
+import ExitModal from '../../components/ExitModal/ExitModal';
 import { getDailyQuestionSet } from '../../services/dailyQuestionService';
 import { gridPuzzleQuestions } from '../../data/gridPuzzleQuestions';
 import api from '../../utils/api';
@@ -22,6 +23,7 @@ export default function GridPuzzle() {
   const navigate = useNavigate();
 
   const [difficulty, setDifficulty] = useState(null);
+  const [showExitModal, setShowExitModal] = useState(false);
   const [puzzles, setPuzzles] = useState([]);
   const [index, setIndex] = useState(0);
   const [selectedChoice, setSelectedChoice] = useState(null);
@@ -148,9 +150,19 @@ export default function GridPuzzle() {
           total={puzzles.length}
           score={score}
           difficulty={difficulty}
-          onExit={() => navigate('/games')}
+          onExit={() => setShowExitModal(true)}
           formattedTime={formattedTime}
           urgency={urgency}
+        />
+
+        {/* Exit Confirmation Modal */}
+        <ExitModal
+          isOpen={showExitModal}
+          onCancel={() => setShowExitModal(false)}
+          onConfirm={() => {
+            setShowExitModal(false);
+            navigate('/games');
+          }}
         />
 
         <AnimatePresence mode="wait">

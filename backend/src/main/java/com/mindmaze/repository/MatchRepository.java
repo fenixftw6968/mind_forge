@@ -17,4 +17,10 @@ public interface MatchRepository extends JpaRepository<Match, String> {
 
     @Query("SELECT m FROM Match m WHERE m.status = 'WAITING' AND m.mode = 'RANKED' AND m.gameSlug = :gameSlug AND m.player1 != :user")
     List<Match> findOpenRankedMatches(@Param("gameSlug") String gameSlug, @Param("user") User user);
+
+    @Query("SELECT m FROM Match m WHERE m.status = 'WAITING' AND m.mode = 'FRIEND' AND m.player2 = :user ORDER BY m.createdAt DESC")
+    List<Match> findPendingInvitationsForUser(@Param("user") User user);
+
+    @Query("SELECT m FROM Match m WHERE m.status = 'WAITING' AND (m.player1 = :user OR m.player2 = :user)")
+    List<Match> findWaitingMatchesByUser(@Param("user") User user);
 }

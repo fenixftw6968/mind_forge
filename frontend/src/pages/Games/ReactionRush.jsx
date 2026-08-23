@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Zap, AlertTriangle, Play, RefreshCw, Trophy, ArrowRight, Swords, Users, Clock, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useGame } from '../../context/GameContext';
@@ -10,6 +10,7 @@ import PlayModeModal from '../../components/PlayModeModal/PlayModeModal';
 import MatchmakingLobby from '../../components/MatchmakingLobby/MatchmakingLobby';
 import CompetitiveResults from '../../components/CompetitiveResults/CompetitiveResults';
 import SocialDrawer from '../../components/SocialDrawer/SocialDrawer';
+import ExitModal from '../../components/ExitModal/ExitModal';
 import api from '../../utils/api';
 
 const TOTAL_ROUNDS = 5;
@@ -33,12 +34,14 @@ export default function ReactionRush() {
   const { user, refreshUser } = useAuth();
   const { showXPPopup } = useGame();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Mode state
   const [showModeModal, setShowModeModal] = useState(true);
   const [playMode, setPlayMode] = useState('PRACTICE'); // 'PRACTICE' | 'RANKED' | 'FRIEND'
   const [showMatchmaking, setShowMatchmaking] = useState(false);
   const [showSocialDrawer, setShowSocialDrawer] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
   const [invitedFriend, setInvitedFriend] = useState(null);
   const [currentMatch, setCurrentMatch] = useState(null);
   const [competitiveResult, setCompetitiveResult] = useState(null);
@@ -55,6 +58,14 @@ export default function ReactionRush() {
 
   const config = DELAY_CONFIG[difficulty] || DELAY_CONFIG.MEDIUM;
 
+  // Auto-start match if accepted from invite
+  useEffect(() => {
+    if (location.state?.acceptedMatch) {
+      handleMatchReady(location.state.acceptedMatch);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   const handleSelectMode = (mode) => {
     setPlayMode(mode);
     setShowModeModal(false);
@@ -64,6 +75,20 @@ export default function ReactionRush() {
     } else if (mode === 'FRIEND') {
       setShowSocialDrawer(true);
     }
+  };
+
+  const handleExitGame = async () => {
+    setShowExitModal(false);
+    if (currentMatch?.id) {
+      try {
+        await api.post(`/api/matches/${currentMatch.id}/abandon`);
+      } catch (e) {}
+    } else if (showMatchmaking) {
+      try {
+        await api.post('/api/matches/queue/cancel?gameSlug=reaction-rush');
+      } catch (e) {}
+    }
+    navigate('/games');
   };
 
   const handleMatchReady = (match) => {
@@ -284,11 +309,18 @@ export default function ReactionRush() {
         {/* Header navigation & status */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
           <button
-            onClick={() => navigate('/games')}
+            onClick={() => setShowExitModal(true)}
             style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', padding: '0.4rem 0.8rem', borderRadius: '0.5rem', color: '#64748B', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}
           >
             ← Exit Game
           </button>
+
+          {/* Exit Game Confirmation Modal */}
+          <ExitModal
+            isOpen={showExitModal}
+            onCancel={() => setShowExitModal(false)}
+            onConfirm={handleExitGame}
+          />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <span style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 600 }}>

@@ -92,24 +92,37 @@ public class MatchService {
                     .player1RatingBefore(opponent.getCompetitiveRating() != null ? opponent.getCompetitiveRating() : 500)
                     .player2RatingBefore(user.getCompetitiveRating() != null ? user.getCompetitiveRating() : 500)
                     .challengeData(challengeData)
+                    .isBotMatch(false)
                     .startedAt(LocalDateTime.now())
                     .build();
 
             match = matchRepository.save(match);
             return convertToDto(match);
         } else {
-            // Also check if there's any open match in database
+            // Also check if there's any open ranked match in database waiting for another player
             List<Match> openMatches = matchRepository.findOpenRankedMatches(gameSlug, user);
             if (!openMatches.isEmpty()) {
-                Match match = openMatches.get(0);
-                match.setPlayer2(user);
-                match.setPlayer2RatingBefore(user.getCompetitiveRating() != null ? user.getCompetitiveRating() : 500);
-                match.setStatus(Match.MatchStatus.READY);
-                match.setPlayer1Ready(true);
-                match.setPlayer2Ready(true);
-                match.setStartedAt(LocalDateTime.now());
-                match = matchRepository.save(match);
-                return convertToDto(match);
+                // Pick open match with closest rating
+                int myRating = user.getCompetitiveRating() != null ? user.getCompetitiveRating() : 500;
+                Match bestMatch = openMatches.get(0);
+                int minDiff = Math.abs(myRating - (bestMatch.getPlayer1RatingBefore() != null ? bestMatch.getPlayer1RatingBefore() : 500));
+                for (Match m : openMatches) {
+                    int diff = Math.abs(myRating - (m.getPlayer1RatingBefore() != null ? m.getPlayer1RatingBefore() : 500));
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        bestMatch = m;
+                    }
+                }
+
+                bestMatch.setPlayer2(user);
+                bestMatch.setPlayer2RatingBefore(user.getCompetitiveRating() != null ? user.getCompetitiveRating() : 500);
+                bestMatch.setStatus(Match.MatchStatus.READY);
+                bestMatch.setPlayer1Ready(true);
+                bestMatch.setPlayer2Ready(true);
+                bestMatch.setIsBotMatch(false);
+                bestMatch.setStartedAt(LocalDateTime.now());
+                bestMatch = matchRepository.save(bestMatch);
+                return convertToDto(bestMatch);
             }
 
             // Otherwise create open match or add to queue
@@ -122,6 +135,7 @@ public class MatchService {
                     .player1Ready(true)
                     .player1RatingBefore(user.getCompetitiveRating() != null ? user.getCompetitiveRating() : 500)
                     .challengeData(challengeData)
+                    .isBotMatch(false)
                     .build();
 
             match = matchRepository.save(match);
@@ -136,6 +150,17 @@ public class MatchService {
         if (queue != null) {
             queue.remove(userId);
         }
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            List<Match> waiting = matchRepository.findWaitingMatchesByUser(user);
+            for (Match m : waiting) {
+                if (m.getMode() == Match.MatchMode.RANKED && m.getGameSlug().equals(gameSlug)) {
+                    m.setStatus(Match.MatchStatus.CANCELLED);
+                    m.setCancelledReason("CANCELLED_BY_PLAYER");
+                    matchRepository.save(m);
+                }
+            }
+        }
     }
 
     @Transactional
@@ -146,6 +171,16 @@ public class MatchService {
                 .orElseThrow(() -> new ResourceNotFoundException("Friend user not found"));
 
         String challengeData = generateChallengeData(gameSlug);
+
+        // Cancel previous waiting friend matches between these two
+        List<Match> waiting = matchRepository.findPendingInvitationsForUser(friend);
+        for (Match w : waiting) {
+            if (w.getPlayer1().getId().equals(hostUserId)) {
+                w.setStatus(Match.MatchStatus.CANCELLED);
+                w.setCancelledReason("REPLACED_BY_NEW_INVITATION");
+                matchRepository.save(w);
+            }
+        }
 
         Match match = Match.builder()
                 .gameSlug(gameSlug)
@@ -158,15 +193,25 @@ public class MatchService {
                 .player1RatingBefore(host.getCompetitiveRating() != null ? host.getCompetitiveRating() : 500)
                 .player2RatingBefore(friend.getCompetitiveRating() != null ? friend.getCompetitiveRating() : 500)
                 .challengeData(challengeData)
+                .isBotMatch(false)
                 .build();
 
         match = matchRepository.save(match);
         return convertToDto(match);
     }
 
+    @Transactional(readOnly = true)
+    public List<MatchDto> getPendingInvitations(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return matchRepository.findPendingInvitationsForUser(user).stream()
+                .filter(m -> m.getCreatedAt().isAfter(LocalDateTime.now().minusMinutes(5)))
+                .map(this::convertToDto)
+                .toList();
+    }
+
     @Transactional
     public MatchDto acceptFriendMatch(String matchId, Long friendUserId) {
-        // Find match
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
 
@@ -174,10 +219,89 @@ public class MatchService {
             throw new BadRequestException("You are not the invited player for this match");
         }
 
+        if (match.getStatus() != Match.MatchStatus.WAITING) {
+            throw new BadRequestException("This match invitation is no longer active");
+        }
+
         match.setPlayer2Ready(true);
         match.setStatus(Match.MatchStatus.READY);
         match.setStartedAt(LocalDateTime.now());
         match = matchRepository.save(match);
+        return convertToDto(match);
+    }
+
+    @Transactional
+    public MatchDto declineFriendMatch(String matchId, Long friendUserId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        if (!match.getPlayer2().getId().equals(friendUserId)) {
+            throw new BadRequestException("You are not the invited player for this match");
+        }
+
+        match.setStatus(Match.MatchStatus.CANCELLED);
+        match.setCancelledReason("DECLINED");
+        match = matchRepository.save(match);
+        return convertToDto(match);
+    }
+
+    @Transactional
+    public MatchDto cancelMatch(String matchId, Long userId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        boolean isP1 = match.getPlayer1().getId().equals(userId);
+        boolean isP2 = match.getPlayer2() != null && match.getPlayer2().getId().equals(userId);
+
+        if (!isP1 && !isP2) {
+            throw new BadRequestException("You are not a participant in this match");
+        }
+
+        match.setStatus(Match.MatchStatus.CANCELLED);
+        match.setCancelledReason(isP1 ? "CANCELLED_BY_HOST" : "CANCELLED_BY_OPPONENT");
+        match = matchRepository.save(match);
+
+        cancelQueue(userId, match.getGameSlug());
+        return convertToDto(match);
+    }
+
+    @Transactional
+    public MatchDto abandonMatch(String matchId, Long userId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        boolean isP1 = match.getPlayer1().getId().equals(userId);
+        boolean isP2 = match.getPlayer2() != null && match.getPlayer2().getId().equals(userId);
+
+        if (!isP1 && !isP2) {
+            throw new BadRequestException("You are not a participant in this match");
+        }
+
+        if (match.getStatus() == Match.MatchStatus.READY || match.getStatus() == Match.MatchStatus.IN_PROGRESS) {
+            // Forfeit match: the abandoning player loses
+            if (isP1) {
+                match.setPlayer1Score(0);
+                match.setPlayer1Finished(true);
+                if (match.getPlayer2() != null) {
+                    match.setPlayer2Score(Math.max(1, match.getPlayer2Score() != null ? match.getPlayer2Score() : 1));
+                    match.setPlayer2Finished(true);
+                }
+            } else {
+                match.setPlayer2Score(0);
+                match.setPlayer2Finished(true);
+                match.setPlayer1Score(Math.max(1, match.getPlayer1Score() != null ? match.getPlayer1Score() : 1));
+                match.setPlayer1Finished(true);
+            }
+            finalizeMatch(match);
+            match.setCancelledReason("ABANDONED");
+            match = matchRepository.save(match);
+        } else {
+            match.setStatus(Match.MatchStatus.CANCELLED);
+            match.setCancelledReason("ABANDONED");
+            match = matchRepository.save(match);
+        }
+
+        cancelQueue(userId, match.getGameSlug());
         return convertToDto(match);
     }
 
@@ -257,7 +381,7 @@ public class MatchService {
         User p2 = match.getPlayer2();
 
         int r1 = p1.getCompetitiveRating() != null ? p1.getCompetitiveRating() : 500;
-        int r2 = p2.getCompetitiveRating() != null ? p2.getCompetitiveRating() : 500;
+        int r2 = p2 != null && p2.getCompetitiveRating() != null ? p2.getCompetitiveRating() : 500;
 
         match.setPlayer1RatingBefore(r1);
         match.setPlayer2RatingBefore(r2);
@@ -265,24 +389,31 @@ public class MatchService {
         if (actualScore1 == 1.0) {
             match.setWinnerId(p1.getId());
             p1.setMatchesWon((p1.getMatchesWon() != null ? p1.getMatchesWon() : 0) + 1);
-        } else if (actualScore1 == 0.0) {
+        } else if (actualScore1 == 0.0 && p2 != null) {
             match.setWinnerId(p2.getId());
             p2.setMatchesWon((p2.getMatchesWon() != null ? p2.getMatchesWon() : 0) + 1);
         }
 
         p1.setMatchesPlayed((p1.getMatchesPlayed() != null ? p1.getMatchesPlayed() : 0) + 1);
-        p2.setMatchesPlayed((p2.getMatchesPlayed() != null ? p2.getMatchesPlayed() : 0) + 1);
+        if (p2 != null) {
+            p2.setMatchesPlayed((p2.getMatchesPlayed() != null ? p2.getMatchesPlayed() : 0) + 1);
+        }
 
-        // Calculate Elo ratings
-        EloRatingService.EloResult eloResult = eloRatingService.calculateNewRatings(r1, r2, actualScore1);
-        match.setPlayer1RatingChange(eloResult.getDeltaA());
-        match.setPlayer2RatingChange(eloResult.getDeltaB());
+        // Apply Elo rating changes only for real human ranked matches (not bots)
+        if (!Boolean.TRUE.equals(match.getIsBotMatch()) && p2 != null) {
+            EloRatingService.EloResult eloResult = eloRatingService.calculateNewRatings(r1, r2, actualScore1);
+            match.setPlayer1RatingChange(eloResult.getDeltaA());
+            match.setPlayer2RatingChange(eloResult.getDeltaB());
 
-        p1.setCompetitiveRating(eloResult.getNewRatingA());
-        p2.setCompetitiveRating(eloResult.getNewRatingB());
+            p1.setCompetitiveRating(eloResult.getNewRatingA());
+            p2.setCompetitiveRating(eloResult.getNewRatingB());
+            userRepository.save(p2);
+        } else {
+            match.setPlayer1RatingChange(0);
+            match.setPlayer2RatingChange(0);
+        }
 
         userRepository.save(p1);
-        userRepository.save(p2);
 
         match.setStatus(Match.MatchStatus.FINISHED);
         match.setFinishedAt(LocalDateTime.now());
@@ -354,6 +485,8 @@ public class MatchService {
                 .winnerId(match.getWinnerId())
                 .winnerUsername(winnerName)
                 .challengeData(match.getChallengeData())
+                .isBotMatch(match.getIsBotMatch())
+                .cancelledReason(match.getCancelledReason())
                 .createdAt(match.getCreatedAt())
                 .startedAt(match.getStartedAt())
                 .finishedAt(match.getFinishedAt())

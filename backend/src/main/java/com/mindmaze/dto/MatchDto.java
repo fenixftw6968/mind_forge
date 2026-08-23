@@ -38,6 +38,8 @@ public class MatchDto {
     private Long winnerId;
     private String winnerUsername;
     private String challengeData;
+    private Boolean isBotMatch;
+    private String cancelledReason;
 
     private LocalDateTime createdAt;
     private LocalDateTime startedAt;

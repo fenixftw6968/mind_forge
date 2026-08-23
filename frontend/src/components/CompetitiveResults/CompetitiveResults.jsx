@@ -106,52 +106,71 @@ export default function CompetitiveResults({
       </div>
 
       {/* Rating Delta Box */}
-      <div style={{
-        background: myDelta > 0 ? '#F0FDF4' : (myDelta < 0 ? '#FFF5F5' : '#F8FAFC'),
-        border: `1px solid ${myDelta > 0 ? '#BBF7D0' : (myDelta < 0 ? '#FED7D7' : '#E2E8F0')}`,
-        borderRadius: '1rem',
-        padding: '1rem 1.25rem',
-        marginBottom: '2rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '10px',
-            background: currentRank.bg,
-            border: `1px solid ${currentRank.border}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '1.25rem'
-          }}>
-            {currentRank.badge}
-          </div>
-          <div style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#0F172A' }}>
-              {currentRank.name} Tier
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-              Rating: {myBefore} → <strong style={{ color: '#0F172A' }}>{myAfter}</strong>
-            </div>
-          </div>
-        </div>
-
+      {matchResult.isBotMatch ? (
         <div style={{
+          background: '#F8FAFC',
+          border: '1px solid #E2E8F0',
+          borderRadius: '1rem',
+          padding: '0.85rem 1.25rem',
+          marginBottom: '2rem',
           display: 'flex',
           alignItems: 'center',
-          gap: '0.35rem',
-          fontSize: '1.15rem',
-          fontWeight: 800,
-          color: myDelta > 0 ? '#16A34A' : (myDelta < 0 ? '#DC2626' : '#64748B')
+          justifyContent: 'center',
+          gap: '0.5rem',
+          color: '#64748B',
+          fontSize: '0.875rem',
+          fontWeight: 600
         }}>
-          {myDelta > 0 ? <TrendingUp size={18} /> : (myDelta < 0 ? <TrendingDown size={18} /> : null)}
-          {myDelta > 0 ? `+${myDelta}` : myDelta} Elo
+          🤖 <span>Practice AI Bot Match — Competitive Elo rating was not modified.</span>
         </div>
-      </div>
+      ) : (
+        <div style={{
+          background: myDelta > 0 ? '#F0FDF4' : (myDelta < 0 ? '#FFF5F5' : '#F8FAFC'),
+          border: `1px solid ${myDelta > 0 ? '#BBF7D0' : (myDelta < 0 ? '#FED7D7' : '#E2E8F0')}`,
+          borderRadius: '1rem',
+          padding: '1rem 1.25rem',
+          marginBottom: '2rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '10px',
+              background: currentRank.bg,
+              border: `1px solid ${currentRank.border}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.25rem'
+            }}>
+              {currentRank.badge}
+            </div>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#0F172A' }}>
+                {currentRank.name} Tier
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                Rating: {myBefore} → <strong style={{ color: '#0F172A' }}>{myAfter}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            fontSize: '1.15rem',
+            fontWeight: 800,
+            color: myDelta > 0 ? '#16A34A' : (myDelta < 0 ? '#DC2626' : '#64748B')
+          }}>
+            {myDelta > 0 ? <TrendingUp size={18} /> : (myDelta < 0 ? <TrendingDown size={18} /> : null)}
+            {myDelta > 0 ? `+${myDelta}` : myDelta} Elo
+          </div>
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>

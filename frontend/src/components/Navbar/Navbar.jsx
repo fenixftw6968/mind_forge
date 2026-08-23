@@ -1,10 +1,12 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Zap, Trophy, Flame, Coins, LogOut, Menu, X, ChevronDown, Users, Swords } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getRankFromRating } from '../../utils/rankUtils';
 import SocialDrawer from '../SocialDrawer/SocialDrawer';
+import IncomingInviteModal from '../IncomingInviteModal/IncomingInviteModal';
+import api from '../../utils/api';
 
 export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -12,6 +14,55 @@ export default function Navbar() {
   const location  = useLocation();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [socialOpen, setSocialOpen] = useState(false);
+  const [pendingInvite, setPendingInvite] = useState(null);
+
+  // Poll for incoming friend match invitations every 2.5s
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let isMounted = true;
+    const checkInvites = async () => {
+      try {
+        const res = await api.get('/api/matches/invitations/pending');
+        if (isMounted && Array.isArray(res.data) && res.data.length > 0) {
+          setPendingInvite(res.data[0]);
+        } else if (isMounted) {
+          setPendingInvite(null);
+        }
+      } catch (e) {
+        // Silently catch polling error
+      }
+    };
+
+    checkInvites();
+    const interval = setInterval(checkInvites, 2500);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [isAuthenticated]);
+
+  const handleAcceptInvite = async (invite) => {
+    try {
+      const res = await api.post(`/api/matches/${invite.id}/accept`);
+      setPendingInvite(null);
+      // Navigate to game with active match state
+      navigate(`/games/${invite.gameSlug}`, { state: { acceptedMatch: res.data } });
+    } catch (e) {
+      console.error("Failed to accept invite", e);
+      setPendingInvite(null);
+    }
+  };
+
+  const handleDeclineInvite = async (invite) => {
+    try {
+      await api.post(`/api/matches/${invite.id}/decline`);
+    } catch (e) {
+      console.error("Failed to decline invite", e);
+    } finally {
+      setPendingInvite(null);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -199,6 +250,13 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
+
+      {/* Incoming Friend Match Invitation Popup */}
+      <IncomingInviteModal
+        invite={pendingInvite}
+        onAccept={handleAcceptInvite}
+        onDecline={handleDeclineInvite}
+      />
 
       {/* Friends & Social Drawer */}
       <SocialDrawer

@@ -46,12 +46,43 @@ public class MatchController {
         return ResponseEntity.ok(matchService.createFriendMatch(user.getId(), friendId, gameSlug));
     }
 
+    @GetMapping("/invitations/pending")
+    public ResponseEntity<List<MatchDto>> getPendingInvitations(
+            @AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(matchService.getPendingInvitations(user.getId()));
+    }
+
     @PostMapping("/{matchId}/accept")
     public ResponseEntity<MatchDto> acceptFriendMatch(
             @PathVariable String matchId,
             @AuthenticationPrincipal User user) {
         if (user == null) return ResponseEntity.status(401).build();
         return ResponseEntity.ok(matchService.acceptFriendMatch(matchId, user.getId()));
+    }
+
+    @PostMapping("/{matchId}/decline")
+    public ResponseEntity<MatchDto> declineFriendMatch(
+            @PathVariable String matchId,
+            @AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(matchService.declineFriendMatch(matchId, user.getId()));
+    }
+
+    @PostMapping("/{matchId}/cancel")
+    public ResponseEntity<MatchDto> cancelMatch(
+            @PathVariable String matchId,
+            @AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(matchService.cancelMatch(matchId, user.getId()));
+    }
+
+    @PostMapping("/{matchId}/abandon")
+    public ResponseEntity<MatchDto> abandonMatch(
+            @PathVariable String matchId,
+            @AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(matchService.abandonMatch(matchId, user.getId()));
     }
 
     @GetMapping("/{matchId}")

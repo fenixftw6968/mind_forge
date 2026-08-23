@@ -88,6 +88,11 @@ public class Match {
     private Integer player1RatingChange;
     private Integer player2RatingChange;
 
+    @Builder.Default
+    private Boolean isBotMatch = false;
+
+    private String cancelledReason; // e.g. "DECLINED", "CANCELLED_BY_HOST", "ABANDONED"
+
     // Challenge payload (JSON string with puzzles/scenes generated server-side)
     @Column(columnDefinition = "TEXT")
     private String challengeData;
