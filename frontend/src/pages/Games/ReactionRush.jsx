@@ -39,6 +39,7 @@ export default function ReactionRush() {
   const [playMode, setPlayMode] = useState('PRACTICE'); // 'PRACTICE' | 'RANKED' | 'FRIEND'
   const [showMatchmaking, setShowMatchmaking] = useState(false);
   const [showSocialDrawer, setShowSocialDrawer] = useState(false);
+  const [invitedFriend, setInvitedFriend] = useState(null);
   const [currentMatch, setCurrentMatch] = useState(null);
   const [competitiveResult, setCompetitiveResult] = useState(null);
 
@@ -58,6 +59,7 @@ export default function ReactionRush() {
     setPlayMode(mode);
     setShowModeModal(false);
     if (mode === 'RANKED') {
+      setInvitedFriend(null);
       setShowMatchmaking(true);
     } else if (mode === 'FRIEND') {
       setShowSocialDrawer(true);
@@ -199,9 +201,11 @@ export default function ReactionRush() {
         isOpen={showMatchmaking}
         gameSlug="reaction-rush"
         gameTitle="Reaction Rush"
-        mode="RANKED"
+        mode={playMode === 'FRIEND' ? 'FRIEND' : 'RANKED'}
+        friendTarget={invitedFriend}
         onClose={() => {
           setShowMatchmaking(false);
+          setInvitedFriend(null);
           setShowModeModal(true);
         }}
         onMatchReady={handleMatchReady}
@@ -220,6 +224,8 @@ export default function ReactionRush() {
         }}
         onInviteFriendToGame={(friend) => {
           setShowSocialDrawer(false);
+          setInvitedFriend(friend);
+          setPlayMode('FRIEND');
           setShowMatchmaking(true);
         }}
       />

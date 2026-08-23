@@ -28,6 +28,7 @@ export default function MemoryChallenge() {
   const [playMode, setPlayMode] = useState('PRACTICE'); // 'PRACTICE' | 'RANKED' | 'FRIEND'
   const [showMatchmaking, setShowMatchmaking] = useState(false);
   const [showSocialDrawer, setShowSocialDrawer] = useState(false);
+  const [invitedFriend, setInvitedFriend] = useState(null);
   const [currentMatch, setCurrentMatch] = useState(null);
   const [competitiveResult, setCompetitiveResult] = useState(null);
 
@@ -52,6 +53,7 @@ export default function MemoryChallenge() {
     setPlayMode(mode);
     setShowModeModal(false);
     if (mode === 'RANKED') {
+      setInvitedFriend(null);
       setShowMatchmaking(true);
     } else if (mode === 'FRIEND') {
       setShowSocialDrawer(true);
@@ -69,16 +71,37 @@ export default function MemoryChallenge() {
       if (match.challengeData) {
         const parsed = typeof match.challengeData === 'string' ? JSON.parse(match.challengeData) : match.challengeData;
         if (Array.isArray(parsed) && parsed.length > 0) {
-          challengeScenes = parsed.map((p, idx) => ({
-            id: p.id || idx + 1,
-            title: p.title || 'Memory Crime Scene',
-            revealTime: 6,
-            items: p.items || ['Red Bag', 'Silver Key', 'Laptop', 'Notebook', 'Coffee Mug', 'Pen'],
-            question: p.question || 'Which item was located in the scene?',
-            options: p.options || ['Silver Key', 'Golden Watch', 'Blue Folder', 'USB Flash'],
-            correctAnswer: p.correctAnswer || p.answer || 'Silver Key',
-            explanation: p.explanation || 'Visual observation test.'
-          }));
+          challengeScenes = parsed.map((p, idx) => {
+            let contentObj = {};
+            if (typeof p.content === 'string') {
+              try { contentObj = JSON.parse(p.content); } catch (e) {}
+            } else if (typeof p.content === 'object' && p.content !== null) {
+              contentObj = p.content;
+            }
+
+            let correctAns = p.correctAnswer || p.answer || '';
+            if (typeof correctAns === 'string' && correctAns.trim().startsWith('{')) {
+              try {
+                const parsedAns = JSON.parse(correctAns);
+                correctAns = parsedAns.answer || correctAns;
+              } catch (e) {}
+            }
+
+            const items = p.items || contentObj.items || ['Red Bag', 'Silver Key', 'Laptop', 'Notebook', 'Coffee Mug', 'Pen'];
+            const question = p.question || contentObj.question || 'Which item was located in the scene?';
+            const options = p.options || contentObj.options || contentObj.choices || ['Silver Key', 'Golden Watch', 'Blue Folder', 'USB Flash'];
+
+            return {
+              id: p.id || idx + 1,
+              title: p.title || contentObj.title || 'Memory Crime Scene',
+              revealTime: p.revealTime || contentObj.revealTime || 6,
+              items: items,
+              question: question,
+              options: options,
+              correctAnswer: correctAns || (typeof options[0] === 'string' ? options[0] : 'Silver Key'),
+              explanation: p.explanation || contentObj.explanation || 'Visual observation test.'
+            };
+          });
         }
       }
     } catch (e) {
@@ -253,9 +276,11 @@ export default function MemoryChallenge() {
         isOpen={showMatchmaking}
         gameSlug="memory-challenge"
         gameTitle="Memory Challenge"
-        mode="RANKED"
+        mode={playMode === 'FRIEND' ? 'FRIEND' : 'RANKED'}
+        friendTarget={invitedFriend}
         onClose={() => {
           setShowMatchmaking(false);
+          setInvitedFriend(null);
           setShowModeModal(true);
         }}
         onMatchReady={handleMatchReady}
@@ -274,6 +299,8 @@ export default function MemoryChallenge() {
         }}
         onInviteFriendToGame={(friend) => {
           setShowSocialDrawer(false);
+          setInvitedFriend(friend);
+          setPlayMode('FRIEND');
           setShowMatchmaking(true);
         }}
       />

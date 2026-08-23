@@ -30,6 +30,7 @@ export default function NumberDetective() {
   const [playMode, setPlayMode] = useState('PRACTICE'); // 'PRACTICE' | 'RANKED' | 'FRIEND'
   const [showMatchmaking, setShowMatchmaking] = useState(false);
   const [showSocialDrawer, setShowSocialDrawer] = useState(false);
+  const [invitedFriend, setInvitedFriend] = useState(null);
   const [currentMatch, setCurrentMatch] = useState(null);
   const [competitiveResult, setCompetitiveResult] = useState(null);
 
@@ -59,6 +60,7 @@ export default function NumberDetective() {
     setPlayMode(mode);
     setShowModeModal(false);
     if (mode === 'RANKED') {
+      setInvitedFriend(null);
       setShowMatchmaking(true);
     } else if (mode === 'FRIEND') {
       setShowSocialDrawer(true);
@@ -77,14 +79,31 @@ export default function NumberDetective() {
       if (match.challengeData) {
         const parsed = typeof match.challengeData === 'string' ? JSON.parse(match.challengeData) : match.challengeData;
         if (Array.isArray(parsed) && parsed.length > 0) {
-          challengeQuestions = parsed.map((p, idx) => ({
-            id: p.id || idx + 1,
-            question: p.question,
-            correctAnswer: p.correctAnswer || p.answer,
-            options: p.options || [],
-            hint: p.hint || '',
-            explanation: p.explanation || 'Mathematical logic pattern.'
-          }));
+          challengeQuestions = parsed.map((p, idx) => {
+            let contentObj = {};
+            if (typeof p.content === 'string') {
+              try { contentObj = JSON.parse(p.content); } catch (e) {}
+            } else if (typeof p.content === 'object' && p.content !== null) {
+              contentObj = p.content;
+            }
+
+            let correctAns = p.correctAnswer || p.answer || '';
+            if (typeof correctAns === 'string' && correctAns.trim().startsWith('{')) {
+              try {
+                const parsedAns = JSON.parse(correctAns);
+                correctAns = parsedAns.answer || correctAns;
+              } catch (e) {}
+            }
+
+            return {
+              id: p.id || idx + 1,
+              question: p.question || contentObj.question || p.title || '',
+              correctAnswer: correctAns,
+              options: p.options || contentObj.options || contentObj.choices || [],
+              hint: p.hint || contentObj.hint || '',
+              explanation: p.explanation || contentObj.explanation || 'Mathematical logic pattern.'
+            };
+          }).filter(q => q.question);
         }
       }
     } catch (e) {
@@ -256,9 +275,11 @@ export default function NumberDetective() {
         isOpen={showMatchmaking}
         gameSlug="number-detective"
         gameTitle="Number Detective"
-        mode="RANKED"
+        mode={playMode === 'FRIEND' ? 'FRIEND' : 'RANKED'}
+        friendTarget={invitedFriend}
         onClose={() => {
           setShowMatchmaking(false);
+          setInvitedFriend(null);
           setShowModeModal(true);
         }}
         onMatchReady={handleMatchReady}
@@ -277,7 +298,8 @@ export default function NumberDetective() {
         }}
         onInviteFriendToGame={(friend) => {
           setShowSocialDrawer(false);
-          // start matchmaking/lobby for friend
+          setInvitedFriend(friend);
+          setPlayMode('FRIEND');
           setShowMatchmaking(true);
         }}
       />
