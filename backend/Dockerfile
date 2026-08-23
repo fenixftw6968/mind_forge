@@ -1,5 +1,5 @@
 # Stage 1: Build the application jar
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
 # Copy pom.xml and fetch dependencies to cache them
@@ -11,7 +11,7 @@ COPY src ./src
 RUN mvn package -DskipTests
 
 # Stage 2: Runtime JRE environment
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 # Copy built jar from build stage
