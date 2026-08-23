@@ -61,8 +61,20 @@ public class DailyChallengeService {
                 });
 
         boolean completedToday = false;
+        Boolean isCorrect = null;
+        Integer xpEarned = null;
+        Integer coinsEarned = null;
+
         if (userId != null) {
-            completedToday = userDailyChallengeRepository.existsByUserIdAndDailyChallengeId(userId, challenge.getId());
+            java.util.Optional<com.mindmaze.entity.UserDailyChallenge> attemptOpt = 
+                userDailyChallengeRepository.findByUserIdAndDailyChallengeId(userId, challenge.getId());
+            if (attemptOpt.isPresent()) {
+                completedToday = true;
+                com.mindmaze.entity.UserDailyChallenge attempt = attemptOpt.get();
+                isCorrect = attempt.getIsCorrect();
+                xpEarned = attempt.getXpEarned();
+                coinsEarned = attempt.getCoinsEarned();
+            }
         }
 
         // Calculate expiresAt (end of today)
@@ -79,6 +91,9 @@ public class DailyChallengeService {
                 .puzzle(challenge.getPuzzle())
                 .expiresAt(expiresAt.toString())
                 .completedToday(completedToday)
+                .isCorrect(isCorrect)
+                .xpEarned(xpEarned)
+                .coinsEarned(coinsEarned)
                 .build();
     }
 
@@ -103,7 +118,8 @@ public class DailyChallengeService {
             JsonNode node = objectMapper.readTree(challenge.getPuzzle());
             if (node.has("answer")) {
                 correctAnsStr = node.get("answer").asText();
-                isCorrect = correctAnsStr.trim().equalsIgnoreCase(request.getUserAnswer().trim());
+                String submittedAnswer = request.getUserAnswer() != null ? request.getUserAnswer().trim() : "";
+                isCorrect = !submittedAnswer.isEmpty() && correctAnsStr.trim().equalsIgnoreCase(submittedAnswer);
             }
             if (node.has("explanation")) {
                 explanation = node.get("explanation").asText();

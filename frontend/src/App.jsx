@@ -17,11 +17,16 @@ import DailyChallenge from './pages/DailyChallenge/DailyChallenge';
 
 // Game pages
 import NumberDetective from './pages/Games/NumberDetective';
-import WhoIsLying from './pages/Games/WhoIsLying';
-import PatternDetective from './pages/Games/PatternDetective';
-import SolveCrime from './pages/Games/SolveCrime';
-import SpotFallacy from './pages/Games/SpotFallacy';
 import MemoryChallenge from './pages/Games/MemoryChallenge';
+import CodeBreaker from './pages/Games/CodeBreaker';
+import ReactionRush from './pages/Games/ReactionRush';
+import GridPuzzle from './pages/Games/GridPuzzle';
+import SpeedMatch from './pages/Games/SpeedMatch';
+
+import { runDataMigration } from './utils/dataMigration';
+
+// Run backward compatibility migration
+runDataMigration();
 
 export default function App() {
   return (
@@ -44,11 +49,11 @@ export default function App() {
 
             {/* Game routes */}
             <Route path="/games/number-detective"  element={<ProtectedRoute><NumberDetective /></ProtectedRoute>} />
-            <Route path="/games/who-is-lying"      element={<ProtectedRoute><WhoIsLying /></ProtectedRoute>} />
-            <Route path="/games/pattern-detective" element={<ProtectedRoute><PatternDetective /></ProtectedRoute>} />
-            <Route path="/games/solve-crime"       element={<ProtectedRoute><SolveCrime /></ProtectedRoute>} />
-            <Route path="/games/spot-fallacy"      element={<ProtectedRoute><SpotFallacy /></ProtectedRoute>} />
             <Route path="/games/memory-challenge"  element={<ProtectedRoute><MemoryChallenge /></ProtectedRoute>} />
+            <Route path="/games/code-breaker"      element={<ProtectedRoute><CodeBreaker /></ProtectedRoute>} />
+            <Route path="/games/reaction-rush"     element={<ProtectedRoute><ReactionRush /></ProtectedRoute>} />
+            <Route path="/games/grid-puzzle"       element={<ProtectedRoute><GridPuzzle /></ProtectedRoute>} />
+            <Route path="/games/speed-match"       element={<ProtectedRoute><SpeedMatch /></ProtectedRoute>} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

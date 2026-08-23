@@ -173,6 +173,9 @@ public class UserService {
                 });
         }
 
+        int rating = user.getCompetitiveRating() != null ? user.getCompetitiveRating() : 500;
+        String compRank = com.mindmaze.util.RankUtil.getRankName(rating);
+
         return UserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -185,6 +188,10 @@ public class UserService {
                 .longestStreak(user.getLongestStreak())
                 .gamesCompleted(user.getGamesCompleted())
                 .mysteriesSolved(user.getMysteriesSolved())
+                .competitiveRating(rating)
+                .competitiveRank(compRank)
+                .matchesPlayed(user.getMatchesPlayed() != null ? user.getMatchesPlayed() : 0)
+                .matchesWon(user.getMatchesWon() != null ? user.getMatchesWon() : 0)
                 .createdAt(user.getCreatedAt())
                 .recentActivity(activities)
                 .build();

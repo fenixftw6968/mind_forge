@@ -13,4 +13,8 @@ public class LeaderboardEntryDto {
     private Integer level;
     private Integer xp;
     private Integer streak;
+    private Integer competitiveRating;
+    private String competitiveRank;
+    private Integer matchesWon;
+    private Integer matchesPlayed;
 }

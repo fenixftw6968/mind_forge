@@ -6,10 +6,10 @@ export default function ProtectedRoute({ children }) {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0f' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8FAFC' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '3px solid rgba(139,92,246,0.2)', borderTopColor: '#8b5cf6', animation: 'spin 0.8s linear infinite', margin: '0 auto 1rem' }} />
-          <p className="font-display" style={{ color: '#52526a', fontSize: '0.875rem' }}>Loading MindMaze...</p>
+          <div style={{ width: '44px', height: '44px', borderRadius: '50%', border: '3px solid #E2E8F0', borderTopColor: '#4F46E5', animation: 'spin 0.8s linear infinite', margin: '0 auto 1rem' }} />
+          <p className="font-display" style={{ color: '#64748B', fontSize: '0.875rem', fontWeight: 600 }}>Loading MindForge...</p>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </div>

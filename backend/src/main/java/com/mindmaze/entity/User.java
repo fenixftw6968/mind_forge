@@ -81,6 +81,19 @@ public class User {
     @Builder.Default
     private Integer noHintGames = 0;
 
+    // ── Competitive Multiplayer ───────────────────────────────
+    @Column(nullable = false, columnDefinition = "integer default 500")
+    @Builder.Default
+    private Integer competitiveRating = 500;
+
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    @Builder.Default
+    private Integer matchesPlayed = 0;
+
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    @Builder.Default
+    private Integer matchesWon = 0;
+
     // ── Timestamps ────────────────────────────────────────────
     @CreationTimestamp
     @Column(nullable = false, updatable = false, columnDefinition = "timestamp default current_timestamp")

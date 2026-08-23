@@ -24,6 +24,8 @@ public class LeaderboardService {
             sortedUsers = userRepository.findAllOrderByStreakDesc();
         } else if ("games".equalsIgnoreCase(sortBy)) {
             sortedUsers = userRepository.findAllOrderByGamesCompletedDesc();
+        } else if ("rating".equalsIgnoreCase(sortBy) || "competitive".equalsIgnoreCase(sortBy) || "ranked".equalsIgnoreCase(sortBy)) {
+            sortedUsers = userRepository.findAllOrderByCompetitiveRatingDesc();
         } else {
             sortedUsers = userRepository.findAllOrderByXpDesc();
         }
@@ -31,12 +33,17 @@ public class LeaderboardService {
         List<LeaderboardEntryDto> result = new ArrayList<>();
         int rank = 1;
         for (User user : sortedUsers) {
+            int r = user.getCompetitiveRating() != null ? user.getCompetitiveRating() : 500;
             result.add(LeaderboardEntryDto.builder()
                     .rank(rank++)
                     .username(user.getUsername())
                     .level(user.getLevel())
                     .xp(user.getXp())
                     .streak(user.getCurrentStreak())
+                    .competitiveRating(r)
+                    .competitiveRank(com.mindmaze.util.RankUtil.getRankName(r))
+                    .matchesWon(user.getMatchesWon() != null ? user.getMatchesWon() : 0)
+                    .matchesPlayed(user.getMatchesPlayed() != null ? user.getMatchesPlayed() : 0)
                     .build());
         }
 

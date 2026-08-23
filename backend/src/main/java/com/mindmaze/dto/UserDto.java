@@ -21,6 +21,10 @@ public class UserDto {
     private Integer longestStreak;
     private Integer gamesCompleted;
     private Integer mysteriesSolved;
+    private Integer competitiveRating;
+    private String competitiveRank;
+    private Integer matchesPlayed;
+    private Integer matchesWon;
     private LocalDateTime createdAt;
     private List<RecentActivity> recentActivity;
 

@@ -27,4 +27,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM User u ORDER BY u.currentStreak DESC")
     List<User> findAllOrderByStreakDesc();
+
+    @Query("SELECT u FROM User u ORDER BY u.competitiveRating DESC")
+    List<User> findAllOrderByCompetitiveRatingDesc();
 }

@@ -1,63 +1,146 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Eye, EyeOff, CheckCircle, XCircle, Star, Clock } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle, XCircle, Swords, Users, Clock, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useGame } from '../../context/GameContext';
 import XPPopup from '../../components/XPPopup/XPPopup';
+import DifficultySelector from '../../components/DifficultySelector/DifficultySelector';
+import GameProgress from '../../components/GameProgress/GameProgress';
+import GameResults from '../../components/GameResults/GameResults';
+import PlayModeModal from '../../components/PlayModeModal/PlayModeModal';
+import MatchmakingLobby from '../../components/MatchmakingLobby/MatchmakingLobby';
+import CompetitiveResults from '../../components/CompetitiveResults/CompetitiveResults';
+import SocialDrawer from '../../components/SocialDrawer/SocialDrawer';
+import { getDailyQuestionSet } from '../../services/dailyQuestionService';
+import { memoryChallengeQuestions } from '../../data/memoryChallengeQuestions';
 import api from '../../utils/api';
 
+const XP_PER_DIFFICULTY = { EASY: 15, MEDIUM: 25, HARD: 50 };
+
 export default function MemoryChallenge() {
-  const { refreshUser } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { xpPopups, showXPPopup } = useGame();
   const navigate = useNavigate();
 
-  const [scenes, setScenes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [sceneIndex, setSceneIndex] = useState(0);
-  const [phase, setPhase]   = useState('select'); // select | reveal | recall | result | complete
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [qIndex, setQIndex] = useState(0);
-  const [selected, setSelected] = useState(null);
-  const [answers, setAnswers]   = useState([]);
-  const [score, setScore]       = useState(0);
-  const [totalXP, setTotalXP]   = useState(0);
-  const [latestUser, setLatestUser] = useState(null);
+  // Mode state
+  const [showModeModal, setShowModeModal] = useState(true);
+  const [playMode, setPlayMode] = useState('PRACTICE'); // 'PRACTICE' | 'RANKED' | 'FRIEND'
+  const [showMatchmaking, setShowMatchmaking] = useState(false);
+  const [showSocialDrawer, setShowSocialDrawer] = useState(false);
+  const [currentMatch, setCurrentMatch] = useState(null);
+  const [competitiveResult, setCompetitiveResult] = useState(null);
+
+  const [difficulty, setDifficulty]     = useState(null); // null = selecting
+  const [scenes, setScenes]             = useState([]);
+  const [sceneIndex, setSceneIndex]     = useState(0);
+  const [phase, setPhase]               = useState('reveal'); // reveal | recall | result
+  const [timeLeft, setTimeLeft]         = useState(8);
+  const [selected, setSelected]         = useState(null);
+  const [showResult, setShowResult]     = useState(false);
+  const [score, setScore]               = useState(0);
+  const [mistakes, setMistakes]         = useState(0);
+  const [totalXP, setTotalXP]           = useState(0);
+  const [showComplete, setShowComplete] = useState(false);
+  const [latestUser, setLatestUser]     = useState(null);
+  const startTimeRef = useRef(Date.now());
 
   const intervalRef = useRef(null);
-  const scene   = scenes[sceneIndex];
-  const question = scene?.questions[qIndex];
+  const scene = scenes[sceneIndex];
+
+  const handleSelectMode = (mode) => {
+    setPlayMode(mode);
+    setShowModeModal(false);
+    if (mode === 'RANKED') {
+      setShowMatchmaking(true);
+    } else if (mode === 'FRIEND') {
+      setShowSocialDrawer(true);
+    }
+  };
+
+  const handleMatchReady = (match) => {
+    setShowMatchmaking(false);
+    setShowSocialDrawer(false);
+    setCurrentMatch(match);
+    startTimeRef.current = Date.now();
+
+    let challengeScenes = [];
+    try {
+      if (match.challengeData) {
+        const parsed = typeof match.challengeData === 'string' ? JSON.parse(match.challengeData) : match.challengeData;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          challengeScenes = parsed.map((p, idx) => ({
+            id: p.id || idx + 1,
+            title: p.title || 'Memory Crime Scene',
+            revealTime: 6,
+            items: p.items || ['Red Bag', 'Silver Key', 'Laptop', 'Notebook', 'Coffee Mug', 'Pen'],
+            question: p.question || 'Which item was located in the scene?',
+            options: p.options || ['Silver Key', 'Golden Watch', 'Blue Folder', 'USB Flash'],
+            correctAnswer: p.correctAnswer || p.answer || 'Silver Key',
+            explanation: p.explanation || 'Visual observation test.'
+          }));
+        }
+      }
+    } catch (e) {
+      console.warn("Could not parse match challengeData, falling back to local set", e);
+    }
+
+    if (challengeScenes.length === 0) {
+      challengeScenes = getDailyQuestionSet({
+        gameType: 'memory-challenge',
+        difficulty: 'MEDIUM',
+        questionBank: memoryChallengeQuestions,
+        count: 5,
+        userShuffle: false
+      });
+    }
+
+    setScenes(challengeScenes);
+    setDifficulty('MEDIUM');
+    setSceneIndex(0);
+    setScore(0);
+    setMistakes(0);
+    setTotalXP(0);
+    setSelected(null);
+    setShowResult(false);
+    setShowComplete(false);
+    setPhase('reveal');
+    setTimeLeft(challengeScenes[0]?.revealTime || 6);
+    setCompetitiveResult(null);
+  };
+
+  const startGame = (diff) => {
+    const selectedList = getDailyQuestionSet({
+      gameType: 'memory-challenge',
+      difficulty: diff,
+      questionBank: memoryChallengeQuestions,
+      count: 10,
+      userShuffle: true
+    });
+
+    setScenes(selectedList);
+    setDifficulty(diff);
+    setSceneIndex(0);
+    setScore(0);
+    setMistakes(0);
+    setTotalXP(0);
+    setSelected(null);
+    setShowResult(false);
+    setShowComplete(false);
+    setLatestUser(null);
+    setPhase('reveal');
+    setTimeLeft(selectedList[0]?.revealTime || 8);
+    setCompetitiveResult(null);
+  };
 
   useEffect(() => {
-    const fetchScenes = async () => {
-      try {
-        const res = await api.get('/api/games/memory-challenge/puzzles');
-        const parsed = res.data.map(p => {
-          const content = typeof p.content === 'string' ? JSON.parse(p.content) : p.content;
-          return {
-            ...p,
-            revealTime: content.revealTime,
-            items: content.items,
-            questions: content.questions,
-            description: content.description
-          };
-        });
-        setScenes(parsed);
-      } catch (e) {
-        console.error("Failed to load memory scenes", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchScenes();
-  }, []);
-
-  const startScene = (idx) => {
-    setSceneIndex(idx);
-    setPhase('reveal');
-    setTimeLeft(scenes[idx].revealTime);
-    setQIndex(0); setAnswers([]); setSelected(null); setLatestUser(null);
-  };
+    if (difficulty && !showComplete && scene) {
+      setPhase('reveal');
+      setTimeLeft(scene.revealTime || 8);
+      setSelected(null);
+      setShowResult(false);
+    }
+  }, [sceneIndex, difficulty, showComplete]);
 
   useEffect(() => {
     if (phase === 'reveal' && timeLeft > 0) {
@@ -68,230 +151,341 @@ export default function MemoryChallenge() {
     return () => clearTimeout(intervalRef.current);
   }, [phase, timeLeft]);
 
-  const handleAnswer = (choice) => {
-    if (selected) return;
+  const handleAnswer = async (choice) => {
+    if (selected || showResult) return;
     setSelected(choice);
-    const isCorrect = choice === question.answer;
-    const newAnswers = [...answers, { qId: question.id, choice, correct: isCorrect }];
-    setAnswers(newAnswers);
+    const isCorrect = choice === scene.correctAnswer;
+    setShowResult(true);
 
-    setTimeout(async () => {
-      if (qIndex + 1 >= scene.questions.length) {
-        const correct = newAnswers.filter(a => a.correct).length;
-        const passed = correct >= Math.ceil(scene.questions.length * 0.7);
-        const ansValue = passed ? "correct" : "incorrect";
-        setScore(correct);
+    if (!isCorrect) {
+      setMistakes(m => m + 1);
+    }
 
+    if (playMode === 'PRACTICE') {
+      const baseXP = XP_PER_DIFFICULTY[(scene.difficulty || difficulty || 'MEDIUM').toUpperCase()] || 20;
+      const earned = isCorrect ? baseXP : 0;
+
+      if (isCorrect) {
+        setScore(s => s + 1);
+        setTotalXP(t => t + earned);
+        showXPPopup(earned);
+      }
+
+      try {
+        const res = await api.post('/api/games/memory-challenge/attempts', {
+          puzzleId: scene.id,
+          userAnswer: choice,
+          hintUsed: false,
+          timeTakenSeconds: (scene.revealTime || 8) - timeLeft
+        });
+
+        if (res.data?.user) {
+          setLatestUser(res.data.user);
+        }
+      } catch (e) {
+        // Offline fallback
+      }
+    } else {
+      if (isCorrect) {
+        setScore(s => s + 1);
+      }
+    }
+  };
+
+  const handleNext = async () => {
+    if (sceneIndex + 1 >= scenes.length) {
+      if (playMode === 'PRACTICE') {
+        if (latestUser) {
+          refreshUser(latestUser);
+        }
+        setShowComplete(true);
+      } else if (currentMatch) {
+        const totalDuration = Math.round((Date.now() - startTimeRef.current) / 1000);
         try {
-          const res = await api.post('/api/games/memory-challenge/attempts', {
-            puzzleId: scene.id,
-            userAnswer: ansValue,
-            hintUsed: false,
-            timeTakenSeconds: 30
-          });
-
-          const earned = res.data.xpEarned;
-          setTotalXP(earned);
-          if (earned > 0) showXPPopup(earned);
-
-          if (res.data.user) {
-            setLatestUser(res.data.user);
+          if (currentMatch.player2Id === 999999) {
+            const botScore = Math.max(0, score + (Math.random() > 0.4 ? (Math.random() > 0.5 ? 0 : -1) : 1));
+            const botDelta = score >= botScore ? -16 : 16;
+            const myDelta = score > botScore ? 24 : (score === botScore ? 0 : -18);
+            const simResult = {
+              ...currentMatch,
+              player1Score: score,
+              player2Score: botScore,
+              player1RatingChange: myDelta,
+              player2RatingChange: botDelta,
+              winnerId: score > botScore ? currentMatch.player1Id : (score < botScore ? 999999 : null)
+            };
+            setCompetitiveResult(simResult);
+          } else {
+            const res = await api.post(`/api/matches/${currentMatch.id}/submit`, {
+              score: score,
+              timeTakenSeconds: totalDuration,
+              mistakes: mistakes,
+              detailedAnswers: 'Memory Challenge Set Completed'
+            });
+            setCompetitiveResult(res.data);
           }
         } catch (e) {
-          console.error("Failed to submit attempt", e);
+          console.error("Memory match submit error", e);
         }
-
-        setPhase('result');
-      } else {
-        setQIndex(q => q + 1);
-        setSelected(null);
       }
-    }, 900);
-  };
-
-  const handleComplete = () => {
-    if (latestUser) {
-      refreshUser(latestUser);
+    } else {
+      setSceneIndex(i => i + 1);
     }
-    setPhase('complete');
   };
 
-  if (loading) {
+  // === PLAY MODE SELECT MODAL ===
+  if (showModeModal) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a0f', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: '#52526a' }}>Loading Memory Scenes...</div>
+      <PlayModeModal
+        isOpen={showModeModal}
+        gameTitle="Memory Challenge"
+        gameIcon="👁️"
+        onClose={() => navigate('/games')}
+        onSelectMode={handleSelectMode}
+      />
+    );
+  }
+
+  // === MATCHMAKING LOBBY ===
+  if (showMatchmaking) {
+    return (
+      <MatchmakingLobby
+        isOpen={showMatchmaking}
+        gameSlug="memory-challenge"
+        gameTitle="Memory Challenge"
+        mode="RANKED"
+        onClose={() => {
+          setShowMatchmaking(false);
+          setShowModeModal(true);
+        }}
+        onMatchReady={handleMatchReady}
+      />
+    );
+  }
+
+  // === SOCIAL DRAWER (PLAY WITH FRIEND) ===
+  if (showSocialDrawer) {
+    return (
+      <SocialDrawer
+        isOpen={showSocialDrawer}
+        onClose={() => {
+          setShowSocialDrawer(false);
+          setShowModeModal(true);
+        }}
+        onInviteFriendToGame={(friend) => {
+          setShowSocialDrawer(false);
+          setShowMatchmaking(true);
+        }}
+      />
+    );
+  }
+
+  // === COMPETITIVE MATCH RESULTS SCREEN ===
+  if (competitiveResult) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px', paddingBottom: '3rem' }}>
+        <CompetitiveResults
+          matchResult={competitiveResult}
+          currentUserId={user?.id || currentMatch?.player1Id}
+          onRematch={() => {
+            setCompetitiveResult(null);
+            setShowMatchmaking(true);
+          }}
+          onDashboard={() => navigate('/dashboard')}
+        />
       </div>
     );
   }
 
-  if (phase === 'select') {
+  if (!difficulty && playMode === 'PRACTICE') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a0f', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ maxWidth: '560px', width: '100%', padding: '2rem' }}>
-          <button onClick={() => navigate('/games')} style={{ background: 'none', border: 'none', color: '#a1a1b5', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem', fontSize: '0.875rem' }}>
-            <ArrowLeft size={15} /> Back to Games
-          </button>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-              <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>👁️</div>
-              <h1 className="font-display" style={{ fontSize: '2rem', fontWeight: 700, color: 'white', marginBottom: '0.5rem' }}>Memory Challenge</h1>
-              <p style={{ color: '#a1a1b5' }}>Study the scene carefully. Then answer questions from memory.</p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              {scenes.map((s, i) => (
-                <motion.button key={i} whileHover={{ scale: 1.02 }} onClick={() => startScene(i)}
-                  style={{ width: '100%', padding: '1.25rem', borderRadius: '1rem', background: s.difficulty === 'EASY' ? 'rgba(16,185,129,0.08)' : 'rgba(245,158,11,0.08)', border: `1px solid ${s.difficulty === 'EASY' ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)'}`, cursor: 'pointer', textAlign: 'left', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                  <div style={{ fontSize: '1.75rem' }}>{s.difficulty === 'EASY' ? '🌱' : '🔥'}</div>
-                  <div>
-                    <div className="font-accent" style={{ fontWeight: 700, color: 'white', fontSize: '1rem' }}>{s.title}</div>
-                    <div style={{ fontSize: '0.8rem', color: '#a1a1b5', marginTop: '0.15rem' }}>{s.difficulty} • {s.revealTime}s to memorize • {s.questions.length} questions</div>
-                  </div>
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </div>
+      <DifficultySelector
+        title="Memory Challenge"
+        subtitle="Study the complex scene carefully before it disappears. Then answer from memory."
+        icon="👁️"
+        onSelectDifficulty={(diff) => startGame(diff)}
+        onBack={() => setShowModeModal(true)}
+        customTiers={[
+          { id: 'EASY', label: 'Easy', icon: '🌱', color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', xp: '+15 XP', time: '8s Study', desc: '6 everyday objects with clear colors and positions' },
+          { id: 'MEDIUM', label: 'Medium', icon: '🧠', color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', xp: '+25 XP', time: '6s Study', desc: '6 detailed technical items with sub-descriptors' },
+          { id: 'HARD', label: 'Hard', icon: '🔥', color: '#E11D48', bg: '#FFF1F2', border: '#FECDD3', xp: '+50 XP', time: '5s Study', desc: '9 complex forensic/cyber metrics with numbers and parameters' }
+        ]}
+      />
     );
   }
 
-  if (phase === 'complete') {
+  if (showComplete) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a0f', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={{ textAlign: 'center', maxWidth: '440px', padding: '2rem' }}>
-          <div style={{ fontSize: '5rem', marginBottom: '1.5rem' }}>🧠</div>
-          <h1 className="font-display" style={{ fontSize: '2rem', fontWeight: 700, color: 'white', marginBottom: '0.5rem' }}>Memory Logged!</h1>
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', marginTop: '2rem' }}>
-            <button onClick={() => setPhase('select')} className="btn-primary">Play Again</button>
-            <button onClick={() => navigate('/games')} className="btn-secondary">Games</button>
-          </div>
-        </motion.div>
-      </div>
+      <GameResults
+        score={score}
+        total={scenes.length}
+        xpEarned={totalXP}
+        gameTitle="Memory Challenge"
+        onPlayAgain={() => startGame(difficulty)}
+      />
     );
   }
+
+  if (!scene) return null;
+
+  const choicesList = scene.options || (scene.questions?.[0]?.choices) || [];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0f', paddingTop: '64px' }}>
+    <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px' }}>
       <XPPopup popups={xpPopups} />
-      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <button onClick={() => setPhase('select')} style={{ background: 'none', border: 'none', color: '#a1a1b5', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
-            <ArrowLeft size={15} /> Exit
-          </button>
-          <div style={{ display: 'flex', align: 'center', gap: '0.5rem' }}>
-            {phase === 'reveal' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 0.85rem', borderRadius: '999px', background: timeLeft <= 3 ? 'rgba(244,63,94,0.15)' : 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)' }}>
-                <Eye size={13} color={timeLeft <= 3 ? '#f43f5e' : '#a78bfa'} />
-                <span className="font-display" style={{ fontSize: '0.85rem', fontWeight: 700, color: timeLeft <= 3 ? '#f43f5e' : '#a78bfa' }}>{timeLeft}s</span>
-              </div>
-            )}
-            {phase === 'recall' && (
-              <span style={{ fontSize: '0.8rem', color: '#52526a' }}>Q {qIndex + 1}/{scene.questions.length}</span>
-            )}
-          </div>
-        </div>
+      <div style={{ maxWidth: '750px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+        
+        {/* Progress Header */}
+        <GameProgress
+          current={sceneIndex + 1}
+          total={scenes.length}
+          score={score}
+          difficulty={difficulty}
+          onExit={() => setDifficulty(null)}
+          formattedTime={phase === 'reveal' ? `${timeLeft}s` : null}
+          urgency={timeLeft <= 2 ? 'critical' : 'normal'}
+          onMidnightRollover={() => startGame(difficulty)}
+        />
 
         {/* REVEAL PHASE */}
         {phase === 'reveal' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <Eye size={16} color="#8b5cf6" />
-                <span className="font-accent" style={{ fontSize: '1rem', fontWeight: 600, color: '#a78bfa' }}>Memorize This Scene</span>
+                <Eye size={20} color="#4F46E5" />
+                <span className="font-accent" style={{ fontSize: '1.2rem', fontWeight: 800, color: '#4F46E5' }}>
+                  {scene.title}
+                </span>
               </div>
-              <p style={{ color: '#52526a', fontSize: '0.8rem' }}>{scene.description}</p>
+              <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: 500 }}>{scene.description}</p>
             </div>
 
-            {/* Scene display */}
-            <div style={{ background: '#13131f', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '1.5rem', padding: '2rem', marginBottom: '1.5rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+            {/* Scene Matrix Display */}
+            <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '1.25rem', padding: '2rem', marginBottom: '1.5rem', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.05)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${scene.items.length > 6 ? 3 : 3}, 1fr)`, gap: '1rem' }}>
                 {scene.items.map((item, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.08 }}
-                    className="memory-item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '0.75rem', gap: '0.4rem' }}>
-                    <span style={{ fontSize: '2rem' }}>{item.emoji}</span>
-                    <span style={{ fontSize: '0.7rem', color: '#a1a1b5', textAlign: 'center' }}>{item.label}</span>
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.85 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.04 }}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      padding: '1.25rem 0.75rem',
+                      background: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '0.875rem',
+                      gap: '0.5rem',
+                      textAlign: 'center',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+                    }}
+                  >
+                    <span style={{ fontSize: '2.5rem' }}>{item.emoji}</span>
+                    <span style={{ fontSize: '0.8rem', color: '#1E293B', fontWeight: 700, lineHeight: 1.3 }}>{item.label}</span>
                   </motion.div>
                 ))}
               </div>
             </div>
 
-            {/* Countdown */}
+            {/* Countdown bar */}
             <div style={{ textAlign: 'center' }}>
-              <div style={{ height: '6px', background: 'rgba(255,255,255,0.06)', borderRadius: '999px', overflow: 'hidden', maxWidth: '300px', margin: '0 auto' }}>
-                <motion.div style={{ height: '100%', borderRadius: '999px', background: timeLeft <= 3 ? '#f43f5e' : 'linear-gradient(90deg, #8b5cf6, #06b6d4)' }}
+              <div style={{ height: '6px', background: '#E2E8F0', borderRadius: '999px', overflow: 'hidden', maxWidth: '300px', margin: '0 auto' }}>
+                <motion.div
+                  style={{ height: '100%', borderRadius: '999px', background: timeLeft <= 2 ? '#E11D48' : 'linear-gradient(90deg, #6366F1, #4F46E5)' }}
                   initial={{ width: '100%' }}
-                  animate={{ width: `${(timeLeft / scene.revealTime) * 100}%` }}
+                  animate={{ width: `${(timeLeft / (scene.revealTime || 8)) * 100}%` }}
                   transition={{ duration: 1, ease: 'linear' }}
                 />
               </div>
-              <p style={{ marginTop: '0.75rem', color: '#52526a', fontSize: '0.8rem' }}>Scene hidden in {timeLeft}s...</p>
+              <p style={{ marginTop: '0.75rem', color: '#64748B', fontSize: '0.825rem', fontWeight: 600 }}>Scene hidden in {timeLeft}s...</p>
             </div>
           </motion.div>
         )}
 
         {/* RECALL PHASE */}
-        {phase === 'recall' && question && (
+        {phase === 'recall' && (
           <AnimatePresence mode="wait">
-            <motion.div key={qIndex} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                  <EyeOff size={16} color="#f43f5e" />
-                  <span className="font-accent" style={{ fontSize: '1rem', fontWeight: 600, color: '#f43f5e' }}>Scene Hidden — Answer from Memory</span>
+                  <EyeOff size={18} color="#E11D48" />
+                  <span className="font-accent" style={{ fontSize: '1.1rem', fontWeight: 800, color: '#E11D48' }}>
+                    Scene Hidden — Answer from Memory
+                  </span>
                 </div>
               </div>
-              <div style={{ background: '#13131f', border: '1px solid rgba(139,92,246,0.15)', borderRadius: '1.5rem', padding: '2rem' }}>
-                <p style={{ fontSize: '1.05rem', fontWeight: 600, color: 'white', marginBottom: '1.5rem', textAlign: 'center' }}>
-                  {question.question}
+
+              <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '1.25rem', padding: '2rem', marginBottom: '1.25rem', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.05)' }}>
+                <p style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', marginBottom: '1.75rem', textAlign: 'center' }}>
+                  {scene.question}
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.65rem' }}>
-                  {question.choices.map(choice => {
-                    let borderColor = 'rgba(255,255,255,0.06)';
-                    let bg = 'rgba(255,255,255,0.02)';
-                    let color = '#a1a1b5';
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+                  {choicesList.map(choice => {
+                    let borderColor = '#E2E8F0';
+                    let bg = '#FFFFFF';
+                    let color = '#1E293B';
+
                     if (selected) {
-                      if (choice === question.answer) { borderColor = '#10b981'; bg = 'rgba(16,185,129,0.1)'; color = '#10b981'; }
-                      else if (selected === choice) { borderColor = '#f43f5e'; bg = 'rgba(244,63,94,0.1)'; color = '#f43f5e'; }
+                      if (choice === scene.correctAnswer) {
+                        borderColor = '#A7F3D0';
+                        bg = '#ECFDF5';
+                        color = '#047857';
+                      } else if (selected === choice) {
+                        borderColor = '#FECDD3';
+                        bg = '#FFF1F2';
+                        color = '#BE123C';
+                      }
                     }
+
                     return (
-                      <motion.button key={choice} whileHover={!selected ? { scale: 1.02 } : {}} onClick={() => handleAnswer(choice)} disabled={!!selected}
-                        style={{ padding: '0.9rem', borderRadius: '0.75rem', border: `1px solid ${borderColor}`, background: bg, color, cursor: selected ? 'default' : 'pointer', fontSize: '0.9rem', fontWeight: 500, transition: 'all 0.25s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                        {selected && choice === question.answer && <CheckCircle size={14} color="#10b981" />}
-                        {selected === choice && choice !== question.answer && <XCircle size={14} color="#f43f5e" />}
+                      <motion.button
+                        key={choice}
+                        whileHover={!selected ? { scale: 1.01 } : {}}
+                        onClick={() => handleAnswer(choice)}
+                        disabled={!!selected}
+                        style={{
+                          padding: '1.1rem',
+                          borderRadius: '0.875rem',
+                          border: `1px solid ${borderColor}`,
+                          background: bg,
+                          color,
+                          cursor: selected ? 'default' : 'pointer',
+                          fontSize: '0.95rem',
+                          fontWeight: 700,
+                          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)',
+                          transition: 'all 0.15s ease',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.5rem'
+                        }}
+                      >
+                        {selected && choice === scene.correctAnswer && <CheckCircle size={17} color="#059669" />}
+                        {selected === choice && choice !== scene.correctAnswer && <XCircle size={17} color="#E11D48" />}
                         {choice}
                       </motion.button>
                     );
                   })}
                 </div>
               </div>
+
+              {/* Explanation & Next */}
+              {showResult && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                  <div style={{ padding: '1rem 1.25rem', borderRadius: '0.875rem', background: '#F8FAFC', border: '1px solid #E2E8F0', marginBottom: '1.25rem' }}>
+                    <p style={{ fontSize: '0.725rem', fontWeight: 800, color: '#0284C7', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '0.35rem' }}>Memory Recall Verified</p>
+                    <p style={{ fontSize: '0.875rem', color: '#334155', lineHeight: 1.6, fontWeight: 500 }}>{scene.explanation}</p>
+                  </div>
+                  <button onClick={handleNext} className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}>
+                    {sceneIndex + 1 >= scenes.length ? 'See Results 🏆' : 'Next Memory Challenge →'}
+                  </button>
+                </motion.div>
+              )}
             </motion.div>
           </AnimatePresence>
-        )}
-
-        {/* RESULT PHASE */}
-        {phase === 'result' && (
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>{score >= scene.questions.length ? '🏆' : score > 0 ? '⭐' : '💪'}</div>
-            <h2 className="font-display" style={{ fontSize: '1.75rem', fontWeight: 700, color: 'white', marginBottom: '0.5rem' }}>
-              {score}/{scene.questions.length} Correct
-            </h2>
-            <p style={{ color: '#a1a1b5', marginBottom: '2rem' }}>
-              {score === scene.questions.length ? 'Perfect memory! 🧠' : 'Keep training your observation skills.'}
-            </p>
-            <div style={{ background: '#13131f', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '1rem', padding: '1.5rem', marginBottom: '2rem', display: 'flex', justifyContent: 'space-around' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div className="font-display" style={{ fontSize: '1.75rem', fontWeight: 700, color: '#a78bfa' }}>+{totalXP}</div>
-                <div style={{ fontSize: '0.75rem', color: '#52526a' }}>XP</div>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <div className="font-display" style={{ fontSize: '1.75rem', fontWeight: 700, color: '#f59e0b' }}>+{Math.floor(totalXP / 2.5)}</div>
-                <div style={{ fontSize: '0.75rem', color: '#52526a' }}>Coins</div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
-              <button onClick={handleComplete} className="btn-primary">Claim Rewards</button>
-              <button onClick={() => navigate('/games')} className="btn-secondary">Back to Games</button>
-            </div>
-          </motion.div>
         )}
       </div>
     </div>

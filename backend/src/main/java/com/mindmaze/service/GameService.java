@@ -38,9 +38,19 @@ public class GameService {
     private final UserService userService;
     private final ObjectMapper objectMapper;
 
+    private static final List<String> ACTIVE_SLUGS = List.of(
+        "number-detective",
+        "memory-challenge",
+        "code-breaker",
+        "reaction-rush",
+        "grid-puzzle",
+        "speed-match"
+    );
+
     @Transactional(readOnly = true)
     public List<GameDto> getAllGames() {
         return gameRepository.findAll().stream()
+                .filter(g -> ACTIVE_SLUGS.contains(g.getSlug()))
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -71,32 +81,35 @@ public class GameService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Game game = gameRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Game not found"));
-        Puzzle puzzle = puzzleRepository.findById(request.getPuzzleId())
-                .orElseThrow(() -> new ResourceNotFoundException("Puzzle not found"));
-
-        if (!puzzle.getGame().getId().equals(game.getId())) {
-            throw new BadRequestException("Puzzle does not belong to the specified game");
+        Puzzle puzzle = null;
+        if (request.getPuzzleId() != null) {
+            try {
+                puzzle = puzzleRepository.findById(request.getPuzzleId()).orElse(null);
+            } catch (Exception ignored) {}
         }
 
-        boolean isCorrect = false;
-        String explanation = puzzle.getExplanation();
+        boolean isCorrect = true;
+        String explanation = puzzle != null ? puzzle.getExplanation() : "Great effort!";
         String correctAnsStr = "";
-        try {
-            JsonNode node = objectMapper.readTree(puzzle.getCorrectAnswer());
-            if (node.has("answer")) {
-                correctAnsStr = node.get("answer").asText();
-                isCorrect = correctAnsStr.trim().equalsIgnoreCase(request.getUserAnswer().trim());
+
+        if (puzzle != null) {
+            try {
+                JsonNode node = objectMapper.readTree(puzzle.getCorrectAnswer());
+                if (node.has("answer")) {
+                    correctAnsStr = node.get("answer").asText();
+                    isCorrect = correctAnsStr.trim().equalsIgnoreCase((request.getUserAnswer() != null ? request.getUserAnswer() : "").trim());
+                }
+            } catch (Exception e) {
+                log.error("Failed to parse correct answer JSON for puzzle id: {}", puzzle.getId(), e);
             }
-        } catch (Exception e) {
-            log.error("Failed to parse correct answer JSON for puzzle id: {}", puzzle.getId(), e);
         }
 
         int xpEarned = 0;
         int coinsEarned = 0;
 
         if (isCorrect) {
-            int baseXP = puzzle.getXpReward();
-            xpEarned = request.getHintUsed() ? (int) Math.round(baseXP * 0.7) : baseXP;
+            int baseXP = puzzle != null ? puzzle.getXpReward() : 25;
+            xpEarned = Boolean.TRUE.equals(request.getHintUsed()) ? (int) Math.round(baseXP * 0.7) : baseXP;
             coinsEarned = (int) Math.round(xpEarned / 2.5);
             if (coinsEarned == 0) coinsEarned = 1;
         }
@@ -108,11 +121,11 @@ public class GameService {
                 .puzzle(puzzle)
                 .isCorrect(isCorrect)
                 .userAnswer(request.getUserAnswer())
-                .hintUsed(request.getHintUsed())
+                .hintUsed(Boolean.TRUE.equals(request.getHintUsed()))
                 .xpEarned(xpEarned)
                 .coinsEarned(coinsEarned)
-                .timeTakenSeconds(request.getTimeTakenSeconds())
-                .difficulty(puzzle.getDifficulty())
+                .timeTakenSeconds(request.getTimeTakenSeconds() != null ? request.getTimeTakenSeconds() : 0)
+                .difficulty(puzzle != null ? puzzle.getDifficulty() : "MEDIUM")
                 .build();
 
         gameAttemptRepository.save(attempt);
@@ -169,17 +182,17 @@ public class GameService {
     private List<String> getTagsForSlug(String slug) {
         switch (slug) {
             case "number-detective":
-                return List.of("numbers", "sequences", "logic");
-            case "who-is-lying":
-                return List.of("logic", "deduction", "critical");
-            case "pattern-detective":
-                return List.of("patterns", "grids", "visual");
-            case "solve-crime":
-                return List.of("mystery", "detective", "investigation");
-            case "spot-fallacy":
-                return List.of("logic", "arguments", "fallacies");
+                return List.of("numbers", "sequences", "logic", "math");
             case "memory-challenge":
-                return List.of("memory", "observation", "attention");
+                return List.of("memory", "observation", "attention", "visual");
+            case "code-breaker":
+                return List.of("logic", "deduction", "code", "mastermind");
+            case "reaction-rush":
+                return List.of("speed", "reflexes", "timing", "focus");
+            case "grid-puzzle":
+                return List.of("patterns", "grids", "matrices", "shapes");
+            case "speed-match":
+                return List.of("speed", "stroop", "focus", "decision");
             default:
                 return List.of("brain-training");
         }

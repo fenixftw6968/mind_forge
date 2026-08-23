@@ -12,7 +12,6 @@ import java.util.List;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class DatabaseSeeder implements CommandLineRunner {
 
     private final GameRepository gameRepository;
@@ -20,6 +19,20 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final AchievementRepository achievementRepository;
     private final MysteryCaseRepository mysteryCaseRepository;
     private final DailyChallengeRepository dailyChallengeRepository;
+
+    public DatabaseSeeder(
+            GameRepository gameRepository,
+            PuzzleRepository puzzleRepository,
+            AchievementRepository achievementRepository,
+            MysteryCaseRepository mysteryCaseRepository,
+            DailyChallengeRepository dailyChallengeRepository
+    ) {
+        this.gameRepository = gameRepository;
+        this.puzzleRepository = puzzleRepository;
+        this.achievementRepository = achievementRepository;
+        this.mysteryCaseRepository = mysteryCaseRepository;
+        this.dailyChallengeRepository = dailyChallengeRepository;
+    }
 
     @Override
     public void run(String... args) throws Exception {
@@ -124,15 +137,11 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     private void seedGamesAndPuzzles() {
-        if (gameRepository.count() > 0) {
-            log.info("Games already seeded.");
-            return;
-        }
+        log.info("Synchronizing games and puzzles for the 6-game lineup...");
 
-        log.info("Seeding games and puzzles...");
-
-        // 1. Number Detective
-        Game numDet = Game.builder()
+        // Define the 6 games
+        List<Game> activeGames = List.of(
+            Game.builder()
                 .slug("number-detective")
                 .title("Number Detective")
                 .description("Crack the code hidden in number sequences. Find the pattern and discover the missing number.")
@@ -143,299 +152,110 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .isUnlocked(true).isNew(false).isFeatured(true)
                 .totalPlayers(12450).completionRate(68)
                 .estimatedTime("3-5 min")
-                .build();
-        numDet = gameRepository.save(numDet);
-
-        // EASY
-        puzzleRepository.save(Puzzle.builder()
-                .game(numDet).title("Arithmetic Sequence 2s").difficulty("EASY").xpReward(10).orderIndex(1)
-                .content("{\"question\": \"2, 4, 6, 8, 10, ?\", \"choices\": [\"11\", \"12\", \"13\", \"14\"], \"hint\": \"Look at the difference between consecutive numbers.\"}")
-                .correctAnswer("{\"answer\": \"12\"}")
-                .explanation("This is a simple arithmetic sequence where each number increases by 2. So: 10 + 2 = 12.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(numDet).title("Multiples of 5").difficulty("EASY").xpReward(10).orderIndex(2)
-                .content("{\"question\": \"5, 10, 15, 20, 25, ?\", \"choices\": [\"26\", \"28\", \"30\", \"35\"], \"hint\": \"Each number is a multiple of 5.\"}")
-                .correctAnswer("{\"answer\": \"30\"}")
-                .explanation("The sequence increases by 5 each time, so: 25 + 5 = 30.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(numDet).title("Square Sequence").difficulty("EASY").xpReward(10).orderIndex(3)
-                .content("{\"question\": \"1, 4, 9, 16, 25, ?\", \"choices\": [\"30\", \"35\", \"36\", \"49\"], \"hint\": \"Think about square numbers (1x1, 2x2, 3x3...).\"}")
-                .correctAnswer("{\"answer\": \"36\"}")
-                .explanation("These are perfect squares: 1^2=1, 2^2=4, 3^2=9, 4^2=16, 5^2=25, 6^2=36.")
-                .build());
-
-        // MEDIUM
-        puzzleRepository.save(Puzzle.builder()
-                .game(numDet).title("Increasing Differences").difficulty("MEDIUM").xpReward(25).orderIndex(4)
-                .content("{\"question\": \"2, 6, 12, 20, 30, ?\", \"choices\": [\"38\", \"40\", \"42\", \"48\"], \"hint\": \"Look at the differences between consecutive numbers (+4, +6, +8...).\"}")
-                .correctAnswer("{\"answer\": \"42\"}")
-                .explanation("The differences between consecutive terms are +4, +6, +8, +10 — increasing by 2 each time. So: 30 + 12 = 42.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(numDet).title("Odd Differences").difficulty("MEDIUM").xpReward(25).orderIndex(5)
-                .content("{\"question\": \"3, 6, 11, 18, 27, ?\", \"choices\": [\"34\", \"36\", \"38\", \"40\"], \"hint\": \"The differences are odd numbers.\"}")
-                .correctAnswer("{\"answer\": \"38\"}")
-                .explanation("The differences are +3, +5, +7, +9 — odd numbers. The next difference is +11: 27 + 11 = 38.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(numDet).title("Fibonacci Growth").difficulty("MEDIUM").xpReward(25).orderIndex(6)
-                .content("{\"question\": \"2, 3, 5, 8, 13, 21, ?\", \"choices\": [\"29\", \"31\", \"34\", \"38\"], \"hint\": \"Add the two previous numbers to get the next.\"}")
-                .correctAnswer("{\"answer\": \"34\"}")
-                .explanation("Fibonacci sequence: each term is the sum of the two preceding terms. 13 + 21 = 34.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(numDet).title("Sequential Differences").difficulty("MEDIUM").xpReward(25).orderIndex(7)
-                .content("{\"question\": \"1, 2, 4, 7, 11, 16, ?\", \"choices\": [\"20\", \"21\", \"22\", \"23\"], \"hint\": \"The differences are +1, +2, +3, +4...\"}")
-                .correctAnswer("{\"answer\": \"22\"}")
-                .explanation("The differences are consecutive integers. The next difference is +6, so: 16 + 6 = 22.")
-                .build());
-
-        // HARD
-        puzzleRepository.save(Puzzle.builder()
-                .game(numDet).title("Cubic Progression").difficulty("HARD").xpReward(50).orderIndex(8)
-                .content("{\"question\": \"1, 8, 27, 64, 125, ?\", \"choices\": [\"150\", \"200\", \"216\", \"225\"], \"hint\": \"Think about cubic numbers (1x1x1, 2x2x2...).\"}")
-                .correctAnswer("{\"answer\": \"216\"}")
-                .explanation("These are perfect cubes: 1^3=1, 2^3=8, 3^3=27, 4^3=64, 5^3=125, 6^3=216.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(numDet).title("Double and Add One").difficulty("HARD").xpReward(50).orderIndex(9)
-                .content("{\"question\": \"2, 5, 11, 23, 47, ?\", \"choices\": [\"85\", \"90\", \"95\", \"100\"], \"hint\": \"Try doubling and adding 1.\"}")
-                .correctAnswer("{\"answer\": \"95\"}")
-                .explanation("Each term is obtained by multiplying the previous term by 2 and adding 1: (47 x 2) + 1 = 95.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(numDet).title("Famous Sequence").difficulty("HARD").xpReward(50).orderIndex(10)
-                .content("{\"question\": \"0, 1, 1, 2, 3, 5, 8, 13, 21, 34, ?\", \"choices\": [\"45\", \"50\", \"55\", \"60\"], \"hint\": \"This is the classic Fibonacci sequence starting from 0.\"}")
-                .correctAnswer("{\"answer\": \"55\"}")
-                .explanation("Classic Fibonacci: 21 + 34 = 55.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(numDet).title("Even Differences").difficulty("HARD").xpReward(50).orderIndex(11)
-                .content("{\"question\": \"1, 3, 7, 13, 21, 31, ?\", \"choices\": [\"40\", \"41\", \"43\", \"45\"], \"hint\": \"The differences are +2, +4, +6, +8, +10...\"}")
-                .correctAnswer("{\"answer\": \"43\"}")
-                .explanation("The differences follow the even numbers sequence (+2, +4, +6...). The next difference is +12, so: 31 + 12 = 43.")
-                .build());
-
-
-        // 2. Who Is Lying
-        Game whoLying = Game.builder()
-                .slug("who-is-lying")
-                .title("Who Is Lying?")
-                .description("Characters make contradictory claims. Use logic to determine who's telling the truth.")
-                .category("Critical Thinking")
-                .icon("🎭")
-                .difficulty("HARD")
-                .xpRewardEasy(10).xpRewardMedium(25).xpRewardHard(50)
-                .isUnlocked(true).isNew(false).isFeatured(true)
-                .totalPlayers(8930).completionRate(45)
-                .build();
-        whoLying = gameRepository.save(whoLying);
-
-        // EASY
-        puzzleRepository.save(Puzzle.builder()
-                .game(whoLying).title("Broken Window").difficulty("EASY").xpReward(10).orderIndex(1)
-                .content("{\"question\": \"Who is lying?\", \"scenario\": \"Three students are questioned about who broke the classroom window.\", \"rule\": \"Exactly one person is lying.\", \"characters\": [{\"id\": \"A\", \"name\": \"Alex\", \"avatar\": \"👦\", \"statement\": \"I did not break the window.\"}, {\"id\": \"B\", \"name\": \"Beth\", \"avatar\": \"👧\", \"statement\": \"Alex is telling the truth.\"}, {\"id\": \"C\", \"name\": \"Chris\", \"avatar\": \"🧒\", \"statement\": \"Alex broke the window.\"}], \"choices\": [{\"id\": \"A\", \"label\": \"Alex is lying\"}, {\"id\": \"B\", \"label\": \"Beth is lying\"}, {\"id\": \"C\", \"label\": \"Chris is lying\"}], \"hint\": \"Assume Alex is telling the truth and see if everything is consistent.\"}")
-                .correctAnswer("{\"answer\": \"C\"}")
-                .explanation("If Alex didn't break the window (Alex is telling the truth), then Beth is also telling the truth (agreeing with Alex). That means Chris is lying. This gives exactly one liar.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(whoLying).title("Stolen Necklace").difficulty("EASY").xpReward(10).orderIndex(2)
-                .content("{\"question\": \"Who is lying?\", \"scenario\": \"Three suspects are questioned about a stolen necklace.\", \"rule\": \"Exactly one person is lying.\", \"characters\": [{\"id\": \"A\", \"name\": \"Alice\", \"avatar\": \"👩\", \"statement\": \"I didn't steal the necklace.\"}, {\"id\": \"B\", \"name\": \"Bob\", \"avatar\": \"👨\", \"statement\": \"Alice is lying.\"}, {\"id\": \"C\", \"name\": \"Carol\", \"avatar\": \"👩‍🦱\", \"statement\": \"Bob is telling the truth.\"}], \"choices\": [{\"id\": \"A\", \"label\": \"Alice is lying\"}, {\"id\": \"B\", \"label\": \"Bob is lying\"}, {\"id\": \"C\", \"label\": \"Carol is lying\"}], \"hint\": \"Try assuming Alice is telling the truth and count the liars.\"}")
-                .correctAnswer("{\"answer\": \"B\"}")
-                .explanation("If Alice is telling the truth, Bob's statement that 'Alice is lying' is false, so Bob lies. Then Carol's statement that 'Bob is telling the truth' is also false, which would mean two liars. So Alice must be lying. This means Bob and Carol are telling the truth, so only Alice lies.")
-                .build());
-
-        // MEDIUM
-        puzzleRepository.save(Puzzle.builder()
-                .game(whoLying).title("Missing Files").difficulty("MEDIUM").xpReward(25).orderIndex(3)
-                .content("{\"question\": \"Who took the files?\", \"scenario\": \"Four colleagues are questioned about missing files.\", \"rule\": \"Exactly one person took the files and is lying. Everyone else tells the truth.\", \"characters\": [{\"id\": \"A\", \"name\": \"Arya\", \"avatar\": \"👩‍💼\", \"statement\": \"Derek took the files.\"}, {\"id\": \"B\", \"name\": \"Ben\", \"avatar\": \"👨‍💼\", \"statement\": \"I didn't take the files.\"}, {\"id\": \"C\", \"name\": \"Clara\", \"avatar\": \"👩‍🔬\", \"statement\": \"Ben is telling the truth.\"}, {\"id\": \"D\", \"name\": \"Derek\", \"avatar\": \"🧑‍💻\", \"statement\": \"Arya is lying.\"}], \"choices\": [{\"id\": \"A\", \"label\": \"Arya took the files\"}, {\"id\": \"B\", \"label\": \"Ben took the files\"}, {\"id\": \"C\", \"label\": \"Clara took the files\"}, {\"id\": \"D\", \"label\": \"Derek took the files\"}], \"hint\": \"Try each person as the culprit and see who creates exactly one liar.\"}")
-                .correctAnswer("{\"answer\": \"D\"}")
-                .explanation("If Derek took the files, Derek lies about Arya lying. Arya says Derek took the files (true), Ben says he didn't (true), and Clara says Ben tells the truth (true). Only Derek lies, which matches the rule.")
-                .build());
-
-        // HARD
-        puzzleRepository.save(Puzzle.builder()
-                .game(whoLying).title("Museum Heist Interrogation").difficulty("HARD").xpReward(50).orderIndex(4)
-                .content("{\"question\": \"Who committed the heist?\", \"scenario\": \"Five suspects are interrogated about a museum heist.\", \"rule\": \"Exactly one agent is guilty and is lying entirely. All others tell the truth.\", \"characters\": [{\"id\": \"A\", \"name\": \"Agent A\", \"avatar\": \"🕵️\", \"statement\": \"I am innocent. C is guilty.\"}, {\"id\": \"B\", \"name\": \"Agent B\", \"avatar\": \"🕵️‍♀️\", \"statement\": \"A is innocent. D is guilty.\"}, {\"id\": \"C\", \"name\": \"Agent C\", \"avatar\": \"🧑\u200D🦯\", \"statement\": \"B is lying. I am innocent.\"}, {\"id\": \"D\", \"name\": \"Agent D\", \"avatar\": \"👤\", \"statement\": \"C is innocent. A committed the heist.\"}, {\"id\": \"E\", \"name\": \"Agent E\", \"avatar\": \"🎩\", \"statement\": \"D is telling the truth. B is innocent.\"}], \"choices\": [{\"id\": \"A\", \"label\": \"Agent A\"}, {\"id\": \"B\", \"label\": \"Agent B\"}, {\"id\": \"C\", \"label\": \"Agent C\"}, {\"id\": \"D\", \"label\": \"Agent D\"}, {\"id\": \"E\", \"label\": \"Agent E\"}], \"hint\": \"Test each agent as the guilty party. The guilty agent's statements must all be false.\"}")
-                .correctAnswer("{\"answer\": \"D\"}")
-                .explanation("If D committed the heist, D lies about everything. A committed the heist is false (D did), and C is innocent is false (meaning C is guilty, which is not true, wait, if C is innocent is true, D lies, so C is guilty. Actually, Agent D committed the heist matches the logic).")
-                .build());
-
-
-        // 3. Pattern Detective
-        Game patDet = Game.builder()
-                .slug("pattern-detective")
-                .title("Pattern Detective")
-                .description("Spot hidden patterns in grids and sequences. Find the missing piece to complete the puzzle.")
-                .category("Patterns")
-                .icon("🧩")
-                .difficulty("MEDIUM")
-                .xpRewardEasy(10).xpRewardMedium(25).xpRewardHard(50)
-                .isUnlocked(true).isNew(false).isFeatured(false)
-                .totalPlayers(15670).completionRate(72)
-                .build();
-        patDet = gameRepository.save(patDet);
-
-        // EASY
-        puzzleRepository.save(Puzzle.builder()
-                .game(patDet).title("Double Row").difficulty("EASY").xpReward(10).orderIndex(1)
-                .content("{\"description\": \"Find the missing number in the grid. Each row follows the same rule.\", \"type\": \"grid\", \"grid\": [[2, 4, 8], [3, 6, 12], [5, 10, \"?\"]], \"choices\": [\"15\", \"20\", \"25\", \"30\"], \"hint\": \"Look at how the numbers in each row relate to each other.\"}")
-                .correctAnswer("{\"answer\": \"20\"}")
-                .explanation("In each row, the second number is double the first, and the third is double the second. So: 5 * 2 = 10, 10 * 2 = 20.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(patDet).title("Sequential Count").difficulty("EASY").xpReward(10).orderIndex(2)
-                .content("{\"description\": \"Discover the pattern and find the missing value.\", \"type\": \"grid\", \"grid\": [[1, 2, 3], [4, 5, 6], [7, 8, \"?\"]], \"choices\": [\"9\", \"10\", \"12\", \"11\"], \"hint\": \"Count sequentially!\"}")
-                .correctAnswer("{\"answer\": \"9\"}")
-                .explanation("Simply sequential counting: 1, 2, 3, 4, 5, 6, 7, 8, 9.")
-                .build());
-
-        // MEDIUM
-        puzzleRepository.save(Puzzle.builder()
-                .game(patDet).title("Perfect Squares").difficulty("MEDIUM").xpReward(25).orderIndex(3)
-                .content("{\"description\": \"Each row and column has a hidden relationship. Find the missing number.\", \"type\": \"grid\", \"grid\": [[1, 4, 9], [16, 25, 36], [49, 64, \"?\"]], \"choices\": [\"72\", \"81\", \"90\", \"100\"], \"hint\": \"These are all related to a single mathematical operation.\"}")
-                .correctAnswer("{\"answer\": \"81\"}")
-                .explanation("All numbers are perfect squares: 1^2, 2^2, 3^2, 4^2, 5^2, 6^2, 7^2, 8^2, 9^2. The missing value is 9^2 = 81.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(patDet).title("Multiplier Columns").difficulty("MEDIUM").xpReward(25).orderIndex(4)
-                .content("{\"description\": \"Find the pattern connecting each row and column.\", \"type\": \"grid\", \"grid\": [[3, 6, 18], [4, 8, 24], [5, 10, \"?\"]], \"choices\": [\"20\", \"25\", \"30\", \"35\"], \"hint\": \"Each column has a fixed multiplier relationship.\"}")
-                .correctAnswer("{\"answer\": \"30\"}")
-                .explanation("In each row: column 2 = column 1 x 2, column 3 = column 1 x 6. So: 5 x 6 = 30.")
-                .build());
-
-        // HARD
-        puzzleRepository.save(Puzzle.builder()
-                .game(patDet).title("Prime Matrix").difficulty("HARD").xpReward(50).orderIndex(5)
-                .content("{\"description\": \"A complex pattern hides in this matrix. Uncover it.\", \"type\": \"grid\", \"grid\": [[2, 3, 5], [7, 11, 13], [17, 19, \"?\"]], \"choices\": [\"21\", \"23\", \"25\", \"29\"], \"hint\": \"These numbers have a very special mathematical property (prime numbers).\"}")
-                .correctAnswer("{\"answer\": \"23\"}")
-                .explanation("All numbers are prime numbers listed in order: 2, 3, 5, 7, 11, 13, 17, 19, 23. The next prime after 19 is 23.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(patDet).title("Fibonacci Grid").difficulty("HARD").xpReward(50).orderIndex(6)
-                .content("{\"description\": \"Find the missing number in this complex sequence.\", \"type\": \"sequence\", \"grid\": [[1, 1, 2], [3, 5, 8], [13, 21, \"?\"]], \"choices\": [\"29\", \"30\", \"34\", \"40\"], \"hint\": \"The entire grid forms a famous sequence.\"}")
-                .correctAnswer("{\"answer\": \"34\"}")
-                .explanation("Fibonacci sequence arranged in a grid: 1, 1, 2, 3, 5, 8, 13, 21, 34.")
-                .build());
-
-
-        // 4. Spot the Fallacy
-        Game spotFal = Game.builder()
-                .slug("spot-fallacy")
-                .title("Spot the Fallacy")
-                .description("Identify flawed arguments and logical fallacies in everyday statements.")
-                .category("Critical Thinking")
-                .icon("⚖️")
-                .difficulty("MEDIUM")
-                .xpRewardEasy(10).xpRewardMedium(25).xpRewardHard(50)
-                .isUnlocked(true).isNew(false).isFeatured(false)
-                .totalPlayers(6780).completionRate(55)
-                .build();
-        spotFal = gameRepository.save(spotFal);
-
-        // Fallacy Puzzles from patternPuzzles.js
-        puzzleRepository.save(Puzzle.builder()
-                .game(spotFal).title("Coffee Success").difficulty("EASY").xpReward(10).orderIndex(1)
-                .content("{\"description\": \"Identify the fallacy.\", \"statement\": \"\\\"9 out of 10 successful people drink coffee. Therefore, drinking coffee makes you successful.\\\"\", \"question\": \"Which logical fallacy does this argument commit?\", \"choices\": [\"Correlation vs Causation\", \"Strawman Fallacy\", \"False Dilemma\", \"Appeal to Emotion\", \"Hasty Generalization\"], \"hint\": \"Does one thing happening alongside another prove it caused the other?\"}")
-                .correctAnswer("{\"answer\": \"Correlation vs Causation\"}")
-                .explanation("Just because two things happen together (successful people + coffee drinking) doesn't mean one causes the other. Correlation does not prove causation.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(spotFal).title("With Us or Against Us").difficulty("EASY").xpReward(10).orderIndex(2)
-                .content("{\"description\": \"Identify the fallacy.\", \"statement\": \"\\\"You're either with us or against us. Since you questioned our policy, you must be our enemy.\\\"\", \"question\": \"Which logical fallacy is present?\", \"choices\": [\"False Dilemma\", \"Strawman Fallacy\", \"Ad Hominem\", \"Bandwagon Fallacy\", \"Appeal to Authority\"], \"hint\": \"Are there really only two possible positions here?\"}")
-                .correctAnswer("{\"answer\": \"False Dilemma\"}")
-                .explanation("This fallacy presents only two options (with us or against us) when in reality there are many other possibilities.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(spotFal).title("Hasty Generalization Exam").difficulty("MEDIUM").xpReward(25).orderIndex(3)
-                .content("{\"description\": \"Identify the fallacy.\", \"statement\": \"\\\"I spoke to three students who found the exam easy. Clearly, the exam was too easy for everyone.\\\"\", \"question\": \"Identify the fallacy:\", \"choices\": [\"Hasty Generalization\", \"False Dilemma\", \"Appeal to Emotion\", \"Slippery Slope\", \"Circular Reasoning\"], \"hint\": \"Is 3 students enough to represent everyone?\"}")
-                .correctAnswer("{\"answer\": \"Hasty Generalization\"}")
-                .explanation("Drawing a broad conclusion from a very small, unrepresentative sample size is a hasty generalization.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(spotFal).title("Slippery Slope Test").difficulty("MEDIUM").xpReward(25).orderIndex(4)
-                .content("{\"description\": \"Identify the fallacy.\", \"statement\": \"\\\"If we allow students to redo one test, soon they'll expect to redo every test, and eventually nobody will study anymore.\\\"\", \"question\": \"Which fallacy does this commit?\", \"choices\": [\"Slippery Slope\", \"Ad Hominem\", \"Strawman Fallacy\", \"Bandwagon Fallacy\", \"Appeal to Nature\"], \"hint\": \"Does one small concession necessarily lead to a catastrophic chain of events?\"}")
-                .correctAnswer("{\"answer\": \"Slippery Slope\"}")
-                .explanation("This assumes one small action will inevitably lead to extreme negative consequences without providing evidence.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(spotFal).title("False Authority Cardiology").difficulty("HARD").xpReward(50).orderIndex(5)
-                .content("{\"description\": \"Identify the fallacy.\", \"statement\": \"\\\"Dr. Patel, a renowned cardiologist, says climate change is a hoax. He's a doctor — we should believe him.\\\"\", \"question\": \"Identify the primary fallacy:\", \"choices\": [\"Appeal to False Authority\", \"Ad Hominem\", \"Strawman Fallacy\", \"Hasty Generalization\", \"False Dilemma\"], \"hint\": \"Is the expert's authority relevant to the specific claim?\"}")
-                .correctAnswer("{\"answer\": \"Appeal to False Authority\"}")
-                .explanation("Citing an expert outside their area of expertise (a cardiologist on climate science) is an appeal to false authority.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(spotFal).title("Traditional Diet").difficulty("HARD").xpReward(50).orderIndex(6)
-                .content("{\"description\": \"Identify the fallacy.\", \"statement\": \"\\\"People have eaten meat for thousands of years, so veganism must be unnatural and wrong.\\\"\", \"question\": \"Which fallacy best describes this argument?\", \"choices\": [\"Appeal to Tradition\", \"False Dilemma\", \"Hasty Generalization\", \"Slippery Slope\", \"Ad Hominem\"], \"hint\": \"Does something being old make it right?\"}")
-                .correctAnswer("{\"answer\": \"Appeal to Tradition\"}")
-                .explanation("Arguing that something is correct simply because it has been done for a long time is the appeal to tradition fallacy.")
-                .build());
-
-
-        // 5. Memory Challenge
-        Game memChal = Game.builder()
+                .build(),
+            Game.builder()
                 .slug("memory-challenge")
                 .title("Memory Challenge")
                 .description("Observe the scene, then recall every detail. Train your observation and memory skills.")
                 .category("Memory")
-                .icon("👁️")
+                .icon("🧠")
                 .difficulty("EASY")
-                .xpRewardEasy(10).xpRewardMedium(25).xpRewardHard(50)
+                .xpRewardEasy(15).xpRewardMedium(25).xpRewardHard(50)
                 .isUnlocked(true).isNew(false).isFeatured(false)
                 .totalPlayers(18900).completionRate(80)
-                .build();
-        memChal = gameRepository.save(memChal);
-
-        // Memory Scenes from mysteryCases.js
-        puzzleRepository.save(Puzzle.builder()
-                .game(memChal).title("The Suspect's Room").difficulty("EASY").xpReward(10).orderIndex(1)
-                .content("{\"description\": \"Study this crime scene carefully. You have 8 seconds.\", \"revealTime\": 8, \"items\": [{\"emoji\": \"📱\", \"label\": \"Red Phone\", \"color\": \"red\"}, {\"emoji\": \"🔑\", \"label\": \"3 Keys\", \"count\": 3, \"color\": \"gold\"}, {\"emoji\": \"📚\", \"label\": \"Blue Book\", \"color\": \"blue\"}, {\"emoji\": \"🕯️\", \"label\": \"Lit Candle\", \"color\": \"white\"}, {\"emoji\": \"🧤\", \"label\": \"Black Glove\", \"color\": \"black\"}, {\"emoji\": \"💼\", \"label\": \"Brown Briefcase\", \"color\": \"brown\"}], \"questions\": [{\"id\": \"q1\", \"question\": \"What color was the phone?\", \"choices\": [\"Blue\", \"Red\", \"Black\", \"White\"], \"answer\": \"Red\"}, {\"id\": \"q2\", \"question\": \"How many keys were on the table?\", \"choices\": [\"1\", \"2\", \"3\", \"4\"], \"answer\": \"3\"}, {\"id\": \"q3\", \"question\": \"What color was the glove?\", \"choices\": [\"Brown\", \"Red\", \"Black\", \"Blue\"], \"answer\": \"Black\"}]}")
-                .correctAnswer("{\"answer\": \"correct\"}")
-                .explanation("The phone was red, there were 3 golden keys, and the glove was black.")
-                .build());
-
-        puzzleRepository.save(Puzzle.builder()
-                .game(memChal).title("The Abandoned Office").difficulty("MEDIUM").xpReward(25).orderIndex(2)
-                .content("{\"description\": \"Memorize every detail in this office. You have 6 seconds.\", \"revealTime\": 6, \"items\": [{\"emoji\": \"☕\", \"label\": \"Coffee Cup\", \"color\": \"brown\"}, {\"emoji\": \"📎\", \"label\": \"Paper Clips\", \"count\": 5}, {\"emoji\": \"🖊️\", \"label\": \"Green Pen\", \"color\": \"green\"}, {\"emoji\": \"📁\", \"label\": \"Yellow Folder\", \"color\": \"yellow\"}, {\"emoji\": \"🔦\", \"label\": \"Flashlight\", \"color\": \"grey\"}, {\"emoji\": \"💊\", \"label\": \"Medicine Bottle\", \"color\": \"white\"}, {\"emoji\": \"🗝️\", \"label\": \"Old Key\", \"color\": \"brass\"}, {\"emoji\": \"📰\", \"label\": \"Newspaper\", \"color\": \"white\"}], \"questions\": [{\"id\": \"q1\", \"question\": \"What color was the pen?\", \"choices\": [\"Blue\", \"Red\", \"Green\", \"Black\"], \"answer\": \"Green\"}, {\"id\": \"q2\", \"question\": \"How many paper clips were there?\", \"choices\": [\"3\", \"4\", \"5\", \"6\"], \"answer\": \"5\"}, {\"id\": \"q3\", \"question\": \"What color was the folder?\", \"choices\": [\"Red\", \"Yellow\", \"Blue\", \"Green\"], \"answer\": \"Yellow\"}, {\"id\": \"q4\", \"question\": \"Which of these was NOT in the scene?\", \"choices\": [\"Flashlight\", \"Medicine Bottle\", \"Scissors\", \"Newspaper\"], \"answer\": \"Scissors\"}]}")
-                .correctAnswer("{\"answer\": \"correct\"}")
-                .explanation("The pen was green, there were 5 paper clips, the folder was yellow, and scissors were not in the scene.")
-                .build());
-
-
-        // 6. Solve Crime
-        Game solveCrime = Game.builder()
-                .slug("solve-crime")
-                .title("Solve the Crime")
-                .description("Step into a real mystery. Investigate suspects, analyze evidence, and crack the case.")
-                .category("Mystery")
-                .icon("🔍")
-                .difficulty("HARD")
-                .xpRewardEasy(10).xpRewardMedium(25).xpRewardHard(50)
+                .estimatedTime("2-4 min")
+                .build(),
+            Game.builder()
+                .slug("code-breaker")
+                .title("Code Breaker")
+                .description("Use logical clues to deduce the secret code. Test your deductive reasoning and elimination skills.")
+                .category("Logic")
+                .icon("🔐")
+                .difficulty("MEDIUM")
+                .xpRewardEasy(15).xpRewardMedium(30).xpRewardHard(60)
                 .isUnlocked(true).isNew(true).isFeatured(true)
-                .totalPlayers(5230).completionRate(38)
-                .build();
-        gameRepository.save(solveCrime);
+                .totalPlayers(9420).completionRate(62)
+                .estimatedTime("3-5 min")
+                .build(),
+            Game.builder()
+                .slug("reaction-rush")
+                .title("Reaction Rush")
+                .description("Test your speed, focus, and reaction time. Wait for the green signal and click as fast as possible.")
+                .category("Reaction")
+                .icon("⚡")
+                .difficulty("MEDIUM")
+                .xpRewardEasy(10).xpRewardMedium(20).xpRewardHard(40)
+                .isUnlocked(true).isNew(true).isFeatured(false)
+                .totalPlayers(14200).completionRate(85)
+                .estimatedTime("1-2 min")
+                .build(),
+            Game.builder()
+                .slug("grid-puzzle")
+                .title("Grid Puzzle")
+                .description("Find the missing piece and complete the pattern across symbolic, shape, and numeric matrices.")
+                .category("Patterns")
+                .icon("🧩")
+                .difficulty("MEDIUM")
+                .xpRewardEasy(15).xpRewardMedium(25).xpRewardHard(50)
+                .isUnlocked(true).isNew(true).isFeatured(false)
+                .totalPlayers(11300).completionRate(71)
+                .estimatedTime("3-5 min")
+                .build(),
+            Game.builder()
+                .slug("speed-match")
+                .title("Speed Match")
+                .description("Make fast decisions and test your concentration with rapid Stroop and color-word matching.")
+                .category("Decision Making")
+                .icon("🎯")
+                .difficulty("HARD")
+                .xpRewardEasy(15).xpRewardMedium(30).xpRewardHard(55)
+                .isUnlocked(true).isNew(true).isFeatured(true)
+                .totalPlayers(16750).completionRate(64)
+                .estimatedTime("2-3 min")
+                .build()
+        );
 
-        log.info("Seeding games and puzzles complete.");
+        for (Game g : activeGames) {
+            Game existing = gameRepository.findBySlug(g.getSlug()).orElse(null);
+            if (existing == null) {
+                gameRepository.save(g);
+            } else {
+                existing.setTitle(g.getTitle());
+                existing.setDescription(g.getDescription());
+                existing.setCategory(g.getCategory());
+                existing.setIcon(g.getIcon());
+                existing.setDifficulty(g.getDifficulty());
+                existing.setXpRewardEasy(g.getXpRewardEasy());
+                existing.setXpRewardMedium(g.getXpRewardMedium());
+                existing.setXpRewardHard(g.getXpRewardHard());
+                existing.setIsUnlocked(g.getIsUnlocked());
+                existing.setIsNew(g.getIsNew());
+                existing.setIsFeatured(g.getIsFeatured());
+                existing.setTotalPlayers(g.getTotalPlayers());
+                existing.setCompletionRate(g.getCompletionRate());
+                existing.setEstimatedTime(g.getEstimatedTime());
+                gameRepository.save(existing);
+            }
+        }
+
+        // Clean up obsolete games from database safely
+        List<String> obsoleteSlugs = List.of("who-is-lying", "pattern-detective", "spot-the-fallacy", "solve-crime");
+        for (String oldSlug : obsoleteSlugs) {
+            gameRepository.findBySlug(oldSlug).ifPresent(oldGame -> {
+                try {
+                    gameRepository.delete(oldGame);
+                } catch (Exception e) {
+                    try {
+                        oldGame.setIsUnlocked(false);
+                        gameRepository.save(oldGame);
+                    } catch (Exception ex) {
+                        log.debug("Could not deactivate obsolete game {}", oldSlug);
+                    }
+                }
+            });
+        }
+
+        log.info("Games synchronization complete.");
     }
 
     private void seedMysteryCases() {

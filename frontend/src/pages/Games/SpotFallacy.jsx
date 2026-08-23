@@ -1,62 +1,72 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Lightbulb, CheckCircle, XCircle, Star } from 'lucide-react';
+import { Lightbulb, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useGame } from '../../context/GameContext';
 import XPPopup from '../../components/XPPopup/XPPopup';
+import DifficultySelector from '../../components/DifficultySelector/DifficultySelector';
+import GameProgress from '../../components/GameProgress/GameProgress';
+import GameResults from '../../components/GameResults/GameResults';
+import { getDailyQuestionSet } from '../../services/dailyQuestionService';
+import { spotFallacyQuestions } from '../../data/spotFallacyQuestions';
 import api from '../../utils/api';
+
+const XP_PER_DIFFICULTY = { EASY: 15, MEDIUM: 25, HARD: 50 };
 
 export default function SpotFallacy() {
   const { refreshUser } = useAuth();
   const { xpPopups, showXPPopup } = useGame();
   const navigate = useNavigate();
 
-  const [started, setStarted]   = useState(false);
-  const [puzzles, setPuzzles]   = useState([]);
-  const [index, setIndex]       = useState(0);
-  const [selected, setSelected] = useState(null);
-  const [hintUsed, setHintUsed] = useState(false);
-  const [showResult, setShowResult] = useState(false);
-  const [score, setScore]       = useState(0);
-  const [totalXP, setTotalXP]   = useState(0);
+  const [difficulty, setDifficulty]     = useState(null);
+  const [puzzles, setPuzzles]           = useState([]);
+  const [index, setIndex]               = useState(0);
+  const [selected, setSelected]         = useState(null);
+  const [hintUsed, setHintUsed]         = useState(false);
+  const [showResult, setShowResult]     = useState(false);
+  const [score, setScore]               = useState(0);
+  const [totalXP, setTotalXP]           = useState(0);
   const [showComplete, setShowComplete] = useState(false);
-  const [latestUser, setLatestUser] = useState(null);
+  const [latestUser, setLatestUser]     = useState(null);
 
-  useEffect(() => {
-    const fetchPuzzles = async () => {
-      try {
-        const res = await api.get('/api/games/spot-fallacy/puzzles');
-        const parsed = res.data.map(p => {
-          const content = typeof p.content === 'string' ? JSON.parse(p.content) : p.content;
-          const ans = typeof p.correctAnswer === 'string' ? JSON.parse(p.correctAnswer) : p.correctAnswer;
-          return {
-            ...p,
-            statement: content.statement,
-            question: content.question,
-            choices: content.choices,
-            hint: content.hint,
-            answer: ans.answer,
-            description: content.description
-          };
-        });
-        setPuzzles(parsed);
-      } catch (e) {
-        console.error("Failed to fetch fallacy puzzles", e);
-      }
-    };
-    fetchPuzzles();
-  }, []);
+  const puzzle = puzzles[index];
 
-  const puzzle  = puzzles[index];
+  const startGame = (diff) => {
+    const selectedList = getDailyQuestionSet({
+      gameType: 'spot-fallacy',
+      difficulty: diff,
+      questionBank: spotFallacyQuestions,
+      count: 10,
+      userShuffle: true
+    });
 
-  const startGame = () => setStarted(true);
+    setPuzzles(selectedList);
+    setDifficulty(diff);
+    setIndex(0);
+    setScore(0);
+    setTotalXP(0);
+    setSelected(null);
+    setHintUsed(false);
+    setShowResult(false);
+    setShowComplete(false);
+    setLatestUser(null);
+  };
 
   const handleAnswer = async (choice) => {
     if (showResult) return;
     setSelected(choice);
-    const isCorrect = choice === puzzle.answer;
+    const isCorrect = choice === puzzle.correctAnswer;
     setShowResult(true);
+
+    const baseXP = XP_PER_DIFFICULTY[(puzzle.difficulty || difficulty || 'MEDIUM').toUpperCase()] || 25;
+    const earned = isCorrect ? (hintUsed ? Math.floor(baseXP * 0.7) : baseXP) : 0;
+
+    if (isCorrect) {
+      setScore(s => s + 1);
+      setTotalXP(t => t + earned);
+      showXPPopup(earned);
+    }
 
     try {
       const res = await api.post('/api/games/spot-fallacy/attempts', {
@@ -66,18 +76,11 @@ export default function SpotFallacy() {
         timeTakenSeconds: 15
       });
 
-      if (isCorrect) {
-        const earned = res.data.xpEarned;
-        setScore(s => s + 1);
-        setTotalXP(t => t + earned);
-        showXPPopup(earned);
-      }
-
-      if (res.data.user) {
+      if (res.data?.user) {
         setLatestUser(res.data.user);
       }
     } catch (e) {
-      console.error("Failed to submit attempt", e);
+      // Offline fallback
     }
   };
 
@@ -89,129 +92,148 @@ export default function SpotFallacy() {
       setShowComplete(true);
     } else {
       setIndex(i => i + 1);
-      setSelected(null); setHintUsed(false); setShowResult(false);
+      setSelected(null);
+      setHintUsed(false);
+      setShowResult(false);
     }
   };
 
-  if (puzzles.length === 0) {
+  if (!difficulty) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a0f', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: '#52526a' }}>Loading Puzzles...</div>
-      </div>
-    );
-  }
-
-  if (!started) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0a0a0f', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ maxWidth: '560px', width: '100%', padding: '2rem' }}>
-          <button onClick={() => navigate('/games')} style={{ background: 'none', border: 'none', color: '#a1a1b5', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem', fontSize: '0.875rem' }}>
-            <ArrowLeft size={15} /> Back to Games
-          </button>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>⚖️</div>
-            <h1 className="font-display" style={{ fontSize: '2rem', fontWeight: 700, color: 'white', marginBottom: '0.75rem' }}>Spot the Fallacy</h1>
-            <p style={{ color: '#a1a1b5', lineHeight: 1.7, marginBottom: '2rem' }}>
-              Read each argument carefully. Identify the logical fallacy that makes the argument flawed. 
-              <strong style={{ color: '#a78bfa' }}> {puzzles.length} challenges</strong> await.
-            </p>
-            <div style={{ background: '#13131f', border: '1px solid rgba(139,92,246,0.15)', borderRadius: '1rem', padding: '1.25rem', textAlign: 'left', marginBottom: '2rem' }}>
-              <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#8b5cf6', marginBottom: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Fallacies You'll Encounter</p>
-              {['Correlation vs Causation', 'False Dilemma', 'Hasty Generalization', 'Slippery Slope', 'Appeal to False Authority', 'Appeal to Tradition'].map((f, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.4rem 0', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: '0.85rem', color: '#a1a1b5' }}>
-                  <span style={{ color: '#8b5cf6', fontSize: '0.7rem' }}>▸</span> {f}
-                </div>
-              ))}
-            </div>
-            <button onClick={startGame} className="btn-primary" style={{ width: '100%', justifyContent: 'center', fontSize: '1rem' }}>
-              Start Challenge →
-            </button>
-          </motion.div>
-        </div>
-      </div>
+      <DifficultySelector
+        title="Spot the Fallacy"
+        subtitle="Deconstruct deceptive arguments and uncover the underlying logical fallacy."
+        icon="⚖️"
+        onSelectDifficulty={(diff) => startGame(diff)}
+        onBack={() => navigate('/games')}
+        customTiers={[
+          { id: 'EASY', label: 'Easy', icon: '🌱', color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', xp: '+15 XP', time: 'Relaxed', desc: 'Classic fallacies: Ad Hominem, Straw Man, False Dilemma' },
+          { id: 'MEDIUM', label: 'Medium', icon: '🧠', color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', xp: '+25 XP', time: 'Moderate', desc: 'Composition, Equivocation, Tu Quoque, and Texas Sharpshooter' },
+          { id: 'HARD', label: 'Hard', icon: '🔥', color: '#E11D48', bg: '#FFF1F2', border: '#FECDD3', xp: '+50 XP', time: 'Intense', desc: 'Sunk Cost, Fallacy Fallacy, Continuum Fallacy, and Genetic Fallacy' }
+        ]}
+      />
     );
   }
 
   if (showComplete) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a0f', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={{ textAlign: 'center', maxWidth: '440px', padding: '2rem' }}>
-          <div style={{ fontSize: '5rem', marginBottom: '1.5rem' }}>{score >= puzzles.length * 0.7 ? '🏆' : '💪'}</div>
-          <h1 className="font-display" style={{ fontSize: '2rem', fontWeight: 700, color: 'white', marginBottom: '0.5rem' }}>
-            {score >= puzzles.length * 0.7 ? 'Logic Legend!' : 'Keep Learning!'}
-          </h1>
-          <p style={{ color: '#a1a1b5', marginBottom: '2rem' }}>{score}/{puzzles.length} correct</p>
-          <div style={{ background: '#13131f', border: '1px solid rgba(139,92,246,0.2)', borderRadius: '1rem', padding: '1.5rem', marginBottom: '2rem', display: 'flex', justifyContent: 'space-around' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div className="font-display" style={{ fontSize: '1.75rem', fontWeight: 700, color: '#a78bfa' }}>+{totalXP}</div>
-              <div style={{ fontSize: '0.75rem', color: '#52526a' }}>XP</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div className="font-display" style={{ fontSize: '1.75rem', fontWeight: 700, color: '#f59e0b' }}>+{Math.floor(totalXP / 2.5)}</div>
-              <div style={{ fontSize: '0.75rem', color: '#52526a' }}>Coins</div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
-            <button onClick={() => { setStarted(false); setIndex(0); setScore(0); setTotalXP(0); setSelected(null); setHintUsed(false); setShowResult(false); setShowComplete(false); }} className="btn-primary">Play Again</button>
-            <button onClick={() => navigate('/games')} className="btn-secondary">Games</button>
-          </div>
-        </motion.div>
-      </div>
+      <GameResults
+        score={score}
+        total={puzzles.length}
+        xpEarned={totalXP}
+        gameTitle="Spot the Fallacy"
+        onPlayAgain={() => startGame(difficulty)}
+      />
     );
   }
 
-  return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0f', paddingTop: '64px' }}>
-      <XPPopup popups={xpPopups} />
-      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <button onClick={() => setStarted(false)} style={{ background: 'none', border: 'none', color: '#a1a1b5', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
-            <ArrowLeft size={15} /> Exit
-          </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '0.8rem', color: '#52526a' }}>Q {index + 1}/{puzzles.length}</span>
-            <Star size={13} color="#f59e0b" fill="#f59e0b" />
-            <span style={{ fontSize: '0.8rem', color: '#f59e0b' }}>Score: {score}</span>
-          </div>
-        </div>
+  if (!puzzle) return null;
 
-        <div style={{ height: '3px', background: 'rgba(255,255,255,0.05)', borderRadius: '999px', marginBottom: '2rem', overflow: 'hidden' }}>
-          <motion.div style={{ height: '100%', background: 'linear-gradient(90deg, #8b5cf6, #06b6d4)', borderRadius: '999px' }} animate={{ width: `${((index + 1) / puzzles.length) * 100}%` }} />
-        </div>
+  const optionsList = puzzle.options || puzzle.choices || [];
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px' }}>
+      <XPPopup popups={xpPopups} />
+      <div style={{ maxWidth: '750px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+        
+        {/* Header Progress */}
+        <GameProgress
+          current={index + 1}
+          total={puzzles.length}
+          score={score}
+          difficulty={difficulty}
+          onExit={() => setDifficulty(null)}
+          onMidnightRollover={() => startGame(difficulty)}
+        />
 
         <AnimatePresence mode="wait">
-          <motion.div key={index} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.3 }}>
-            <div style={{ background: '#13131f', border: '1px solid rgba(139,92,246,0.15)', borderRadius: '1.5rem', padding: '2rem', marginBottom: '1.25rem' }}>
-              <div style={{ display: 'flex', align: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
-                <span style={{ padding: '0.25rem 0.65rem', borderRadius: '999px', background: puzzle.difficulty === 'EASY' ? 'rgba(16,185,129,0.12)' : puzzle.difficulty === 'MEDIUM' ? 'rgba(245,158,11,0.12)' : 'rgba(244,63,94,0.12)', color: puzzle.difficulty === 'EASY' ? '#10b981' : puzzle.difficulty === 'MEDIUM' ? '#f59e0b' : '#f43f5e', fontSize: '0.7rem', fontWeight: 600, border: `1px solid ${puzzle.difficulty === 'EASY' ? 'rgba(16,185,129,0.25)' : puzzle.difficulty === 'MEDIUM' ? 'rgba(245,158,11,0.25)' : 'rgba(244,63,94,0.25)'}` }}>{puzzle.difficulty}</span>
-              </div>
-
-              <blockquote style={{ fontSize: '1.05rem', color: '#e1e1f0', lineHeight: 1.75, fontStyle: 'italic', padding: '1.25rem 1.5rem', background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.12)', borderLeft: '3px solid #8b5cf6', borderRadius: '0 0.75rem 0.75rem 0', marginBottom: '1.5rem' }}>
-                {puzzle.statement}
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '1.25rem', padding: '2rem', marginBottom: '1.25rem', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.05)' }}>
+              
+              {/* Argument Statement */}
+              <p style={{ fontSize: '0.75rem', color: '#4F46E5', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
+                The Argument
+              </p>
+              <blockquote
+                style={{
+                  fontSize: '1.1rem',
+                  color: '#1E293B',
+                  lineHeight: 1.7,
+                  fontStyle: 'italic',
+                  padding: '1.25rem 1.5rem',
+                  background: '#F8FAFC',
+                  border: '1px solid #E2E8F0',
+                  borderLeft: '4px solid #6366F1',
+                  borderRadius: '0 0.75rem 0.75rem 0',
+                  marginBottom: '1.5rem'
+                }}
+              >
+                "{puzzle.statement}"
               </blockquote>
 
-              <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#a1a1b5', marginBottom: '1rem' }}>{puzzle.question}</p>
+              <p style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A', marginBottom: '1rem' }}>
+                {puzzle.question || "Which logical fallacy is committed in this statement?"}
+              </p>
 
-              {hintUsed && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', gap: '0.5rem', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '0.75rem', padding: '0.85rem 1rem', marginBottom: '1rem' }}>
-                  <Lightbulb size={15} color="#f59e0b" style={{ flexShrink: 0 }} />
-                  <p style={{ fontSize: '0.85rem', color: '#fbbf24' }}>{puzzle.hint}</p>
+              {/* Hint */}
+              {hintUsed && puzzle.hint && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', gap: '0.5rem', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '0.75rem', padding: '0.85rem 1rem', marginBottom: '1rem' }}>
+                  <Lightbulb size={16} color="#D97706" style={{ flexShrink: 0 }} />
+                  <p style={{ fontSize: '0.85rem', color: '#B45309', fontWeight: 500 }}>{puzzle.hint}</p>
                 </motion.div>
               )}
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
-                {puzzle.choices.map(choice => {
-                  let borderColor = 'rgba(255,255,255,0.06)';
-                  let bg = 'rgba(255,255,255,0.02)';
-                  let color = '#a1a1b5';
-                  if (showResult && choice === puzzle.answer) { borderColor = '#10b981'; bg = 'rgba(16,185,129,0.1)'; color = '#10b981'; }
-                  else if (selected === choice && showResult) { borderColor = '#f43f5e'; bg = 'rgba(244,63,94,0.1)'; color = '#f43f5e'; }
-                  else if (selected === choice) { borderColor = '#8b5cf6'; bg = 'rgba(139,92,246,0.1)'; color = '#a78bfa'; }
+              {/* Choices */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                {optionsList.map(choice => {
+                  let borderColor = '#E2E8F0';
+                  let bg = '#FFFFFF';
+                  let color = '#334155';
+
+                  if (showResult && choice === puzzle.correctAnswer) {
+                    borderColor = '#A7F3D0';
+                    bg = '#ECFDF5';
+                    color = '#047857';
+                  } else if (selected === choice && showResult) {
+                    borderColor = '#FECDD3';
+                    bg = '#FFF1F2';
+                    color = '#BE123C';
+                  } else if (selected === choice) {
+                    borderColor = '#C7D2FE';
+                    bg = '#EEF2FF';
+                    color = '#4338CA';
+                  }
+
                   return (
-                    <button key={choice} onClick={() => handleAnswer(choice)} disabled={showResult}
-                      style={{ padding: '0.85rem 1.1rem', borderRadius: '0.75rem', border: `1px solid ${borderColor}`, background: bg, color, textAlign: 'left', cursor: showResult ? 'default' : 'pointer', fontSize: '0.875rem', fontWeight: 500, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      {showResult && choice === puzzle.answer && <CheckCircle size={14} color="#10b981" />}
-                      {showResult && selected === choice && choice !== puzzle.answer && <XCircle size={14} color="#f43f5e" />}
+                    <button
+                      key={choice}
+                      onClick={() => handleAnswer(choice)}
+                      disabled={showResult}
+                      style={{
+                        padding: '0.95rem 1.25rem',
+                        borderRadius: '0.75rem',
+                        border: `1px solid ${borderColor}`,
+                        background: bg,
+                        color,
+                        textAlign: 'left',
+                        cursor: showResult ? 'default' : 'pointer',
+                        fontSize: '0.925rem',
+                        fontWeight: 600,
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                        transition: 'all 0.15s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem'
+                      }}
+                    >
+                      {showResult && choice === puzzle.correctAnswer && <CheckCircle size={17} color="#059669" />}
+                      {showResult && selected === choice && choice !== puzzle.correctAnswer && <XCircle size={17} color="#E11D48" />}
                       {choice}
                     </button>
                   );
@@ -219,13 +241,14 @@ export default function SpotFallacy() {
               </div>
             </div>
 
+            {/* Explanation */}
             {showResult && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <div style={{ padding: '1rem 1.25rem', borderRadius: '0.85rem', background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.15)', marginBottom: '1rem' }}>
-                  <p style={{ fontSize: '0.7rem', fontWeight: 700, color: '#06b6d4', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.35rem' }}>Why This Is a Fallacy</p>
-                  <p style={{ fontSize: '0.875rem', color: '#a1a1b5', lineHeight: 1.7 }}>{puzzle.explanation}</p>
+                <div style={{ padding: '1rem 1.25rem', borderRadius: '0.85rem', background: '#F8FAFC', border: '1px solid #E2E8F0', marginBottom: '1rem' }}>
+                  <p style={{ fontSize: '0.725rem', fontWeight: 800, color: '#0284C7', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '0.35rem' }}>Logical Fallacy Breakdown</p>
+                  <p style={{ fontSize: '0.875rem', color: '#334155', lineHeight: 1.6, fontWeight: 500 }}>{puzzle.explanation}</p>
                 </div>
-                <button onClick={handleNext} className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                <button onClick={handleNext} className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}>
                   {index + 1 >= puzzles.length ? 'See Results 🏆' : 'Next Fallacy →'}
                 </button>
               </motion.div>
@@ -233,9 +256,9 @@ export default function SpotFallacy() {
 
             {!showResult && (
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                {!hintUsed && (
-                  <button onClick={() => setHintUsed(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', color: '#f59e0b', borderRadius: '0.75rem', padding: '0.5rem 1rem', cursor: 'pointer', fontSize: '0.8rem' }}>
-                    <Lightbulb size={13} /> Hint (-30% XP)
+                {!hintUsed && puzzle.hint && (
+                  <button onClick={() => setHintUsed(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#FFFBEB', border: '1px solid #FDE68A', color: '#B45309', borderRadius: '0.75rem', padding: '0.5rem 1rem', cursor: 'pointer', fontSize: '0.825rem', fontWeight: 600, boxShadow: '0 1px 2px rgba(0,0,0,0.03)' }}>
+                    <Lightbulb size={14} /> Hint (-30% XP)
                   </button>
                 )}
               </div>

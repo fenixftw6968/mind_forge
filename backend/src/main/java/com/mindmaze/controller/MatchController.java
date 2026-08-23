@@ -1,0 +1,80 @@
+package com.mindmaze.controller;
+
+import com.mindmaze.dto.MatchDto;
+import com.mindmaze.dto.MatchSubmitRequest;
+import com.mindmaze.entity.User;
+import com.mindmaze.service.MatchService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/matches")
+@RequiredArgsConstructor
+public class MatchController {
+
+    private final MatchService matchService;
+
+    @PostMapping("/queue")
+    public ResponseEntity<MatchDto> queueForMatch(
+            @RequestParam String gameSlug,
+            @AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(matchService.queueForMatch(user.getId(), gameSlug));
+    }
+
+    @PostMapping("/queue/cancel")
+    public ResponseEntity<Void> cancelQueue(
+            @RequestParam String gameSlug,
+            @AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        matchService.cancelQueue(user.getId(), gameSlug);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/invite")
+    public ResponseEntity<MatchDto> inviteFriend(
+            @RequestBody Map<String, Object> body,
+            @AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        Long friendId = Long.valueOf(body.get("friendId").toString());
+        String gameSlug = (String) body.get("gameSlug");
+        return ResponseEntity.ok(matchService.createFriendMatch(user.getId(), friendId, gameSlug));
+    }
+
+    @PostMapping("/{matchId}/accept")
+    public ResponseEntity<MatchDto> acceptFriendMatch(
+            @PathVariable String matchId,
+            @AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(matchService.acceptFriendMatch(matchId, user.getId()));
+    }
+
+    @GetMapping("/{matchId}")
+    public ResponseEntity<MatchDto> getMatchStatus(
+            @PathVariable String matchId,
+            @AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(matchService.getMatchStatus(matchId));
+    }
+
+    @PostMapping("/{matchId}/submit")
+    public ResponseEntity<MatchDto> submitMatch(
+            @PathVariable String matchId,
+            @RequestBody MatchSubmitRequest request,
+            @AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(matchService.submitMatchResult(matchId, user.getId(), request));
+    }
+
+    @GetMapping("/recent")
+    public ResponseEntity<List<MatchDto>> getRecentMatches(
+            @AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(matchService.getRecentMatches(user.getId()));
+    }
+}

@@ -6,11 +6,11 @@ export default function XPBar({ current, total, level, animated = true }) {
   return (
     <div style={{ width: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-        <span style={{ fontSize: '0.75rem', color: '#a1a1b5', fontWeight: 500 }}>
+        <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>
           Level {level}
         </span>
-        <span style={{ fontSize: '0.75rem', color: '#a1a1b5' }}>
-          <span style={{ color: '#a78bfa', fontWeight: 600 }}>{current.toLocaleString()}</span>
+        <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
+          <span style={{ color: '#4F46E5', fontWeight: 700 }}>{current.toLocaleString()}</span>
           {' / '}{total.toLocaleString()} XP
         </span>
       </div>
@@ -25,7 +25,7 @@ export default function XPBar({ current, total, level, animated = true }) {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.3rem' }}>
-        <span style={{ fontSize: '0.7rem', color: '#52526a' }}>{pct}%</span>
+        <span style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600 }}>{pct}%</span>
       </div>
     </div>
   );
