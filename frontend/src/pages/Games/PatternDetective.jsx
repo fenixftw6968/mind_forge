@@ -53,8 +53,15 @@ export default function PatternDetective() {
     setLatestUser(null);
   };
 
+  // Guarantee clean answer state on every question index change
+  useEffect(() => {
+    setSelected(null);
+    setHintUsed(false);
+    setShowResult(false);
+  }, [index, puzzles]);
+
   const handleAnswer = async (choice) => {
-    if (showResult) return;
+    if (showResult || selected) return;
     const isCorrect = choice === puzzle.correctAnswer;
     setSelected(choice);
     setShowResult(true);
@@ -85,6 +92,9 @@ export default function PatternDetective() {
   };
 
   const handleNext = () => {
+    setSelected(null);
+    setHintUsed(false);
+    setShowResult(false);
     if (index + 1 >= puzzles.length) {
       if (latestUser) {
         refreshUser(latestUser);
@@ -92,9 +102,6 @@ export default function PatternDetective() {
       setShowComplete(true);
     } else {
       setIndex(i => i + 1);
-      setSelected(null);
-      setHintUsed(false);
-      setShowResult(false);
     }
   };
 

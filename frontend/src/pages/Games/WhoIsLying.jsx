@@ -53,6 +53,13 @@ export default function WhoIsLying() {
     setLatestUser(null);
   };
 
+  // Guarantee clean answer state on every question index change
+  useEffect(() => {
+    setSelected(null);
+    setHintUsed(false);
+    setShowResult(false);
+  }, [index, puzzles]);
+
   const handleSelect = (choiceId) => {
     if (showResult) return;
     setSelected(choiceId);
@@ -89,6 +96,9 @@ export default function WhoIsLying() {
   };
 
   const handleNext = () => {
+    setSelected(null);
+    setHintUsed(false);
+    setShowResult(false);
     if (index + 1 >= puzzles.length) {
       if (latestUser) {
         refreshUser(latestUser);
@@ -96,9 +106,6 @@ export default function WhoIsLying() {
       setShowComplete(true);
     } else {
       setIndex(i => i + 1);
-      setSelected(null);
-      setHintUsed(false);
-      setShowResult(false);
     }
   };
 

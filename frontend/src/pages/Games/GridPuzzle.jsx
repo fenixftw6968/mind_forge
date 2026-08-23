@@ -67,13 +67,14 @@ export default function GridPuzzle() {
     setShowComplete(false);
   };
 
+  // Guarantee complete reset on any question index change
   useEffect(() => {
-    if (puzzles.length > 0 && !showResult && !showComplete) {
-      setSelectedChoice(null);
-      setHintUsed(false);
-      setShowHint(false);
-      setResult(null);
-      setShowResult(false);
+    setSelectedChoice(null);
+    setHintUsed(false);
+    setShowHint(false);
+    setResult(null);
+    setShowResult(false);
+    if (puzzles.length > 0 && !showComplete) {
       reset(TIMER_SECONDS[(puzzles[index]?.difficulty || difficulty || 'MEDIUM').toUpperCase()] || 90);
       start();
     }
@@ -111,6 +112,11 @@ export default function GridPuzzle() {
   };
 
   const handleNext = () => {
+    setSelectedChoice(null);
+    setHintUsed(false);
+    setShowHint(false);
+    setResult(null);
+    setShowResult(false);
     if (index + 1 < puzzles.length) {
       setIndex(i => i + 1);
     } else {

@@ -185,13 +185,18 @@ export default function NumberDetective() {
     setCompetitiveResult(null);
   };
 
+  // Guarantee clean answer state and fresh timer on every question index change
   useEffect(() => {
-    if (puzzles.length > 0 && !showResult && !showComplete) {
+    setAnswer('');
+    setHintUsed(false);
+    setResult(null);
+    setShowResult(false);
+    if (puzzles.length > 0 && !showComplete) {
       const currentDiff = (puzzles[index]?.difficulty || difficulty || 'MEDIUM').toUpperCase();
       reset(TIMER_SECONDS[currentDiff] || 90);
       start();
     }
-  }, [index, puzzles, showResult, showComplete]);
+  }, [index, puzzles, showComplete]);
 
   const handleSubmit = useCallback(async (timedOut = false) => {
     if (!puzzle || result) return;
@@ -236,6 +241,10 @@ export default function NumberDetective() {
   }, [puzzle, answer, hintUsed, result, difficulty, playMode, showXPPopup]);
 
   const handleNext = async () => {
+    setAnswer('');
+    setHintUsed(false);
+    setResult(null);
+    setShowResult(false);
     if (index + 1 >= puzzles.length) {
       if (playMode === 'PRACTICE') {
         if (latestUser) {
@@ -275,10 +284,6 @@ export default function NumberDetective() {
       }
     } else {
       setIndex(i => i + 1);
-      setAnswer('');
-      setHintUsed(false);
-      setResult(null);
-      setShowResult(false);
     }
   };
 

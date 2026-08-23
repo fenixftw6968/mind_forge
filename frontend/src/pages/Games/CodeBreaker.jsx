@@ -156,8 +156,9 @@ export default function CodeBreaker() {
     setActiveDigit(0);
   };
 
+  // Guarantee clean input and result state on every question index change
   useEffect(() => {
-    if (puzzles.length > 0 && !showResult && !showComplete) {
+    if (puzzles.length > 0) {
       const count = puzzles[index]?.digitCount || 3;
       setDigits(new Array(count).fill(''));
       setActiveDigit(0);
@@ -165,8 +166,10 @@ export default function CodeBreaker() {
       setShowHint(false);
       setResult(null);
       setShowResult(false);
-      reset(TIMER_SECONDS[(puzzles[index]?.difficulty || difficulty || 'MEDIUM').toUpperCase()] || 120);
-      start();
+      if (!showComplete) {
+        reset(TIMER_SECONDS[(puzzles[index]?.difficulty || difficulty || 'MEDIUM').toUpperCase()] || 120);
+        start();
+      }
     }
   }, [index, puzzles, showComplete]);
 
@@ -239,6 +242,13 @@ export default function CodeBreaker() {
   }, [puzzle, result, digits, hintUsed, currentDiff, timerLimit, timeLeft, pause, showXPPopup, refreshUser, playMode]);
 
   const handleNext = async () => {
+    const nextCount = puzzles[index + 1]?.digitCount || 3;
+    setDigits(new Array(nextCount).fill(''));
+    setActiveDigit(0);
+    setHintUsed(false);
+    setShowHint(false);
+    setResult(null);
+    setShowResult(false);
     if (index + 1 < puzzles.length) {
       setIndex(i => i + 1);
     } else {
