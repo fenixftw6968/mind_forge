@@ -13,6 +13,7 @@ import com.mindmaze.repository.UserRepository;
 import com.mindmaze.util.RankUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,12 +31,13 @@ public class MatchService {
     private final EloRatingService eloRatingService;
     private final GameService gameService;
     private final ObjectMapper objectMapper;
+    private final SimpMessagingTemplate messagingTemplate;
 
     // Fast in-memory matchmaking queue by gameSlug: queue of User IDs
     private final Map<String, List<Long>> matchmakingQueues = new ConcurrentHashMap<>();
 
     @Transactional
-    public MatchDto queueForMatch(Long userId, String gameSlug) {
+    public MatchDto queueForMatch(Long userId, String gameSlug, String difficulty) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
@@ -77,10 +79,11 @@ public class MatchService {
         if (matchedUserId != null) {
             User opponent = userRepository.findById(matchedUserId).orElseThrow();
             // Generate server-side challenge data (puzzles)
-            String challengeData = generateChallengeData(gameSlug);
+            String challengeData = generateChallengeData(gameSlug, difficulty);
 
             Match match = Match.builder()
                     .gameSlug(gameSlug)
+                    .difficulty(difficulty)
                     .mode(Match.MatchMode.RANKED)
                     .status(Match.MatchStatus.READY)
                     .player1(opponent)
@@ -97,7 +100,9 @@ public class MatchService {
                     .build();
 
             match = matchRepository.save(match);
-            return convertToDto(match);
+            MatchDto dto = convertToDto(match);
+            broadcastMatchEvent(match.getId(), "MATCH_READY", dto);
+            return dto;
         } else {
             // Also check if there's any open ranked match in database waiting for another player
             List<Match> openMatches = matchRepository.findOpenRankedMatches(gameSlug, user);
@@ -122,13 +127,16 @@ public class MatchService {
                 bestMatch.setIsBotMatch(false);
                 bestMatch.setStartedAt(LocalDateTime.now());
                 bestMatch = matchRepository.save(bestMatch);
-                return convertToDto(bestMatch);
+                MatchDto dto = convertToDto(bestMatch);
+                broadcastMatchEvent(bestMatch.getId(), "MATCH_READY", dto);
+                return dto;
             }
 
             // Otherwise create open match or add to queue
-            String challengeData = generateChallengeData(gameSlug);
+            String challengeData = generateChallengeData(gameSlug, difficulty);
             Match match = Match.builder()
                     .gameSlug(gameSlug)
+                    .difficulty(difficulty)
                     .mode(Match.MatchMode.RANKED)
                     .status(Match.MatchStatus.WAITING)
                     .player1(user)
@@ -164,13 +172,13 @@ public class MatchService {
     }
 
     @Transactional
-    public MatchDto createFriendMatch(Long hostUserId, Long friendUserId, String gameSlug) {
+    public MatchDto createFriendMatch(Long hostUserId, Long friendUserId, String gameSlug, String difficulty) {
         User host = userRepository.findById(hostUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Host user not found"));
         User friend = userRepository.findById(friendUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Friend user not found"));
 
-        String challengeData = generateChallengeData(gameSlug);
+        String challengeData = generateChallengeData(gameSlug, difficulty);
 
         // Cancel previous waiting friend matches between these two
         List<Match> waiting = matchRepository.findPendingInvitationsForUser(friend);
@@ -184,6 +192,7 @@ public class MatchService {
 
         Match match = Match.builder()
                 .gameSlug(gameSlug)
+                .difficulty(difficulty)
                 .mode(Match.MatchMode.FRIEND)
                 .status(Match.MatchStatus.WAITING)
                 .player1(host)
@@ -227,7 +236,9 @@ public class MatchService {
         match.setStatus(Match.MatchStatus.READY);
         match.setStartedAt(LocalDateTime.now());
         match = matchRepository.save(match);
-        return convertToDto(match);
+        MatchDto dto = convertToDto(match);
+        broadcastMatchEvent(match.getId(), "MATCH_READY", dto);
+        return dto;
     }
 
     @Transactional
@@ -242,7 +253,9 @@ public class MatchService {
         match.setStatus(Match.MatchStatus.CANCELLED);
         match.setCancelledReason("DECLINED");
         match = matchRepository.save(match);
-        return convertToDto(match);
+        MatchDto dto = convertToDto(match);
+        broadcastMatchEvent(match.getId(), "MATCH_CANCELLED", dto);
+        return dto;
     }
 
     @Transactional
@@ -262,7 +275,9 @@ public class MatchService {
         match = matchRepository.save(match);
 
         cancelQueue(userId, match.getGameSlug());
-        return convertToDto(match);
+        MatchDto dto = convertToDto(match);
+        broadcastMatchEvent(match.getId(), "MATCH_CANCELLED", dto);
+        return dto;
     }
 
     @Transactional
@@ -302,7 +317,9 @@ public class MatchService {
         }
 
         cancelQueue(userId, match.getGameSlug());
-        return convertToDto(match);
+        MatchDto dto = convertToDto(match);
+        broadcastMatchEvent(match.getId(), "MATCH_ABANDONED", dto);
+        return dto;
     }
 
     @Transactional(readOnly = true)
@@ -346,7 +363,13 @@ public class MatchService {
         }
 
         match = matchRepository.save(match);
-        return convertToDto(match);
+        MatchDto dto = convertToDto(match);
+        broadcastMatchEvent(match.getId(), "MATCH_UPDATE", dto);
+        
+        if (match.getStatus() == Match.MatchStatus.FINISHED) {
+            broadcastMatchEvent(match.getId(), "MATCH_FINISHED", dto);
+        }
+        return dto;
     }
 
     private void finalizeMatch(Match match) {
@@ -419,6 +442,17 @@ public class MatchService {
         match.setFinishedAt(LocalDateTime.now());
     }
 
+    private void broadcastMatchEvent(String matchId, String type, MatchDto data) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("type", type);
+            payload.put("data", data);
+            messagingTemplate.convertAndSend("/topic/match/" + matchId, payload);
+        } catch (Exception e) {
+            log.warn("Failed to broadcast match event: {}", e.getMessage());
+        }
+    }
+
     @Transactional(readOnly = true)
     public List<MatchDto> getRecentMatches(Long userId) {
         User user = userRepository.findById(userId)
@@ -429,9 +463,9 @@ public class MatchService {
                 .toList();
     }
 
-    private String generateChallengeData(String gameSlug) {
+    private String generateChallengeData(String gameSlug, String difficulty) {
         try {
-            List<PuzzleDto> puzzles = gameService.getPuzzlesByGame(gameSlug, "MEDIUM");
+            List<PuzzleDto> puzzles = gameService.getPuzzlesByGame(gameSlug, difficulty != null ? difficulty : "MEDIUM");
             if (puzzles == null || puzzles.isEmpty()) {
                 puzzles = gameService.getPuzzlesByGame(gameSlug, null);
             }
@@ -462,6 +496,7 @@ public class MatchService {
         return MatchDto.builder()
                 .id(match.getId())
                 .gameSlug(match.getGameSlug())
+                .difficulty(match.getDifficulty())
                 .mode(match.getMode().name())
                 .status(match.getStatus().name())
                 .player1Id(p1.getId())

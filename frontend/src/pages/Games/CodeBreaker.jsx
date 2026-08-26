@@ -15,6 +15,7 @@ import CompetitiveResults from '../../components/CompetitiveResults/CompetitiveR
 import SocialDrawer from '../../components/SocialDrawer/SocialDrawer';
 import ExitModal from '../../components/ExitModal/ExitModal';
 import { getDailyQuestionSet } from '../../services/dailyQuestionService';
+import { getRandomQuestionSet } from '../../services/randomQuestionService';
 import { codeBreakerQuestions } from '../../data/codeBreakerQuestions';
 import api from '../../utils/api';
 
@@ -70,15 +71,10 @@ export default function CodeBreaker() {
     }
   }, [location.state]);
 
-  const handleSelectMode = (mode) => {
+    const handleSelectMode = (mode) => {
     setPlayMode(mode);
     setShowModeModal(false);
-    if (mode === 'RANKED') {
-      setInvitedFriend(null);
-      setShowMatchmaking(true);
-    } else if (mode === 'FRIEND') {
-      setShowSocialDrawer(true);
-    }
+    setDifficulty(null);
   };
 
   const handleExitGame = async () => {
@@ -111,7 +107,8 @@ export default function CodeBreaker() {
 
     const activeList = selected.length > 0 ? selected : codeBreakerQuestions.slice(0, 4);
     setPuzzles(activeList);
-    setDifficulty('MEDIUM');
+    const matchDiff = match.difficulty || 'MEDIUM';
+    setDifficulty(matchDiff);
     setIndex(0);
     setScore(0);
     setMistakes(0);
@@ -129,7 +126,7 @@ export default function CodeBreaker() {
   };
 
   const startGame = (diff) => {
-    const selected = getDailyQuestionSet({
+    const selected = getRandomQuestionSet({
       gameType: 'code-breaker',
       difficulty: diff,
       questionBank: codeBreakerQuestions,
@@ -354,13 +351,23 @@ export default function CodeBreaker() {
     );
   }
 
-  if (!difficulty && playMode === 'PRACTICE') {
+  if (!difficulty && !showModeModal) {
     return (
       <DifficultySelector
         title="Code Breaker"
         subtitle="Crack the vault! Use logical deduction clues to identify the secret combination."
         icon="🔐"
-        onSelectDifficulty={startGame}
+        onSelectDifficulty={(diff) => {
+          setDifficulty(diff);
+          if (playMode === 'PRACTICE') {
+            startGame(diff);
+          } else if (playMode === 'RANKED') {
+            setInvitedFriend(null);
+            setShowMatchmaking(true);
+          } else if (playMode === 'FRIEND') {
+            setShowSocialDrawer(true);
+          }
+        }}
         onBack={() => setShowModeModal(true)}
       />
     );

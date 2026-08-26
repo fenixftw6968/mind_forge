@@ -15,6 +15,7 @@ import CompetitiveResults from '../../components/CompetitiveResults/CompetitiveR
 import SocialDrawer from '../../components/SocialDrawer/SocialDrawer';
 import ExitModal from '../../components/ExitModal/ExitModal';
 import { getDailyQuestionSet } from '../../services/dailyQuestionService';
+import { getRandomQuestionSet } from '../../services/randomQuestionService';
 import { numberDetectiveQuestions } from '../../data/numberDetectiveQuestions';
 import api from '../../utils/api';
 
@@ -68,15 +69,10 @@ export default function NumberDetective() {
     }
   }, [location.state]);
 
-  const handleSelectMode = (mode) => {
+    const handleSelectMode = (mode) => {
     setPlayMode(mode);
     setShowModeModal(false);
-    if (mode === 'RANKED') {
-      setInvitedFriend(null);
-      setShowMatchmaking(true);
-    } else if (mode === 'FRIEND') {
-      setShowSocialDrawer(true);
-    }
+    setDifficulty(null);
   };
 
   const handleExitGame = async () => {
@@ -148,7 +144,8 @@ export default function NumberDetective() {
     }
 
     setPuzzles(challengeQuestions);
-    setDifficulty('MEDIUM');
+    const matchDiff = match.difficulty || 'MEDIUM';
+    setDifficulty(matchDiff);
     setIndex(0);
     setScore(0);
     setMistakes(0);
@@ -162,7 +159,7 @@ export default function NumberDetective() {
   };
 
   const startGame = (diff) => {
-    const selected = getDailyQuestionSet({
+    const selected = getRandomQuestionSet({
       gameType: 'number-detective',
       difficulty: diff,
       questionBank: numberDetectiveQuestions,
@@ -356,13 +353,23 @@ export default function NumberDetective() {
   }
 
   // === DIFFICULTY SELECT (Practice Mode) ===
-  if (!difficulty && playMode === 'PRACTICE') {
+  if (!difficulty && !showModeModal) {
     return (
       <DifficultySelector
         title="Number Detective"
         subtitle="Spot the hidden mathematical rule in the sequence. Choose your difficulty level."
         icon="🔢"
-        onSelectDifficulty={(diff) => startGame(diff)}
+        onSelectDifficulty={(diff) => {
+          setDifficulty(diff);
+          if (playMode === 'PRACTICE') {
+            startGame(diff);
+          } else if (playMode === 'RANKED') {
+            setInvitedFriend(null);
+            setShowMatchmaking(true);
+          } else if (playMode === 'FRIEND') {
+            setShowSocialDrawer(true);
+          }
+        }}
         onBack={() => setShowModeModal(true)}
         customTiers={[
           { id: 'EASY', label: 'Easy', icon: '🌱', color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', xp: '+10 XP', time: '2 min', desc: 'Simple arithmetic and doubling sequences' },

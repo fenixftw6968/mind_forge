@@ -14,6 +14,7 @@ import CompetitiveResults from '../../components/CompetitiveResults/CompetitiveR
 import SocialDrawer from '../../components/SocialDrawer/SocialDrawer';
 import ExitModal from '../../components/ExitModal/ExitModal';
 import { getDailyQuestionSet } from '../../services/dailyQuestionService';
+import { getRandomQuestionSet } from '../../services/randomQuestionService';
 import { memoryChallengeQuestions } from '../../data/memoryChallengeQuestions';
 import api from '../../utils/api';
 
@@ -60,15 +61,10 @@ export default function MemoryChallenge() {
     }
   }, [location.state]);
 
-  const handleSelectMode = (mode) => {
+    const handleSelectMode = (mode) => {
     setPlayMode(mode);
     setShowModeModal(false);
-    if (mode === 'RANKED') {
-      setInvitedFriend(null);
-      setShowMatchmaking(true);
-    } else if (mode === 'FRIEND') {
-      setShowSocialDrawer(true);
-    }
+    setDifficulty(null);
   };
 
   const handleExitGame = async () => {
@@ -144,7 +140,8 @@ export default function MemoryChallenge() {
     }
 
     setScenes(challengeScenes);
-    setDifficulty('MEDIUM');
+    const matchDiff = match.difficulty || 'MEDIUM';
+    setDifficulty(matchDiff);
     setSceneIndex(0);
     setScore(0);
     setMistakes(0);
@@ -349,13 +346,23 @@ export default function MemoryChallenge() {
     );
   }
 
-  if (!difficulty && playMode === 'PRACTICE') {
+  if (!difficulty && !showModeModal) {
     return (
       <DifficultySelector
         title="Memory Challenge"
         subtitle="Study the complex scene carefully before it disappears. Then answer from memory."
         icon="👁️"
-        onSelectDifficulty={(diff) => startGame(diff)}
+        onSelectDifficulty={(diff) => {
+          setDifficulty(diff);
+          if (playMode === 'PRACTICE') {
+            startGame(diff);
+          } else if (playMode === 'RANKED') {
+            setInvitedFriend(null);
+            setShowMatchmaking(true);
+          } else if (playMode === 'FRIEND') {
+            setShowSocialDrawer(true);
+          }
+        }}
         onBack={() => setShowModeModal(true)}
         customTiers={[
           { id: 'EASY', label: 'Easy', icon: '🌱', color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', xp: '+15 XP', time: '8s Study', desc: '6 everyday objects with clear colors and positions' },

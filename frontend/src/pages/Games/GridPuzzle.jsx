@@ -11,6 +11,7 @@ import GameProgress from '../../components/GameProgress/GameProgress';
 import GameResults from '../../components/GameResults/GameResults';
 import ExitModal from '../../components/ExitModal/ExitModal';
 import { getDailyQuestionSet } from '../../services/dailyQuestionService';
+import { getRandomQuestionSet } from '../../services/randomQuestionService';
 import { gridPuzzleQuestions } from '../../data/gridPuzzleQuestions';
 import api from '../../utils/api';
 
@@ -45,7 +46,7 @@ export default function GridPuzzle() {
   );
 
   const startGame = (diff) => {
-    const selected = getDailyQuestionSet({
+    const selected = getRandomQuestionSet({
       gameType: 'grid-puzzle',
       difficulty: diff,
       questionBank: gridPuzzleQuestions,

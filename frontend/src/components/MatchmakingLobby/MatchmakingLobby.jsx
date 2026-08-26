@@ -11,6 +11,7 @@ export default function MatchmakingLobby({
   gameTitle,
   mode = 'RANKED', // 'RANKED' or 'FRIEND'
   friendTarget = null,
+  difficulty = null,
   onMatchReady,
 }) {
   const [status, setStatus] = useState('QUEUING'); // 'QUEUING', 'WAITING_FRIEND', 'FOUND', 'COUNTDOWN', 'TIMEOUT_PROMPT', 'DECLINED', 'ERROR'
@@ -18,6 +19,17 @@ export default function MatchmakingLobby({
   const [countdown, setCountdown] = useState(3);
   const [queueTime, setQueueTime] = useState(0);
   const [error, setError] = useState(null);
+
+  // We only start websocket connection once we have a match ID
+  const { connected } = useMatchSocket(matchData?.id, (event) => {
+    if (event.type === 'MATCH_READY') {
+      setMatchData(event.data);
+      handleMatchFound(event.data);
+    } else if (event.type === 'MATCH_CANCELLED' || event.type === 'MATCH_ABANDONED') {
+      setStatus('DECLINED');
+      setTimeout(onClose, 2000);
+    }
+  });
 
   // Queue timer
   useEffect(() => {
@@ -30,6 +42,23 @@ export default function MatchmakingLobby({
     return () => clearInterval(interval);
   }, [isOpen, status]);
 
+  // Handle Match Found (start countdown)
+  const handleMatchFound = useCallback((match) => {
+    setStatus('FOUND');
+    setMatchData(match);
+    let count = 3;
+    setCountdown(count);
+    const interval = setInterval(() => {
+      count--;
+      setCountdown(count);
+      if (count <= 0) {
+        clearInterval(interval);
+        setStatus('COUNTDOWN'); // done with countdown
+        onMatchReady(match);
+      }
+    }, 1000);
+  }, [onMatchReady]);
+
   // Initial Queue / Match creation
   useEffect(() => {
     if (!isOpen) {
@@ -40,78 +69,47 @@ export default function MatchmakingLobby({
       return;
     }
 
-    let pollInterval = null;
     let isCancelled = false;
 
     const startQueue = async () => {
       try {
         if (mode === 'RANKED') {
           setStatus('QUEUING');
-          const res = await api.post(`/api/matches/queue?gameSlug=${gameSlug}`);
+          const diffQuery = difficulty ? `&difficulty=${difficulty}` : '';
+          const res = await api.post(`/api/matches/queue?gameSlug=${gameSlug}${diffQuery}`);
+          if (isCancelled) return;
           const match = res.data;
           setMatchData(match);
 
           if (match.status === 'READY' || (match.player1Id && match.player2Id)) {
             handleMatchFound(match);
           } else {
-            // Poll for opponent every 1.5s
-            let elapsedPolls = 0;
-            pollInterval = setInterval(async () => {
-              elapsedPolls++;
-              try {
-                const pollRes = await api.get(`/api/matches/${match.id}`);
-                const currentMatch = pollRes.data;
-                setMatchData(currentMatch);
-
-                if (currentMatch.status === 'READY' || (currentMatch.player1Id && currentMatch.player2Id)) {
-                  clearInterval(pollInterval);
-                  handleMatchFound(currentMatch);
-                } else if (elapsedPolls >= 16) { // ~24 seconds timeout
-                  clearInterval(pollInterval);
-                  setStatus('TIMEOUT_PROMPT');
-                }
-              } catch (e) {
-                console.error("Match status poll error", e);
-              }
-            }, 1500);
+            // Wait for WebSocket event, but show prompt if taking too long
+            setTimeout(() => {
+              setStatus(prev => (prev === 'QUEUING' ? 'TIMEOUT_PROMPT' : prev));
+            }, 24000);
           }
+          // The useMatchSocket hook will handle the rest via WebSocket
         } else if (mode === 'FRIEND' && friendTarget) {
           setStatus('WAITING_FRIEND');
           const res = await api.post('/api/matches/invite', {
             friendId: friendTarget.userId || friendTarget.id,
-            gameSlug: gameSlug
+            gameSlug: gameSlug,
+            difficulty: difficulty
           });
+          if (isCancelled) return;
           const match = res.data;
           setMatchData(match);
-
-          // Poll for friend acceptance
-          pollInterval = setInterval(async () => {
-            try {
-              const pollRes = await api.get(`/api/matches/${match.id}`);
-              const currentMatch = pollRes.data;
-              setMatchData(currentMatch);
-
-              if (currentMatch.status === 'READY' || currentMatch.player2Ready) {
-                clearInterval(pollInterval);
-                handleMatchFound(currentMatch);
-              } else if (currentMatch.status === 'CANCELLED') {
-                clearInterval(pollInterval);
-                if (currentMatch.cancelledReason === 'DECLINED') {
-                  setStatus('DECLINED');
-                } else {
-                  setError("Friend invitation was cancelled.");
-                  setStatus('ERROR');
-                }
-              }
-            } catch (e) {
-              console.error("Friend match poll error", e);
-            }
-          }, 1500);
+          
+          if (match.status === 'READY' || (match.player1Id && match.player2Id)) {
+            handleMatchFound(match);
+          }
         }
       } catch (err) {
         if (!isCancelled) {
-          setError(err.response?.data?.message || err.message || 'Failed to start matchmaking');
+          console.error("Queue error:", err);
           setStatus('ERROR');
+          setError("Failed to queue. Please try again.");
         }
       }
     };
@@ -120,20 +118,8 @@ export default function MatchmakingLobby({
 
     return () => {
       isCancelled = true;
-      if (pollInterval) clearInterval(pollInterval);
-      if (mode === 'RANKED') {
-        api.post(`/api/matches/queue/cancel?gameSlug=${gameSlug}`).catch(() => {});
-      }
     };
-  }, [isOpen, gameSlug, mode, friendTarget]);
-
-  const handleMatchFound = (match) => {
-    setStatus('FOUND');
-    setTimeout(() => {
-      setStatus('COUNTDOWN');
-      startCountdown(match);
-    }, 1500);
-  };
+  }, [isOpen, gameSlug, mode, friendTarget, difficulty, handleMatchFound]);
 
   const handleSimulatedMatch = async () => {
     // Player opted to play vs AI Bot
@@ -154,27 +140,10 @@ export default function MatchmakingLobby({
   const handleContinueWaiting = () => {
     setStatus('QUEUING');
     setQueueTime(0);
-    // Restart polling
-    let elapsedPolls = 0;
-    const pollInterval = setInterval(async () => {
-      elapsedPolls++;
-      try {
-        if (!matchData?.id) return;
-        const pollRes = await api.get(`/api/matches/${matchData.id}`);
-        const currentMatch = pollRes.data;
-        setMatchData(currentMatch);
-
-        if (currentMatch.status === 'READY' || (currentMatch.player1Id && currentMatch.player2Id)) {
-          clearInterval(pollInterval);
-          handleMatchFound(currentMatch);
-        } else if (elapsedPolls >= 16) {
-          clearInterval(pollInterval);
-          setStatus('TIMEOUT_PROMPT');
-        }
-      } catch (e) {
-        console.error("Match status poll error", e);
-      }
-    }, 1500);
+    // Restart local timeout (e.g. 24s) to show prompt again if no socket event comes in
+    setTimeout(() => {
+      setStatus(prev => (prev === 'QUEUING' ? 'TIMEOUT_PROMPT' : prev));
+    }, 24000);
   };
 
   const handleCancelInvitation = async () => {

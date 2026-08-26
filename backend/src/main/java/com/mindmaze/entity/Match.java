@@ -41,6 +41,9 @@ public class Match {
     @Column(nullable = false, length = 50)
     private String gameSlug; // e.g. "number-detective", "memory-challenge"
 
+    @Column(length = 20)
+    private String difficulty; // e.g. "EASY", "MEDIUM", "HARD"
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default

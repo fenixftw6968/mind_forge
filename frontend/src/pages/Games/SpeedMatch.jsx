@@ -107,12 +107,7 @@ export default function SpeedMatch() {
   const handleSelectMode = (mode) => {
     setPlayMode(mode);
     setShowModeModal(false);
-    if (mode === 'RANKED') {
-      setInvitedFriend(null);
-      setShowMatchmaking(true);
-    } else if (mode === 'FRIEND') {
-      setShowSocialDrawer(true);
-    }
+    setDifficulty(null);
   };
 
   const handleExitGame = async () => {
@@ -135,11 +130,12 @@ export default function SpeedMatch() {
     setCurrentMatch(match);
     startTimeRef.current = Date.now();
 
-    const config = ROUND_LIMITS.MEDIUM;
-    const generated = generateBalancedRounds(10);
+    const matchDiff = match.difficulty || 'MEDIUM';
+    const config = ROUND_LIMITS[matchDiff] || ROUND_LIMITS.MEDIUM;
+    const generated = generateBalancedRounds(config.rounds);
 
     setRounds(generated);
-    setDifficulty('MEDIUM');
+    setDifficulty(matchDiff);
     setCurrentIndex(0);
     setScore(0);
     setMistakes(0);
@@ -274,6 +270,7 @@ export default function SpeedMatch() {
         gameTitle="Speed Match"
         mode={playMode === 'FRIEND' ? 'FRIEND' : 'RANKED'}
         friendTarget={invitedFriend}
+        difficulty={difficulty}
         onClose={() => {
           setShowMatchmaking(false);
           setInvitedFriend(null);
@@ -320,13 +317,23 @@ export default function SpeedMatch() {
     );
   }
 
-  if (!difficulty && playMode === 'PRACTICE') {
+  if (!difficulty && !showModeModal) {
     return (
       <DifficultySelector
         title="Speed Match"
         subtitle="Stroop effect challenge! Fast decision-making: does the word match the ink color?"
         icon="🎯"
-        onSelectDifficulty={startGame}
+        onSelectDifficulty={(diff) => {
+          setDifficulty(diff);
+          if (playMode === 'PRACTICE') {
+            startGame(diff);
+          } else if (playMode === 'RANKED') {
+            setInvitedFriend(null);
+            setShowMatchmaking(true);
+          } else if (playMode === 'FRIEND') {
+            setShowSocialDrawer(true);
+          }
+        }}
         onBack={() => setShowModeModal(true)}
       />
     );
@@ -365,15 +372,8 @@ export default function SpeedMatch() {
   }, [currentIndex, difficulty, isGameOver, currentRound, feedback, handleDecision]);
 
   if (!difficulty) {
-    return (
-      <DifficultySelector
-        title="Speed Match"
-        subtitle="Stroop effect challenge! Quickly decide whether the meaning of the word MATCHES its ink color."
-        icon="🎯"
-        onSelectDifficulty={startGame}
-        onBack={() => navigate('/games')}
-      />
-    );
+    // Fallback if somehow difficulty is lost
+    return null;
   }
 
   if (isGameOver) {

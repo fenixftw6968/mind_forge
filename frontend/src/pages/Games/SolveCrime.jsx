@@ -9,6 +9,7 @@ import DifficultySelector from '../../components/DifficultySelector/DifficultySe
 import GameProgress from '../../components/GameProgress/GameProgress';
 import GameResults from '../../components/GameResults/GameResults';
 import { getDailyQuestionSet } from '../../services/dailyQuestionService';
+import { getRandomQuestionSet } from '../../services/randomQuestionService';
 import { solveCrimeQuestions } from '../../data/solveCrimeQuestions';
 import api from '../../utils/api';
 

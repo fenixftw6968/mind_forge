@@ -22,9 +22,10 @@ public class MatchController {
     @PostMapping("/queue")
     public ResponseEntity<MatchDto> queueForMatch(
             @RequestParam String gameSlug,
+            @RequestParam(required = false) String difficulty,
             @AuthenticationPrincipal User user) {
         if (user == null) return ResponseEntity.status(401).build();
-        return ResponseEntity.ok(matchService.queueForMatch(user.getId(), gameSlug));
+        return ResponseEntity.ok(matchService.queueForMatch(user.getId(), gameSlug, difficulty));
     }
 
     @PostMapping("/queue/cancel")
@@ -43,7 +44,8 @@ public class MatchController {
         if (user == null) return ResponseEntity.status(401).build();
         Long friendId = Long.valueOf(body.get("friendId").toString());
         String gameSlug = (String) body.get("gameSlug");
-        return ResponseEntity.ok(matchService.createFriendMatch(user.getId(), friendId, gameSlug));
+        String difficulty = (String) body.get("difficulty");
+        return ResponseEntity.ok(matchService.createFriendMatch(user.getId(), friendId, gameSlug, difficulty));
     }
 
     @GetMapping("/invitations/pending")

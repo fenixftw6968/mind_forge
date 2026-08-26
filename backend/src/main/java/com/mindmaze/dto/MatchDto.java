@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class MatchDto {
     private String id;
     private String gameSlug;
+    private String difficulty;
     private String mode;
     private String status;
 
