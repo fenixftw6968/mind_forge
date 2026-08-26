@@ -69,10 +69,15 @@ export default function NumberDetective() {
     }
   }, [location.state]);
 
-    const handleSelectMode = (mode) => {
+  const handleSelectMode = (mode) => {
     setPlayMode(mode);
     setShowModeModal(false);
-    setDifficulty(null);
+    if (mode === 'RANKED') {
+      setInvitedFriend(null);
+      setShowMatchmaking(true);
+    } else if (mode === 'FRIEND') {
+      setShowSocialDrawer(true);
+    }
   };
 
   const handleExitGame = async () => {
@@ -353,23 +358,13 @@ export default function NumberDetective() {
   }
 
   // === DIFFICULTY SELECT (Practice Mode) ===
-  if (!difficulty && !showModeModal) {
+  if (!difficulty && playMode === 'PRACTICE') {
     return (
       <DifficultySelector
         title="Number Detective"
         subtitle="Spot the hidden mathematical rule in the sequence. Choose your difficulty level."
         icon="🔢"
-        onSelectDifficulty={(diff) => {
-          setDifficulty(diff);
-          if (playMode === 'PRACTICE') {
-            startGame(diff);
-          } else if (playMode === 'RANKED') {
-            setInvitedFriend(null);
-            setShowMatchmaking(true);
-          } else if (playMode === 'FRIEND') {
-            setShowSocialDrawer(true);
-          }
-        }}
+        onSelectDifficulty={(diff) => startGame(diff)}
         onBack={() => setShowModeModal(true)}
         customTiers={[
           { id: 'EASY', label: 'Easy', icon: '🌱', color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', xp: '+10 XP', time: '2 min', desc: 'Simple arithmetic and doubling sequences' },

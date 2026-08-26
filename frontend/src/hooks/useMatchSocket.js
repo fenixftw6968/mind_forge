@@ -5,45 +5,61 @@ import SockJS from 'sockjs-client';
 export function useMatchSocket(matchId, onEvent) {
   const [connected, setConnected] = useState(false);
   const clientRef = useRef(null);
+  const onEventRef = useRef(onEvent);
+  onEventRef.current = onEvent;
 
   useEffect(() => {
     if (!matchId) return;
 
-    // Use same host as API base, replace http/https with ws/wss or use absolute url if empty.
-    const wsUrl = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/ws` : 'http://localhost:8080/ws';
+    let client = null;
+    try {
+      const wsUrl = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/ws` : 'http://localhost:8080/ws';
 
-    const client = new Client({
-      webSocketFactory: () => new SockJS(wsUrl),
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-      onConnect: () => {
-        setConnected(true);
-        client.subscribe(`/topic/match/${matchId}`, (message) => {
-          if (message.body) {
-            try {
-              const payload = JSON.parse(message.body);
-              if (onEvent) onEvent(payload);
-            } catch (e) {
-              console.error('Failed to parse STOMP message', e);
-            }
+      client = new Client({
+        webSocketFactory: () => new SockJS(wsUrl),
+        reconnectDelay: 5000,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000,
+        debug: () => {}, // Disable noisy debug logs
+        onConnect: () => {
+          setConnected(true);
+          try {
+            client.subscribe(`/topic/match/${matchId}`, (message) => {
+              if (message.body) {
+                try {
+                  const payload = JSON.parse(message.body);
+                  if (onEventRef.current) {
+                    onEventRef.current(payload);
+                  }
+                } catch (e) {
+                  console.warn('Failed to parse STOMP message', e);
+                }
+              }
+            });
+          } catch (subErr) {
+            console.warn('Subscription error:', subErr);
           }
-        });
-      },
-      onStompError: (frame) => {
-        console.error('Broker reported error: ' + frame.headers['message']);
-        console.error('Additional details: ' + frame.body);
-      },
-      onWebSocketClose: () => {
-        setConnected(false);
-      }
-    });
+        },
+        onStompError: (frame) => {
+          console.warn('STOMP broker notice: ' + (frame?.headers?.message || ''));
+        },
+        onWebSocketClose: () => {
+          setConnected(false);
+        }
+      });
 
-    client.activate();
-    clientRef.current = client;
+      client.activate();
+      clientRef.current = client;
+    } catch (e) {
+      console.warn('Could not initialize WebSocket client:', e);
+    }
 
     return () => {
-      client.deactivate();
+      try {
+        if (client) {
+          client.deactivate();
+        }
+      } catch (e) {}
       clientRef.current = null;
     };
   }, [matchId]);

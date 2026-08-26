@@ -71,10 +71,15 @@ export default function CodeBreaker() {
     }
   }, [location.state]);
 
-    const handleSelectMode = (mode) => {
+  const handleSelectMode = (mode) => {
     setPlayMode(mode);
     setShowModeModal(false);
-    setDifficulty(null);
+    if (mode === 'RANKED') {
+      setInvitedFriend(null);
+      setShowMatchmaking(true);
+    } else if (mode === 'FRIEND') {
+      setShowSocialDrawer(true);
+    }
   };
 
   const handleExitGame = async () => {
@@ -351,23 +356,14 @@ export default function CodeBreaker() {
     );
   }
 
-  if (!difficulty && !showModeModal) {
+  // === DIFFICULTY SELECT (Practice Mode) ===
+  if (!difficulty && playMode === 'PRACTICE') {
     return (
       <DifficultySelector
         title="Code Breaker"
         subtitle="Crack the vault! Use logical deduction clues to identify the secret combination."
         icon="🔐"
-        onSelectDifficulty={(diff) => {
-          setDifficulty(diff);
-          if (playMode === 'PRACTICE') {
-            startGame(diff);
-          } else if (playMode === 'RANKED') {
-            setInvitedFriend(null);
-            setShowMatchmaking(true);
-          } else if (playMode === 'FRIEND') {
-            setShowSocialDrawer(true);
-          }
-        }}
+        onSelectDifficulty={(diff) => startGame(diff)}
         onBack={() => setShowModeModal(true)}
       />
     );

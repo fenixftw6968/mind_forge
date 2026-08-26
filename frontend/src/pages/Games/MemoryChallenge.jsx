@@ -61,10 +61,15 @@ export default function MemoryChallenge() {
     }
   }, [location.state]);
 
-    const handleSelectMode = (mode) => {
+  const handleSelectMode = (mode) => {
     setPlayMode(mode);
     setShowModeModal(false);
-    setDifficulty(null);
+    if (mode === 'RANKED') {
+      setInvitedFriend(null);
+      setShowMatchmaking(true);
+    } else if (mode === 'FRIEND') {
+      setShowSocialDrawer(true);
+    }
   };
 
   const handleExitGame = async () => {
@@ -346,23 +351,14 @@ export default function MemoryChallenge() {
     );
   }
 
-  if (!difficulty && !showModeModal) {
+  // === DIFFICULTY SELECT (Practice Mode) ===
+  if (!difficulty && playMode === 'PRACTICE') {
     return (
       <DifficultySelector
         title="Memory Challenge"
         subtitle="Study the complex scene carefully before it disappears. Then answer from memory."
         icon="👁️"
-        onSelectDifficulty={(diff) => {
-          setDifficulty(diff);
-          if (playMode === 'PRACTICE') {
-            startGame(diff);
-          } else if (playMode === 'RANKED') {
-            setInvitedFriend(null);
-            setShowMatchmaking(true);
-          } else if (playMode === 'FRIEND') {
-            setShowSocialDrawer(true);
-          }
-        }}
+        onSelectDifficulty={(diff) => startGame(diff)}
         onBack={() => setShowModeModal(true)}
         customTiers={[
           { id: 'EASY', label: 'Easy', icon: '🌱', color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', xp: '+15 XP', time: '8s Study', desc: '6 everyday objects with clear colors and positions' },

@@ -66,10 +66,15 @@ export default function ReactionRush() {
     }
   }, [location.state]);
 
-    const handleSelectMode = (mode) => {
+  const handleSelectMode = (mode) => {
     setPlayMode(mode);
     setShowModeModal(false);
-    setDifficulty(null);
+    if (mode === 'RANKED') {
+      setInvitedFriend(null);
+      setShowMatchmaking(true);
+    } else if (mode === 'FRIEND') {
+      setShowSocialDrawer(true);
+    }
   };
 
   const handleExitGame = async () => {
@@ -271,23 +276,14 @@ export default function ReactionRush() {
     );
   }
 
-  if (!difficulty && !showModeModal) {
+  // === DIFFICULTY SELECT (Practice Mode) ===
+  if (!difficulty && playMode === 'PRACTICE') {
     return (
       <DifficultySelector
         title="Reaction Rush"
         subtitle="Test your visual reflexes! Wait for the signal, then click as fast as humanly possible when it turns GREEN."
         icon="⚡"
-        onSelectDifficulty={(diff) => {
-          setDifficulty(diff);
-          if (playMode === 'PRACTICE') {
-            startGame(diff);
-          } else if (playMode === 'RANKED') {
-            setInvitedFriend(null);
-            setShowMatchmaking(true);
-          } else if (playMode === 'FRIEND') {
-            setShowSocialDrawer(true);
-          }
-        }}
+        onSelectDifficulty={startGame}
         onBack={() => setShowModeModal(true)}
       />
     );

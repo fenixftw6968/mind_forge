@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Swords, Loader2, X, CheckCircle, ShieldAlert, Sparkles, User, Trophy, Bot, RefreshCw } from 'lucide-react';
 import api from '../../utils/api';
 import { getRankFromRating } from '../../utils/rankUtils';
+import { useMatchSocket } from '../../hooks/useMatchSocket';
 
 export default function MatchmakingLobby({
   isOpen,
@@ -19,17 +20,7 @@ export default function MatchmakingLobby({
   const [countdown, setCountdown] = useState(3);
   const [queueTime, setQueueTime] = useState(0);
   const [error, setError] = useState(null);
-
-  // We only start websocket connection once we have a match ID
-  const { connected } = useMatchSocket(matchData?.id, (event) => {
-    if (event.type === 'MATCH_READY') {
-      setMatchData(event.data);
-      handleMatchFound(event.data);
-    } else if (event.type === 'MATCH_CANCELLED' || event.type === 'MATCH_ABANDONED') {
-      setStatus('DECLINED');
-      setTimeout(onClose, 2000);
-    }
-  });
+  const matchStartedRef = useRef(false);
 
   // Queue timer
   useEffect(() => {
@@ -42,10 +33,14 @@ export default function MatchmakingLobby({
     return () => clearInterval(interval);
   }, [isOpen, status]);
 
-  // Handle Match Found (start countdown)
+  // Trigger countdown and match start
   const handleMatchFound = useCallback((match) => {
+    if (matchStartedRef.current) return;
+    matchStartedRef.current = true;
+
     setStatus('FOUND');
     setMatchData(match);
+
     let count = 3;
     setCountdown(count);
     const interval = setInterval(() => {
@@ -53,22 +48,36 @@ export default function MatchmakingLobby({
       setCountdown(count);
       if (count <= 0) {
         clearInterval(interval);
-        setStatus('COUNTDOWN'); // done with countdown
-        onMatchReady(match);
+        setStatus('COUNTDOWN');
+        if (onMatchReady) {
+          onMatchReady(match);
+        }
       }
     }, 1000);
   }, [onMatchReady]);
 
-  // Initial Queue / Match creation
+  // Listen to WebSockets for real-time instant notification
+  useMatchSocket(matchData?.id, (event) => {
+    if (event.type === 'MATCH_READY') {
+      handleMatchFound(event.data);
+    } else if (event.type === 'MATCH_CANCELLED' || event.type === 'MATCH_ABANDONED') {
+      setStatus('DECLINED');
+      setTimeout(onClose, 2000);
+    }
+  });
+
+  // Initial Queue / Match creation & Polling loop
   useEffect(() => {
     if (!isOpen) {
       setStatus('QUEUING');
       setMatchData(null);
       setQueueTime(0);
       setError(null);
+      matchStartedRef.current = false;
       return;
     }
 
+    let pollInterval = null;
     let isCancelled = false;
 
     const startQueue = async () => {
@@ -78,18 +87,38 @@ export default function MatchmakingLobby({
           const diffQuery = difficulty ? `&difficulty=${difficulty}` : '';
           const res = await api.post(`/api/matches/queue?gameSlug=${gameSlug}${diffQuery}`);
           if (isCancelled) return;
+
           const match = res.data;
           setMatchData(match);
 
           if (match.status === 'READY' || (match.player1Id && match.player2Id)) {
             handleMatchFound(match);
           } else {
-            // Wait for WebSocket event, but show prompt if taking too long
-            setTimeout(() => {
-              setStatus(prev => (prev === 'QUEUING' ? 'TIMEOUT_PROMPT' : prev));
-            }, 24000);
+            // Poll for opponent every 1.5s
+            let elapsedPolls = 0;
+            pollInterval = setInterval(async () => {
+              elapsedPolls++;
+              try {
+                if (matchStartedRef.current) {
+                  clearInterval(pollInterval);
+                  return;
+                }
+                const pollRes = await api.get(`/api/matches/${match.id}`);
+                const currentMatch = pollRes.data;
+                setMatchData(currentMatch);
+
+                if (currentMatch.status === 'READY' || (currentMatch.player1Id && currentMatch.player2Id)) {
+                  clearInterval(pollInterval);
+                  handleMatchFound(currentMatch);
+                } else if (elapsedPolls >= 16) { // ~24 seconds timeout
+                  clearInterval(pollInterval);
+                  setStatus('TIMEOUT_PROMPT');
+                }
+              } catch (e) {
+                console.warn("Match status poll error", e);
+              }
+            }, 1500);
           }
-          // The useMatchSocket hook will handle the rest via WebSocket
         } else if (mode === 'FRIEND' && friendTarget) {
           setStatus('WAITING_FRIEND');
           const res = await api.post('/api/matches/invite', {
@@ -98,18 +127,48 @@ export default function MatchmakingLobby({
             difficulty: difficulty
           });
           if (isCancelled) return;
+
           const match = res.data;
           setMatchData(match);
-          
-          if (match.status === 'READY' || (match.player1Id && match.player2Id)) {
-            handleMatchFound(match);
-          }
+
+          // Poll for friend acceptance
+          let elapsedPolls = 0;
+          pollInterval = setInterval(async () => {
+            elapsedPolls++;
+            try {
+              if (matchStartedRef.current) {
+                clearInterval(pollInterval);
+                return;
+              }
+              const pollRes = await api.get(`/api/matches/${match.id}`);
+              const currentMatch = pollRes.data;
+              setMatchData(currentMatch);
+
+              if (currentMatch.status === 'READY' || currentMatch.player2Ready) {
+                clearInterval(pollInterval);
+                handleMatchFound(currentMatch);
+              } else if (currentMatch.status === 'CANCELLED') {
+                clearInterval(pollInterval);
+                if (currentMatch.cancelledReason === 'DECLINED') {
+                  setStatus('DECLINED');
+                } else {
+                  setError("Friend invitation was cancelled.");
+                  setStatus('ERROR');
+                }
+              } else if (elapsedPolls >= 40) { // ~60 seconds timeout
+                clearInterval(pollInterval);
+                setStatus('TIMEOUT_PROMPT');
+              }
+            } catch (e) {
+              console.warn("Friend match poll error", e);
+            }
+          }, 1500);
         }
       } catch (err) {
         if (!isCancelled) {
           console.error("Queue error:", err);
+          setError(err.response?.data?.message || err.message || 'Failed to start matchmaking');
           setStatus('ERROR');
-          setError("Failed to queue. Please try again.");
         }
       }
     };
@@ -118,6 +177,10 @@ export default function MatchmakingLobby({
 
     return () => {
       isCancelled = true;
+      if (pollInterval) clearInterval(pollInterval);
+      if (mode === 'RANKED') {
+        api.post(`/api/matches/queue/cancel?gameSlug=${gameSlug}`).catch(() => {});
+      }
     };
   }, [isOpen, gameSlug, mode, friendTarget, difficulty, handleMatchFound]);
 
@@ -140,10 +203,30 @@ export default function MatchmakingLobby({
   const handleContinueWaiting = () => {
     setStatus('QUEUING');
     setQueueTime(0);
-    // Restart local timeout (e.g. 24s) to show prompt again if no socket event comes in
-    setTimeout(() => {
-      setStatus(prev => (prev === 'QUEUING' ? 'TIMEOUT_PROMPT' : prev));
-    }, 24000);
+    // Restart polling
+    let elapsedPolls = 0;
+    const pollInterval = setInterval(async () => {
+      elapsedPolls++;
+      try {
+        if (!matchData?.id || matchStartedRef.current) {
+          clearInterval(pollInterval);
+          return;
+        }
+        const pollRes = await api.get(`/api/matches/${matchData.id}`);
+        const currentMatch = pollRes.data;
+        setMatchData(currentMatch);
+
+        if (currentMatch.status === 'READY' || (currentMatch.player1Id && currentMatch.player2Id)) {
+          clearInterval(pollInterval);
+          handleMatchFound(currentMatch);
+        } else if (elapsedPolls >= 16) {
+          clearInterval(pollInterval);
+          setStatus('TIMEOUT_PROMPT');
+        }
+      } catch (e) {
+        console.warn("Match status poll error", e);
+      }
+    }, 1500);
   };
 
   const handleCancelInvitation = async () => {
@@ -153,21 +236,6 @@ export default function MatchmakingLobby({
       } catch (e) {}
     }
     onClose();
-  };
-
-  const startCountdown = (match) => {
-    let count = 3;
-    setCountdown(3);
-    const cInterval = setInterval(() => {
-      count -= 1;
-      setCountdown(count);
-      if (count <= 0) {
-        clearInterval(cInterval);
-        if (onMatchReady) {
-          onMatchReady(match);
-        }
-      }
-    }, 1000);
   };
 
   if (!isOpen) return null;

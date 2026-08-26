@@ -107,7 +107,12 @@ export default function SpeedMatch() {
   const handleSelectMode = (mode) => {
     setPlayMode(mode);
     setShowModeModal(false);
-    setDifficulty(null);
+    if (mode === 'RANKED') {
+      setInvitedFriend(null);
+      setShowMatchmaking(true);
+    } else if (mode === 'FRIEND') {
+      setShowSocialDrawer(true);
+    }
   };
 
   const handleExitGame = async () => {
@@ -317,23 +322,14 @@ export default function SpeedMatch() {
     );
   }
 
-  if (!difficulty && !showModeModal) {
+  // === DIFFICULTY SELECT (Practice Mode) ===
+  if (!difficulty && playMode === 'PRACTICE') {
     return (
       <DifficultySelector
         title="Speed Match"
         subtitle="Stroop effect challenge! Fast decision-making: does the word match the ink color?"
         icon="🎯"
-        onSelectDifficulty={(diff) => {
-          setDifficulty(diff);
-          if (playMode === 'PRACTICE') {
-            startGame(diff);
-          } else if (playMode === 'RANKED') {
-            setInvitedFriend(null);
-            setShowMatchmaking(true);
-          } else if (playMode === 'FRIEND') {
-            setShowSocialDrawer(true);
-          }
-        }}
+        onSelectDifficulty={startGame}
         onBack={() => setShowModeModal(true)}
       />
     );
