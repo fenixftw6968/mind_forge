@@ -21,6 +21,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
+
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -33,17 +37,22 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        log.info("======================================================");
+        log.info("[DEBUG] Updated SecurityConfig loaded successfully on port 8080");
+        log.info("======================================================");
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints
-                .requestMatchers("/health").permitAll()
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/games/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/leaderboard/**").permitAll()
-                .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers(antMatcher("/ws/**")).permitAll()
+                .requestMatchers(antMatcher("/ws")).permitAll()
+                .requestMatchers(antMatcher("/health")).permitAll()
+                .requestMatchers(antMatcher("/api/auth/**")).permitAll()
+                .requestMatchers(antMatcher(HttpMethod.GET, "/api/games/**")).permitAll()
+                .requestMatchers(antMatcher(HttpMethod.GET, "/api/leaderboard/**")).permitAll()
+                .requestMatchers(antMatcher("/actuator/health")).permitAll()
                 // Protected endpoints
                 .anyRequest().authenticated()
             )

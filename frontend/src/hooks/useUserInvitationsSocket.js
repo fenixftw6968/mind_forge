@@ -2,14 +2,14 @@ import { useEffect, useState, useRef } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
-export function useMatchSocket(matchId, onEvent) {
+export function useUserInvitationsSocket(userId, onEvent) {
   const [connected, setConnected] = useState(false);
   const clientRef = useRef(null);
   const onEventRef = useRef(onEvent);
   onEventRef.current = onEvent;
 
   useEffect(() => {
-    if (!matchId) return;
+    if (!userId) return;
 
     let client = null;
     try {
@@ -22,11 +22,11 @@ export function useMatchSocket(matchId, onEvent) {
         reconnectDelay: 5000,
         heartbeatIncoming: 4000,
         heartbeatOutgoing: 4000,
-        debug: () => {}, // Disable noisy debug logs
+        debug: () => {},
         onConnect: () => {
           setConnected(true);
           try {
-            client.subscribe(`/topic/match/${matchId}`, (message) => {
+            client.subscribe(`/topic/invitations/${userId}`, (message) => {
               if (message.body) {
                 try {
                   const payload = JSON.parse(message.body);
@@ -34,12 +34,12 @@ export function useMatchSocket(matchId, onEvent) {
                     onEventRef.current(payload);
                   }
                 } catch (e) {
-                  console.warn('Failed to parse STOMP message', e);
+                  console.warn('Failed to parse STOMP invitation message', e);
                 }
               }
             });
           } catch (subErr) {
-            console.warn('Subscription error:', subErr);
+            console.warn('Invitation subscription error:', subErr);
           }
         },
         onStompError: (frame) => {
@@ -53,7 +53,7 @@ export function useMatchSocket(matchId, onEvent) {
       client.activate();
       clientRef.current = client;
     } catch (e) {
-      console.warn('Could not initialize WebSocket client:', e);
+      console.warn('Could not initialize User Invitations WebSocket client:', e);
     }
 
     return () => {
@@ -64,7 +64,7 @@ export function useMatchSocket(matchId, onEvent) {
       } catch (e) {}
       clientRef.current = null;
     };
-  }, [matchId]);
+  }, [userId]);
 
-  return { connected, client: clientRef.current };
+  return { connected };
 }

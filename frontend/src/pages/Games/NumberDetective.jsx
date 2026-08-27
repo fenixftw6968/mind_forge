@@ -18,6 +18,7 @@ import { getDailyQuestionSet } from '../../services/dailyQuestionService';
 import { getRandomQuestionSet } from '../../services/randomQuestionService';
 import { numberDetectiveQuestions } from '../../data/numberDetectiveQuestions';
 import api from '../../utils/api';
+import { useMatchSocket } from '../../hooks/useMatchSocket';
 
 const TIMER_SECONDS = { EASY: 120, MEDIUM: 90, HARD: 60 };
 const XP_PER_DIFFICULTY = { EASY: 10, MEDIUM: 25, HARD: 50 };
@@ -27,16 +28,18 @@ export default function NumberDetective() {
   const { xpPopups, showXPPopup } = useGame();
   const navigate = useNavigate();
   const location = useLocation();
+  const acceptedMatch = location.state?.acceptedMatch;
 
   // Mode state
-  const [showModeModal, setShowModeModal] = useState(true);
-  const [playMode, setPlayMode] = useState('PRACTICE'); // 'PRACTICE' | 'RANKED' | 'FRIEND'
-  const [showMatchmaking, setShowMatchmaking] = useState(false);
+  const [showModeModal, setShowModeModal] = useState(!acceptedMatch);
+  const [playMode, setPlayMode] = useState(acceptedMatch ? 'FRIEND' : 'PRACTICE');
+  const [showMatchmaking, setShowMatchmaking] = useState(!!acceptedMatch);
   const [showSocialDrawer, setShowSocialDrawer] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [invitedFriend, setInvitedFriend] = useState(null);
-  const [currentMatch, setCurrentMatch] = useState(null);
+  const [currentMatch, setCurrentMatch] = useState(acceptedMatch || null);
   const [competitiveResult, setCompetitiveResult] = useState(null);
+  const [waitingForOpponent, setWaitingForOpponent] = useState(false);
 
   const [difficulty, setDifficulty]   = useState(null); // null = selecting
   const [puzzles, setPuzzles]         = useState([]);
@@ -51,6 +54,118 @@ export default function NumberDetective() {
   const [showComplete, setShowComplete] = useState(false);
   const [latestUser, setLatestUser]   = useState(null);
   const startTimeRef = useRef(Date.now());
+  const scoreRef = useRef(0);
+  const mistakesRef = useRef(0);
+  const durationRef = useRef(0);
+
+  const clearMatchStorage = useCallback((matchId) => {
+    localStorage.removeItem('activeMatchId_number-detective');
+    if (matchId) {
+      localStorage.removeItem('activeMatchIndex_' + matchId);
+      localStorage.removeItem('activeMatchScore_' + matchId);
+      localStorage.removeItem('activeMatchMistakes_' + matchId);
+    }
+  }, []);
+
+  // Listen for MATCH_FINISHED / MATCH_COMPLETED from opponent's submission
+  useMatchSocket(currentMatch?.id, (event) => {
+    if (event.type === 'MATCH_FINISHED' || event.type === 'MATCH_COMPLETED' || event.data?.status === 'FINISHED') {
+      setWaitingForOpponent(false);
+      setCompetitiveResult(event.data);
+      clearMatchStorage(currentMatch?.id);
+    }
+  });
+
+  // Poll for match completion while waiting for opponent (as bulletproof fallback)
+  useEffect(() => {
+    if (!waitingForOpponent || !currentMatch?.id) return;
+    
+    let isCancelled = false;
+    const interval = setInterval(async () => {
+      try {
+        const res = await api.get(`/api/matches/${currentMatch.id}`);
+        if (!isCancelled && res.status === 200 && res.data?.status === 'FINISHED') {
+          setWaitingForOpponent(false);
+          setCompetitiveResult(res.data);
+          clearMatchStorage(currentMatch.id);
+        }
+      } catch (e) {
+        console.warn("Match status check while waiting:", e);
+      }
+    }, 1500);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
+  }, [waitingForOpponent, currentMatch?.id, clearMatchStorage]);
+
+  // Check for active match on mount
+  useEffect(() => {
+    if (!user) return;
+    const activeMatchId = localStorage.getItem('activeMatchId_number-detective');
+    if (!activeMatchId) return;
+    
+    const checkActiveMatch = async () => {
+      try {
+        const res = await api.get(`/api/matches/active?gameSlug=number-detective`);
+        if (res.status === 200 && res.data) {
+          const match = res.data;
+          
+          if (match.status === 'FINISHED') {
+            setCurrentMatch(match);
+            setCompetitiveResult(match);
+            setShowModeModal(false);
+            clearMatchStorage(match.id);
+          } else {
+            setCurrentMatch(match);
+            setShowModeModal(false);
+            
+            const isP1 = match.player1Id === user.id;
+            const finished = isP1 ? match.player1Finished : match.player2Finished;
+            
+            if (finished) {
+              setWaitingForOpponent(true);
+            } else {
+              // Restore questions and progress
+              handleMatchReady(match);
+              
+              const savedIndex = localStorage.getItem('activeMatchIndex_' + match.id);
+              const savedScore = localStorage.getItem('activeMatchScore_' + match.id);
+              const savedMistakes = localStorage.getItem('activeMatchMistakes_' + match.id);
+              
+              if (savedIndex !== null) setIndex(parseInt(savedIndex, 10));
+              if (savedScore !== null) {
+                setScore(parseInt(savedScore, 10));
+                scoreRef.current = parseInt(savedScore, 10);
+              }
+              if (savedMistakes !== null) {
+                setMistakes(parseInt(savedMistakes, 10));
+                mistakesRef.current = parseInt(savedMistakes, 10);
+              }
+            }
+          }
+        } else {
+          localStorage.removeItem('activeMatchId_number-detective');
+        }
+      } catch (e) {
+        console.error("Failed to check active match", e);
+        localStorage.removeItem('activeMatchId_number-detective');
+      }
+    };
+    
+    checkActiveMatch();
+  }, [user, clearMatchStorage]);
+
+  // Save active match progress in localStorage
+  useEffect(() => {
+    if (currentMatch && currentMatch.status !== 'FINISHED' && puzzles.length > 0) {
+      localStorage.setItem('activeMatchId_number-detective', currentMatch.id);
+      localStorage.setItem('activeMatchIndex_' + currentMatch.id, index);
+      localStorage.setItem('activeMatchScore_' + currentMatch.id, score);
+      localStorage.setItem('activeMatchMistakes_' + currentMatch.id, mistakes);
+    }
+  }, [index, score, mistakes, currentMatch, puzzles]);
 
   const puzzle = puzzles[index];
   const timerLimit = difficulty ? TIMER_SECONDS[difficulty.toUpperCase()] || 90 : 90;
@@ -60,11 +175,14 @@ export default function NumberDetective() {
     { onComplete: () => handleSubmit(true) }
   );
 
-  // Auto-start match if accepted from invite
+  // Auto-start match if accepted from invite (go through countdown lobby first)
   useEffect(() => {
     if (location.state?.acceptedMatch) {
-      handleMatchReady(location.state.acceptedMatch);
-      // Clear location state
+      const match = location.state.acceptedMatch;
+      setCurrentMatch(match);
+      setPlayMode('FRIEND');
+      setShowModeModal(false);
+      setShowMatchmaking(true);
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
@@ -86,6 +204,7 @@ export default function NumberDetective() {
       try {
         await api.post(`/api/matches/${currentMatch.id}/abandon`);
       } catch (e) {}
+      clearMatchStorage(currentMatch.id);
     } else if (showMatchmaking) {
       try {
         await api.post('/api/matches/queue/cancel?gameSlug=number-detective');
@@ -237,8 +356,15 @@ export default function NumberDetective() {
     } else {
       // In competitive mode: track score directly
       if (isCorrect) {
-        setScore(s => s + 1);
+        setScore(s => {
+          scoreRef.current = s + 1;
+          return s + 1;
+        });
       }
+      setMistakes(m => {
+        mistakesRef.current = m + (!isCorrect ? 1 : 0);
+        return m + (!isCorrect ? 1 : 0);
+      });
     }
   }, [puzzle, answer, hintUsed, result, difficulty, playMode, showXPPopup]);
 
@@ -255,33 +381,42 @@ export default function NumberDetective() {
         setShowComplete(true);
       } else if (currentMatch) {
         const totalDuration = Math.round((Date.now() - startTimeRef.current) / 1000);
+        durationRef.current = totalDuration;
         try {
           // If solo bot match
           if (currentMatch.player2Id === 999999) {
-            // Simulated opponent score
-            const botScore = Math.max(0, score + (Math.random() > 0.4 ? (Math.random() > 0.5 ? 0 : -1) : 1));
-            const botDelta = score >= botScore ? -16 : 16;
-            const myDelta = score > botScore ? 24 : (score === botScore ? 0 : -18);
+            const botScore = Math.max(0, scoreRef.current + (Math.random() > 0.4 ? (Math.random() > 0.5 ? 0 : -1) : 1));
+            const botDelta = scoreRef.current >= botScore ? -16 : 16;
+            const myDelta = scoreRef.current > botScore ? 24 : (scoreRef.current === botScore ? 0 : -18);
             const simResult = {
               ...currentMatch,
-              player1Score: score,
+              player1Score: scoreRef.current,
               player2Score: botScore,
               player1RatingChange: myDelta,
               player2RatingChange: botDelta,
-              winnerId: score > botScore ? currentMatch.player1Id : (score < botScore ? 999999 : null)
+              winnerId: scoreRef.current > botScore ? currentMatch.player1Id : (scoreRef.current < botScore ? 999999 : null)
             };
             setCompetitiveResult(simResult);
           } else {
+            // Show waiting screen immediately
+            setWaitingForOpponent(true);
             const res = await api.post(`/api/matches/${currentMatch.id}/submit`, {
-              score: score,
+              score: scoreRef.current,
               timeTakenSeconds: totalDuration,
-              mistakes: mistakes,
+              mistakes: mistakesRef.current,
               detailedAnswers: 'Number Detective Set Completed'
             });
-            setCompetitiveResult(res.data);
+            // If server already has both scores (e.g. opponent submitted first), show immediately
+            if (res.data?.status === 'FINISHED') {
+              setWaitingForOpponent(false);
+              setCompetitiveResult(res.data);
+              clearMatchStorage(currentMatch.id);
+            }
+            // Otherwise wait for MATCH_FINISHED WebSocket event (handled by useMatchSocket above)
           }
         } catch (e) {
           console.error("Match result submit error", e);
+          setWaitingForOpponent(false);
         }
       }
     } else {
@@ -311,6 +446,8 @@ export default function NumberDetective() {
         gameTitle="Number Detective"
         mode={playMode === 'FRIEND' ? 'FRIEND' : 'RANKED'}
         friendTarget={invitedFriend}
+        difficulty={difficulty}
+        initialMatch={currentMatch}
         onClose={() => {
           setShowMatchmaking(false);
           setInvitedFriend(null);
@@ -348,11 +485,42 @@ export default function NumberDetective() {
           matchResult={competitiveResult}
           currentUserId={user?.id || currentMatch?.player1Id}
           onRematch={() => {
+            if (playMode === 'FRIEND' && currentMatch) {
+              const oppId = currentMatch.player1Id === user?.id ? currentMatch.player2Id : currentMatch.player1Id;
+              const oppName = currentMatch.player1Id === user?.id ? currentMatch.player2Username : currentMatch.player1Username;
+              if (oppId && oppId !== 999999) {
+                setInvitedFriend({ id: oppId, username: oppName });
+              }
+            }
+            clearMatchStorage(currentMatch?.id);
             setCompetitiveResult(null);
             setShowMatchmaking(true);
           }}
-          onDashboard={() => navigate('/dashboard')}
+          onDashboard={() => {
+            clearMatchStorage(currentMatch?.id);
+            navigate('/dashboard');
+          }}
         />
+      </div>
+    );
+  }
+
+  // === WAITING FOR OPPONENT TO FINISH ===
+  if (waitingForOpponent) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>You finished!</h2>
+          <p style={{ color: '#64748B', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Your score: <strong style={{ color: '#4F46E5' }}>{scoreRef.current} / {puzzles.length}</strong></p>
+          <p style={{ color: '#94A3B8', fontSize: '0.875rem' }}>Waiting for your opponent to finish...</p>
+          <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center', gap: '0.4rem' }}>
+            {[0,1,2].map(i => (
+              <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#6366F1', animation: `bounce 1.2s ${i * 0.2}s infinite` }} />
+            ))}
+          </div>
+          <style>{`@keyframes bounce { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }`}</style>
+        </div>
       </div>
     );
   }

@@ -1,11 +1,12 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Zap, Trophy, Flame, Coins, LogOut, Menu, X, ChevronDown, Users, Swords } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getRankFromRating } from '../../utils/rankUtils';
 import SocialDrawer from '../SocialDrawer/SocialDrawer';
 import IncomingInviteModal from '../IncomingInviteModal/IncomingInviteModal';
+import { useUserInvitationsSocket } from '../../hooks/useUserInvitationsSocket';
 import api from '../../utils/api';
 
 export default function Navbar() {
@@ -15,52 +16,82 @@ export default function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [socialOpen, setSocialOpen] = useState(false);
   const [pendingInvite, setPendingInvite] = useState(null);
+  const [processingInviteId, setProcessingInviteId] = useState(null);
+  const acceptedInviteIdsRef = useRef(new Set());
 
-  // Poll for incoming friend match invitations every 2.5s
+  // Real-time WebSocket listener for invitations to this user
+  useUserInvitationsSocket(user?.id, (event) => {
+    if (event.type === 'NEW_INVITATION') {
+      const inviteId = event.data?.id;
+      if (inviteId && !acceptedInviteIdsRef.current.has(inviteId) && processingInviteId !== inviteId) {
+        setPendingInvite(event.data);
+      }
+    } else if (event.type === 'INVITATION_CANCELLED' || event.type === 'INVITATION_DECLINED' || event.type === 'INVITATION_ACCEPTED') {
+      setPendingInvite(prev => (prev?.id === event.data?.id ? null : prev));
+    }
+  });
+
+  // Initial check on mount + fallback check every 10s
   useEffect(() => {
     if (!isAuthenticated) return;
 
     let isMounted = true;
     const checkInvites = async () => {
+      if (processingInviteId) return;
       try {
         const res = await api.get('/api/matches/invitations/pending');
         if (isMounted && Array.isArray(res.data) && res.data.length > 0) {
-          setPendingInvite(res.data[0]);
+          const invite = res.data[0];
+          if (invite.id && !acceptedInviteIdsRef.current.has(invite.id) && invite.id !== processingInviteId) {
+            setPendingInvite(invite);
+          }
         } else if (isMounted) {
           setPendingInvite(null);
         }
       } catch (e) {
-        // Silently catch polling error
+        // Silently catch error
       }
     };
 
     checkInvites();
-    const interval = setInterval(checkInvites, 2500);
+    const interval = setInterval(checkInvites, 10000);
     return () => {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, processingInviteId]);
 
   const handleAcceptInvite = async (invite) => {
+    if (!invite?.id) return;
+    acceptedInviteIdsRef.current.add(invite.id);
+    setProcessingInviteId(invite.id);
+    setPendingInvite(null);
     try {
       const res = await api.post(`/api/matches/${invite.id}/accept`);
-      setPendingInvite(null);
       // Navigate to game with active match state
       navigate(`/games/${invite.gameSlug}`, { state: { acceptedMatch: res.data } });
     } catch (e) {
       console.error("Failed to accept invite", e);
-      setPendingInvite(null);
+    } finally {
+      setTimeout(() => {
+        setProcessingInviteId(null);
+      }, 2000);
     }
   };
 
   const handleDeclineInvite = async (invite) => {
+    if (!invite?.id) return;
+    acceptedInviteIdsRef.current.add(invite.id);
+    setProcessingInviteId(invite.id);
+    setPendingInvite(null);
     try {
       await api.post(`/api/matches/${invite.id}/decline`);
     } catch (e) {
       console.error("Failed to decline invite", e);
     } finally {
-      setPendingInvite(null);
+      setTimeout(() => {
+        setProcessingInviteId(null);
+      }, 2000);
     }
   };
 

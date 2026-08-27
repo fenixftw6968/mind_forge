@@ -12,6 +12,7 @@ import CompetitiveResults from '../../components/CompetitiveResults/CompetitiveR
 import SocialDrawer from '../../components/SocialDrawer/SocialDrawer';
 import ExitModal from '../../components/ExitModal/ExitModal';
 import api from '../../utils/api';
+import { useMatchSocket } from '../../hooks/useMatchSocket';
 
 const TOTAL_ROUNDS = 5;
 
@@ -35,16 +36,18 @@ export default function ReactionRush() {
   const { showXPPopup } = useGame();
   const navigate = useNavigate();
   const location = useLocation();
+  const acceptedMatch = location.state?.acceptedMatch;
 
   // Mode state
-  const [showModeModal, setShowModeModal] = useState(true);
-  const [playMode, setPlayMode] = useState('PRACTICE'); // 'PRACTICE' | 'RANKED' | 'FRIEND'
-  const [showMatchmaking, setShowMatchmaking] = useState(false);
+  const [showModeModal, setShowModeModal] = useState(!acceptedMatch);
+  const [playMode, setPlayMode] = useState(acceptedMatch ? 'FRIEND' : 'PRACTICE');
+  const [showMatchmaking, setShowMatchmaking] = useState(!!acceptedMatch);
   const [showSocialDrawer, setShowSocialDrawer] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [invitedFriend, setInvitedFriend] = useState(null);
-  const [currentMatch, setCurrentMatch] = useState(null);
+  const [currentMatch, setCurrentMatch] = useState(acceptedMatch || null);
   const [competitiveResult, setCompetitiveResult] = useState(null);
+  const [waitingForOpponent, setWaitingForOpponent] = useState(false);
 
   const [difficulty, setDifficulty] = useState(null);
   const [gameState, setGameState] = useState('idle'); // idle | waiting | ready | clicked | early | complete
@@ -52,16 +55,125 @@ export default function ReactionRush() {
   const [roundTimes, setRoundTimes] = useState([]);
   const [currentReactionTime, setCurrentReactionTime] = useState(null);
   const [totalXP, setTotalXP] = useState(0);
+  const [delays, setDelays] = useState([]);
 
   const startTimeRef = useRef(0);
   const timerRef = useRef(null);
 
   const config = DELAY_CONFIG[difficulty] || DELAY_CONFIG.MEDIUM;
 
-  // Auto-start match if accepted from invite
+  const clearMatchStorage = useCallback((matchId) => {
+    localStorage.removeItem('activeMatchId_reaction-rush');
+    if (matchId) {
+      localStorage.removeItem('activeMatchIndex_' + matchId);
+      localStorage.removeItem('activeMatchScore_' + matchId);
+      localStorage.removeItem('activeMatchTimes_' + matchId);
+    }
+  }, []);
+
+  // Listen for MATCH_FINISHED / MATCH_COMPLETED from opponent
+  useMatchSocket(currentMatch?.id, (event) => {
+    if (event.type === 'MATCH_FINISHED' || event.type === 'MATCH_COMPLETED' || event.data?.status === 'FINISHED') {
+      setWaitingForOpponent(false);
+      setCompetitiveResult(event.data);
+      clearMatchStorage(currentMatch?.id);
+    }
+  });
+
+  // Poll for match completion while waiting for opponent (as bulletproof fallback)
+  useEffect(() => {
+    if (!waitingForOpponent || !currentMatch?.id) return;
+    
+    let isCancelled = false;
+    const interval = setInterval(async () => {
+      try {
+        const res = await api.get(`/api/matches/${currentMatch.id}`);
+        if (!isCancelled && res.status === 200 && res.data?.status === 'FINISHED') {
+          setWaitingForOpponent(false);
+          setCompetitiveResult(res.data);
+          clearMatchStorage(currentMatch.id);
+        }
+      } catch (e) {
+        console.warn("Match status check while waiting:", e);
+      }
+    }, 1500);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
+  }, [waitingForOpponent, currentMatch?.id, clearMatchStorage]);
+
+  // Check for active match on mount
+  useEffect(() => {
+    if (!user) return;
+    const activeMatchId = localStorage.getItem('activeMatchId_reaction-rush');
+    if (!activeMatchId) return;
+    
+    const checkActiveMatch = async () => {
+      try {
+        const res = await api.get(`/api/matches/active?gameSlug=reaction-rush`);
+        if (res.status === 200 && res.data) {
+          const match = res.data;
+          
+          if (match.status === 'FINISHED') {
+            setCurrentMatch(match);
+            setCompetitiveResult(match);
+            setShowModeModal(false);
+            clearMatchStorage(match.id);
+          } else {
+            setCurrentMatch(match);
+            setShowModeModal(false);
+            
+            const isP1 = match.player1Id === user.id;
+            const finished = isP1 ? match.player1Finished : match.player2Finished;
+            
+            if (finished) {
+              setWaitingForOpponent(true);
+            } else {
+              // Restore questions and progress
+              handleMatchReady(match);
+              
+              const savedIndex = localStorage.getItem('activeMatchIndex_' + match.id);
+              const savedTimes = localStorage.getItem('activeMatchTimes_' + match.id);
+              
+              if (savedIndex !== null) setCurrentRound(parseInt(savedIndex, 10));
+              if (savedTimes !== null) {
+                try {
+                  setRoundTimes(JSON.parse(savedTimes));
+                } catch (e) {}
+              }
+            }
+          }
+        } else {
+          localStorage.removeItem('activeMatchId_reaction-rush');
+        }
+      } catch (e) {
+        console.error("Failed to check active match", e);
+        localStorage.removeItem('activeMatchId_reaction-rush');
+      }
+    };
+    
+    checkActiveMatch();
+  }, [user, clearMatchStorage]);
+
+  // Save active match progress in localStorage
+  useEffect(() => {
+    if (currentMatch && currentMatch.status !== 'FINISHED' && delays.length > 0) {
+      localStorage.setItem('activeMatchId_reaction-rush', currentMatch.id);
+      localStorage.setItem('activeMatchIndex_' + currentMatch.id, currentRound);
+      localStorage.setItem('activeMatchTimes_' + currentMatch.id, JSON.stringify(roundTimes));
+    }
+  }, [currentRound, roundTimes, currentMatch, delays]);
+
+  // Auto-start match if accepted from invite (go through countdown lobby first)
   useEffect(() => {
     if (location.state?.acceptedMatch) {
-      handleMatchReady(location.state.acceptedMatch);
+      const match = location.state.acceptedMatch;
+      setCurrentMatch(match);
+      setPlayMode('FRIEND');
+      setShowModeModal(false);
+      setShowMatchmaking(true);
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
@@ -83,6 +195,7 @@ export default function ReactionRush() {
       try {
         await api.post(`/api/matches/${currentMatch.id}/abandon`);
       } catch (e) {}
+      clearMatchStorage(currentMatch.id);
     } else if (showMatchmaking) {
       try {
         await api.post('/api/matches/queue/cancel?gameSlug=reaction-rush');
@@ -104,19 +217,37 @@ export default function ReactionRush() {
     setTotalXP(0);
     setGameState('idle');
     setCompetitiveResult(null);
+
+    let matchDelays = [];
+    try {
+      if (match.challengeData) {
+        const parsed = typeof match.challengeData === 'string' ? JSON.parse(match.challengeData) : match.challengeData;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          matchDelays = parsed;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not parse match challengeData", e);
+    }
+    setDelays(matchDelays);
   };
 
   const startRound = useCallback(() => {
     setGameState('waiting');
     setCurrentReactionTime(null);
 
-    const randomDelay = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+    let randomDelay;
+    if (currentMatch && delays.length > 0) {
+      randomDelay = delays[currentRound - 1] || (Math.floor(Math.random() * (config.max - config.min + 1)) + config.min);
+    } else {
+      randomDelay = Math.floor(Math.random() * (config.max - config.min + 1)) + config.min;
+    }
 
     timerRef.current = setTimeout(() => {
       startTimeRef.current = performance.now();
       setGameState('ready');
     }, randomDelay);
-  }, [config.min, config.max]);
+  }, [config.min, config.max, currentMatch, delays, currentRound]);
 
   const startGame = (diff) => {
     setDifficulty(diff);
@@ -189,16 +320,22 @@ export default function ReactionRush() {
             };
             setCompetitiveResult(simResult);
           } else {
+            setWaitingForOpponent(true);
             const res = await api.post(`/api/matches/${currentMatch.id}/submit`, {
               score: Math.max(0, 1000 - avg),
               timeTakenSeconds: Math.round(avg / 100),
               mistakes: roundTimes.filter(t => t > 450).length,
               detailedAnswers: `Avg Reaction: ${avg}ms`
             });
-            setCompetitiveResult(res.data);
+            if (res.data?.status === 'FINISHED') {
+              setWaitingForOpponent(false);
+              setCompetitiveResult(res.data);
+              clearMatchStorage(currentMatch.id);
+            }
           }
         } catch (e) {
           console.error("Reaction rush submit error", e);
+          setWaitingForOpponent(false);
         }
       }
     } else {
@@ -230,6 +367,7 @@ export default function ReactionRush() {
         mode={playMode === 'FRIEND' ? 'FRIEND' : 'RANKED'}
         friendTarget={invitedFriend}
         difficulty={difficulty}
+        initialMatch={currentMatch}
         onClose={() => {
           setShowMatchmaking(false);
           setInvitedFriend(null);
@@ -259,6 +397,25 @@ export default function ReactionRush() {
     );
   }
 
+  // === WAITING FOR OPPONENT TO FINISH ===
+  if (waitingForOpponent) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>You finished!</h2>
+          <p style={{ color: '#64748B', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Waiting for your opponent to finish...</p>
+          <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center', gap: '0.4rem' }}>
+            {[0,1,2].map(i => (
+              <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#6366F1', animation: `bounce 1.2s ${i * 0.2}s infinite` }} />
+            ))}
+          </div>
+          <style>{`@keyframes bounce { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }`}</style>
+        </div>
+      </div>
+    );
+  }
+
   // === COMPETITIVE MATCH RESULTS SCREEN ===
   if (competitiveResult) {
     return (
@@ -267,10 +424,21 @@ export default function ReactionRush() {
           matchResult={competitiveResult}
           currentUserId={user?.id || currentMatch?.player1Id}
           onRematch={() => {
+            if (playMode === 'FRIEND' && currentMatch) {
+              const oppId = currentMatch.player1Id === user?.id ? currentMatch.player2Id : currentMatch.player1Id;
+              const oppName = currentMatch.player1Id === user?.id ? currentMatch.player2Username : currentMatch.player1Username;
+              if (oppId && oppId !== 999999) {
+                setInvitedFriend({ id: oppId, username: oppName });
+              }
+            }
+            clearMatchStorage(currentMatch?.id);
             setCompetitiveResult(null);
             setShowMatchmaking(true);
           }}
-          onDashboard={() => navigate('/dashboard')}
+          onDashboard={() => {
+            clearMatchStorage(currentMatch?.id);
+            navigate('/dashboard');
+          }}
         />
       </div>
     );

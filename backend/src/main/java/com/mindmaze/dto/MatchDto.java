@@ -45,4 +45,7 @@ public class MatchDto {
     private LocalDateTime createdAt;
     private LocalDateTime startedAt;
     private LocalDateTime finishedAt;
+
+    private Long startedAtMillis;
+    private Long serverTimeMillis;
 }

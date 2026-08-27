@@ -14,13 +14,19 @@ export default function MatchmakingLobby({
   friendTarget = null,
   difficulty = null,
   onMatchReady,
+  initialMatch = null,
 }) {
-  const [status, setStatus] = useState('QUEUING'); // 'QUEUING', 'WAITING_FRIEND', 'FOUND', 'COUNTDOWN', 'TIMEOUT_PROMPT', 'DECLINED', 'ERROR'
+  const [status, setStatus] = useState(() => {
+    return mode === 'FRIEND' ? 'WAITING_FRIEND' : 'QUEUING';
+  }); // 'QUEUING', 'WAITING_FRIEND', 'FOUND', 'COUNTDOWN', 'TIMEOUT_PROMPT', 'DECLINED', 'ERROR'
   const [matchData, setMatchData] = useState(null);
   const [countdown, setCountdown] = useState(3);
   const [queueTime, setQueueTime] = useState(0);
   const [error, setError] = useState(null);
   const matchStartedRef = useRef(false);
+
+  const onMatchReadyRef = useRef(onMatchReady);
+  onMatchReadyRef.current = onMatchReady;
 
   // Queue timer
   useEffect(() => {
@@ -35,32 +41,50 @@ export default function MatchmakingLobby({
 
   // Trigger countdown and match start
   const handleMatchFound = useCallback((match) => {
+    if (!match) return;
     if (matchStartedRef.current) return;
     matchStartedRef.current = true;
 
-    setStatus('FOUND');
     setMatchData(match);
+    setStatus('COUNTDOWN');
+  }, []);
 
-    let count = 3;
-    setCountdown(count);
-    const interval = setInterval(() => {
-      count--;
-      setCountdown(count);
-      if (count <= 0) {
-        clearInterval(interval);
-        setStatus('COUNTDOWN');
-        if (onMatchReady) {
-          onMatchReady(match);
+  // Dedicated countdown timer effect that ticks continuously until 0
+  useEffect(() => {
+    if (status !== 'COUNTDOWN' || !matchData) return;
+
+    const serverTimeOffset = Date.now() - (matchData.serverTimeMillis || Date.now());
+    const targetTime = matchData.startedAtMillis || (Date.now() + 4000);
+    let timerInterval = null;
+
+    const updateTimer = () => {
+      const currentServerTime = Date.now() - serverTimeOffset;
+      const remainingMs = targetTime - currentServerTime;
+      const remainingSecs = Math.max(0, Math.ceil(remainingMs / 1000));
+
+      setCountdown(remainingSecs);
+
+      if (remainingMs <= 0) {
+        if (timerInterval) clearInterval(timerInterval);
+        if (onMatchReadyRef.current) {
+          onMatchReadyRef.current(matchData);
         }
       }
-    }, 1000);
-  }, [onMatchReady]);
+    };
+
+    updateTimer();
+    timerInterval = setInterval(updateTimer, 100);
+
+    return () => {
+      if (timerInterval) clearInterval(timerInterval);
+    };
+  }, [status, matchData]);
 
   // Listen to WebSockets for real-time instant notification
   useMatchSocket(matchData?.id, (event) => {
-    if (event.type === 'MATCH_READY') {
+    if (event.type === 'MATCH_READY' || event.type === 'INVITATION_ACCEPTED') {
       handleMatchFound(event.data);
-    } else if (event.type === 'MATCH_CANCELLED' || event.type === 'MATCH_ABANDONED') {
+    } else if (event.type === 'MATCH_CANCELLED' || event.type === 'MATCH_ABANDONED' || event.type === 'INVITATION_DECLINED') {
       setStatus('DECLINED');
       setTimeout(onClose, 2000);
     }
@@ -69,8 +93,9 @@ export default function MatchmakingLobby({
   // Initial Queue / Match creation & Polling loop
   useEffect(() => {
     if (!isOpen) {
-      setStatus('QUEUING');
+      setStatus(mode === 'FRIEND' ? 'WAITING_FRIEND' : 'QUEUING');
       setMatchData(null);
+      setCountdown(3);
       setQueueTime(0);
       setError(null);
       matchStartedRef.current = false;
@@ -82,6 +107,16 @@ export default function MatchmakingLobby({
 
     const startQueue = async () => {
       try {
+        if (initialMatch) {
+          setMatchData(initialMatch);
+          if (initialMatch.status === 'READY' || initialMatch.player2Ready) {
+            handleMatchFound(initialMatch);
+          } else {
+            setStatus(mode === 'FRIEND' ? 'WAITING_FRIEND' : 'QUEUING');
+          }
+          return;
+        }
+
         if (mode === 'RANKED') {
           setStatus('QUEUING');
           const diffQuery = difficulty ? `&difficulty=${difficulty}` : '';
@@ -119,7 +154,13 @@ export default function MatchmakingLobby({
               }
             }, 1500);
           }
-        } else if (mode === 'FRIEND' && friendTarget) {
+        } else if (mode === 'FRIEND') {
+          if (!friendTarget && !initialMatch) {
+            return;
+          }
+          if (!friendTarget) {
+            return;
+          }
           setStatus('WAITING_FRIEND');
           const res = await api.post('/api/matches/invite', {
             friendId: friendTarget.userId || friendTarget.id,
@@ -157,7 +198,8 @@ export default function MatchmakingLobby({
                 }
               } else if (elapsedPolls >= 40) { // ~60 seconds timeout
                 clearInterval(pollInterval);
-                setStatus('TIMEOUT_PROMPT');
+                setError("Friend did not respond in time.");
+                setStatus('ERROR');
               }
             } catch (e) {
               console.warn("Friend match poll error", e);
@@ -182,7 +224,7 @@ export default function MatchmakingLobby({
         api.post(`/api/matches/queue/cancel?gameSlug=${gameSlug}`).catch(() => {});
       }
     };
-  }, [isOpen, gameSlug, mode, friendTarget, difficulty, handleMatchFound]);
+  }, [isOpen, gameSlug, mode, friendTarget, difficulty, initialMatch]);
 
   const handleSimulatedMatch = async () => {
     // Player opted to play vs AI Bot
@@ -564,30 +606,27 @@ export default function MatchmakingLobby({
             </motion.div>
           )}
 
-          {/* OPPONENT FOUND STATE */}
-          {status === 'FOUND' && (
+          {/* OPPONENT FOUND & COUNTDOWN STATE */}
+          {(status === 'COUNTDOWN' || status === 'FOUND') && (
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
               <div style={{
-                width: '72px',
-                height: '72px',
+                width: '60px',
+                height: '60px',
                 borderRadius: '50%',
                 background: '#ECFDF5',
                 border: '2px solid #A7F3D0',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                margin: '0 auto 1.25rem',
+                margin: '0 auto 0.75rem',
                 color: '#059669'
               }}>
-                <CheckCircle size={38} />
+                <CheckCircle size={32} />
               </div>
 
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', fontFamily: 'var(--font-display)', marginBottom: '0.35rem' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', fontFamily: 'var(--font-display)', marginBottom: '0.25rem' }}>
                 Match Ready!
               </h2>
-              <p style={{ color: '#64748B', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
-                Synchronizing challenge puzzles...
-              </p>
 
               {/* Player vs Player card */}
               <div style={{
@@ -597,20 +636,20 @@ export default function MatchmakingLobby({
                 background: '#F8FAFC',
                 border: '1px solid #E2E8F0',
                 borderRadius: '1.25rem',
-                padding: '1.25rem 1.5rem',
-                marginBottom: '1rem'
+                padding: '1rem 1.25rem',
+                margin: '0.85rem 0'
               }}>
                 <div style={{ textAlign: 'left' }}>
                   <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>You</div>
-                  <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>
                     {matchData?.player1Username || 'You'}
                   </div>
-                  <div style={{ fontSize: '0.775rem', color: '#2563EB', fontWeight: 600 }}>
+                  <div style={{ fontSize: '0.75rem', color: '#2563EB', fontWeight: 600 }}>
                     {matchData?.player1Rating || 500} pts
                   </div>
                 </div>
 
-                <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#6366F1' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#6366F1' }}>
                   VS
                 </div>
 
@@ -618,44 +657,39 @@ export default function MatchmakingLobby({
                   <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>
                     {matchData?.isBotMatch ? 'AI Challenger' : 'Opponent'}
                   </div>
-                  <div style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>
                     {matchData?.player2Username || 'Challenger'}
                   </div>
-                  <div style={{ fontSize: '0.775rem', color: matchData?.isBotMatch ? '#64748B' : '#E11D48', fontWeight: 600 }}>
+                  <div style={{ fontSize: '0.75rem', color: matchData?.isBotMatch ? '#64748B' : '#E11D48', fontWeight: 600 }}>
                     {matchData?.isBotMatch ? '🤖 Bot Match' : `${matchData?.player2Rating || 500} pts`}
                   </div>
                 </div>
               </div>
-            </motion.div>
-          )}
 
-          {/* COUNTDOWN STATE */}
-          {status === 'COUNTDOWN' && (
-            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
-                Starting In
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>
+                Game Starting In
               </div>
 
               <motion.div
                 key={countdown}
-                initial={{ scale: 1.5, opacity: 0 }}
+                initial={{ scale: 1.4, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.5, opacity: 0 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.25 }}
                 style={{
-                  fontSize: '4.5rem',
+                  fontSize: '3.75rem',
                   fontWeight: 900,
                   fontFamily: 'var(--font-display)',
-                  color: countdown === 1 ? '#059669' : '#4F46E5',
+                  color: countdown <= 1 ? '#059669' : '#4F46E5',
                   lineHeight: 1,
-                  margin: '1rem 0 1.5rem'
+                  margin: '0.4rem 0 0.85rem'
                 }}
               >
                 {countdown > 0 ? countdown : 'GO!'}
               </motion.div>
 
-              <p style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 500 }}>
-                Answer quickly and accurately to claim victory!
+              <p style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 500 }}>
+                Synchronizing challenge puzzles...
               </p>
             </motion.div>
           )}

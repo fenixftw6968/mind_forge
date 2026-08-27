@@ -104,6 +104,18 @@ public class MatchController {
         return ResponseEntity.ok(matchService.submitMatchResult(matchId, user.getId(), request));
     }
 
+    @GetMapping("/active")
+    public ResponseEntity<MatchDto> getActiveMatch(
+            @RequestParam String gameSlug,
+            @AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        MatchDto activeMatch = matchService.getActiveMatch(user.getId(), gameSlug);
+        if (activeMatch == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(activeMatch);
+    }
+
     @GetMapping("/recent")
     public ResponseEntity<List<MatchDto>> getRecentMatches(
             @AuthenticationPrincipal User user) {

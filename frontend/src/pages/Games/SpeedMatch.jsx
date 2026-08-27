@@ -13,6 +13,7 @@ import SocialDrawer from '../../components/SocialDrawer/SocialDrawer';
 import ExitModal from '../../components/ExitModal/ExitModal';
 import { shuffleArray } from '../../utils/shuffleQuestions';
 import api from '../../utils/api';
+import { useMatchSocket } from '../../hooks/useMatchSocket';
 
 const COLORS = [
   { name: 'RED', hex: '#E11D48' },
@@ -68,16 +69,21 @@ export default function SpeedMatch() {
   const { showXPPopup } = useGame();
   const navigate = useNavigate();
   const location = useLocation();
+  const acceptedMatch = location.state?.acceptedMatch;
 
   // Mode state
-  const [showModeModal, setShowModeModal] = useState(true);
-  const [playMode, setPlayMode] = useState('PRACTICE'); // 'PRACTICE' | 'RANKED' | 'FRIEND'
-  const [showMatchmaking, setShowMatchmaking] = useState(false);
+  const [showModeModal, setShowModeModal] = useState(!acceptedMatch);
+  const [playMode, setPlayMode] = useState(acceptedMatch ? 'FRIEND' : 'PRACTICE');
+  const [showMatchmaking, setShowMatchmaking] = useState(!!acceptedMatch);
   const [showSocialDrawer, setShowSocialDrawer] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [invitedFriend, setInvitedFriend] = useState(null);
-  const [currentMatch, setCurrentMatch] = useState(null);
+  const [currentMatch, setCurrentMatch] = useState(acceptedMatch || null);
   const [competitiveResult, setCompetitiveResult] = useState(null);
+  const [waitingForOpponent, setWaitingForOpponent] = useState(false);
+
+  const scoreRef = useRef(0);
+  const mistakesRef = useRef(0);
 
   const [difficulty, setDifficulty] = useState(null);
   const [rounds, setRounds] = useState([]);
@@ -96,10 +102,123 @@ export default function SpeedMatch() {
   const currentRound = rounds[currentIndex];
   const roundConfig = ROUND_LIMITS[difficulty] || ROUND_LIMITS.MEDIUM;
 
-  // Auto-start match if accepted from invite
+  const clearMatchStorage = useCallback((matchId) => {
+    localStorage.removeItem('activeMatchId_speed-match');
+    if (matchId) {
+      localStorage.removeItem('activeMatchIndex_' + matchId);
+      localStorage.removeItem('activeMatchScore_' + matchId);
+      localStorage.removeItem('activeMatchMistakes_' + matchId);
+    }
+  }, []);
+
+  // Listen for MATCH_FINISHED / MATCH_COMPLETED from opponent
+  useMatchSocket(currentMatch?.id, (event) => {
+    if (event.type === 'MATCH_FINISHED' || event.type === 'MATCH_COMPLETED' || event.data?.status === 'FINISHED') {
+      setWaitingForOpponent(false);
+      setCompetitiveResult(event.data);
+      clearMatchStorage(currentMatch?.id);
+    }
+  });
+
+  // Poll for match completion while waiting for opponent (as bulletproof fallback)
+  useEffect(() => {
+    if (!waitingForOpponent || !currentMatch?.id) return;
+    
+    let isCancelled = false;
+    const interval = setInterval(async () => {
+      try {
+        const res = await api.get(`/api/matches/${currentMatch.id}`);
+        if (!isCancelled && res.status === 200 && res.data?.status === 'FINISHED') {
+          setWaitingForOpponent(false);
+          setCompetitiveResult(res.data);
+          clearMatchStorage(currentMatch.id);
+        }
+      } catch (e) {
+        console.warn("Match status check while waiting:", e);
+      }
+    }, 1500);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
+  }, [waitingForOpponent, currentMatch?.id, clearMatchStorage]);
+
+  // Check for active match on mount
+  useEffect(() => {
+    if (!user) return;
+    const activeMatchId = localStorage.getItem('activeMatchId_speed-match');
+    if (!activeMatchId) return;
+    
+    const checkActiveMatch = async () => {
+      try {
+        const res = await api.get(`/api/matches/active?gameSlug=speed-match`);
+        if (res.status === 200 && res.data) {
+          const match = res.data;
+          
+          if (match.status === 'FINISHED') {
+            setCurrentMatch(match);
+            setCompetitiveResult(match);
+            setShowModeModal(false);
+            clearMatchStorage(match.id);
+          } else {
+            setCurrentMatch(match);
+            setShowModeModal(false);
+            
+            const isP1 = match.player1Id === user.id;
+            const finished = isP1 ? match.player1Finished : match.player2Finished;
+            
+            if (finished) {
+              setWaitingForOpponent(true);
+            } else {
+              // Restore questions and progress
+              handleMatchReady(match);
+              
+              const savedIndex = localStorage.getItem('activeMatchIndex_' + match.id);
+              const savedScore = localStorage.getItem('activeMatchScore_' + match.id);
+              const savedMistakes = localStorage.getItem('activeMatchMistakes_' + match.id);
+              
+              if (savedIndex !== null) setCurrentIndex(parseInt(savedIndex, 10));
+              if (savedScore !== null) {
+                setScore(parseInt(savedScore, 10));
+                scoreRef.current = parseInt(savedScore, 10);
+              }
+              if (savedMistakes !== null) {
+                setMistakes(parseInt(savedMistakes, 10));
+                mistakesRef.current = parseInt(savedMistakes, 10);
+              }
+            }
+          }
+        } else {
+          localStorage.removeItem('activeMatchId_speed-match');
+        }
+      } catch (e) {
+        console.error("Failed to check active match", e);
+        localStorage.removeItem('activeMatchId_speed-match');
+      }
+    };
+    
+    checkActiveMatch();
+  }, [user, clearMatchStorage]);
+
+  // Save active match progress in localStorage
+  useEffect(() => {
+    if (currentMatch && currentMatch.status !== 'FINISHED' && rounds.length > 0) {
+      localStorage.setItem('activeMatchId_speed-match', currentMatch.id);
+      localStorage.setItem('activeMatchIndex_' + currentMatch.id, currentIndex);
+      localStorage.setItem('activeMatchScore_' + currentMatch.id, score);
+      localStorage.setItem('activeMatchMistakes_' + currentMatch.id, mistakes);
+    }
+  }, [currentIndex, score, mistakes, currentMatch, rounds]);
+
+  // Auto-start match if accepted from invite (go through countdown lobby first)
   useEffect(() => {
     if (location.state?.acceptedMatch) {
-      handleMatchReady(location.state.acceptedMatch);
+      const match = location.state.acceptedMatch;
+      setCurrentMatch(match);
+      setPlayMode('FRIEND');
+      setShowModeModal(false);
+      setShowMatchmaking(true);
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
@@ -121,6 +240,7 @@ export default function SpeedMatch() {
       try {
         await api.post(`/api/matches/${currentMatch.id}/abandon`);
       } catch (e) {}
+      clearMatchStorage(currentMatch.id);
     } else if (showMatchmaking) {
       try {
         await api.post('/api/matches/queue/cancel?gameSlug=speed-match');
@@ -137,7 +257,20 @@ export default function SpeedMatch() {
 
     const matchDiff = match.difficulty || 'MEDIUM';
     const config = ROUND_LIMITS[matchDiff] || ROUND_LIMITS.MEDIUM;
-    const generated = generateBalancedRounds(config.rounds);
+    
+    let matchRounds = [];
+    try {
+      if (match.challengeData) {
+        const parsed = typeof match.challengeData === 'string' ? JSON.parse(match.challengeData) : match.challengeData;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          matchRounds = parsed;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not parse match challengeData", e);
+    }
+
+    const generated = matchRounds.length > 0 ? matchRounds : generateBalancedRounds(config.rounds);
 
     setRounds(generated);
     setDifficulty(matchDiff);
@@ -161,7 +294,10 @@ export default function SpeedMatch() {
     setFeedback(isCorrect ? 'correct' : 'wrong');
 
     if (isCorrect) {
-      setScore(s => s + 1);
+      setScore(s => {
+        scoreRef.current = s + 1;
+        return s + 1;
+      });
       const newStreak = streak + 1;
       setStreak(newStreak);
       setMaxStreak(m => Math.max(m, newStreak));
@@ -175,7 +311,10 @@ export default function SpeedMatch() {
       }
     } else {
       setStreak(0);
-      setMistakes(m => m + 1);
+      setMistakes(m => {
+        mistakesRef.current = m + 1;
+        return m + 1;
+      });
     }
 
     setTimeout(() => {
@@ -221,16 +360,22 @@ export default function SpeedMatch() {
           };
           setCompetitiveResult(simResult);
         } else {
+          setWaitingForOpponent(true);
           const res = await api.post(`/api/matches/${currentMatch.id}/submit`, {
-            score: score,
+            score: scoreRef.current,
             timeTakenSeconds: totalDuration,
-            mistakes: mistakes,
-            detailedAnswers: `Speed Match: ${score}/${rounds.length}`
+            mistakes: mistakesRef.current,
+            detailedAnswers: `Speed Match: ${scoreRef.current}/${rounds.length}`
           });
-          setCompetitiveResult(res.data);
+          if (res.data?.status === 'FINISHED') {
+            setWaitingForOpponent(false);
+            setCompetitiveResult(res.data);
+            clearMatchStorage(currentMatch.id);
+          }
         }
       } catch (e) {
         console.error("Speed match submit error", e);
+        setWaitingForOpponent(false);
       }
     }
   };
@@ -252,88 +397,6 @@ export default function SpeedMatch() {
     setIsGameOver(false);
     setCompetitiveResult(null);
   };
-
-  // === PLAY MODE SELECT MODAL ===
-  if (showModeModal) {
-    return (
-      <PlayModeModal
-        isOpen={showModeModal}
-        gameTitle="Speed Match"
-        gameIcon="🎯"
-        onClose={() => navigate('/games')}
-        onSelectMode={handleSelectMode}
-      />
-    );
-  }
-
-  // === MATCHMAKING LOBBY ===
-  if (showMatchmaking) {
-    return (
-      <MatchmakingLobby
-        isOpen={showMatchmaking}
-        gameSlug="speed-match"
-        gameTitle="Speed Match"
-        mode={playMode === 'FRIEND' ? 'FRIEND' : 'RANKED'}
-        friendTarget={invitedFriend}
-        difficulty={difficulty}
-        onClose={() => {
-          setShowMatchmaking(false);
-          setInvitedFriend(null);
-          setShowModeModal(true);
-        }}
-        onMatchReady={handleMatchReady}
-      />
-    );
-  }
-
-  // === SOCIAL DRAWER ===
-  if (showSocialDrawer) {
-    return (
-      <SocialDrawer
-        isOpen={showSocialDrawer}
-        onClose={() => {
-          setShowSocialDrawer(false);
-          setShowModeModal(true);
-        }}
-        onInviteFriendToGame={(friend) => {
-          setShowSocialDrawer(false);
-          setInvitedFriend(friend);
-          setPlayMode('FRIEND');
-          setShowMatchmaking(true);
-        }}
-      />
-    );
-  }
-
-  // === COMPETITIVE MATCH RESULTS SCREEN ===
-  if (competitiveResult) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px', paddingBottom: '3rem' }}>
-        <CompetitiveResults
-          matchResult={competitiveResult}
-          currentUserId={user?.id || currentMatch?.player1Id}
-          onRematch={() => {
-            setCompetitiveResult(null);
-            setShowMatchmaking(true);
-          }}
-          onDashboard={() => navigate('/dashboard')}
-        />
-      </div>
-    );
-  }
-
-  // === DIFFICULTY SELECT (Practice Mode) ===
-  if (!difficulty && playMode === 'PRACTICE') {
-    return (
-      <DifficultySelector
-        title="Speed Match"
-        subtitle="Stroop effect challenge! Fast decision-making: does the word match the ink color?"
-        icon="🎯"
-        onSelectDifficulty={startGame}
-        onBack={() => setShowModeModal(true)}
-      />
-    );
-  }
 
   // Keyboard shortcut listener: Left Arrow (NO MATCH), Right Arrow (MATCH)
   useEffect(() => {
@@ -367,8 +430,121 @@ export default function SpeedMatch() {
     return () => clearInterval(timerRef.current);
   }, [currentIndex, difficulty, isGameOver, currentRound, feedback, handleDecision]);
 
+  // === PLAY MODE SELECT MODAL ===
+  if (showModeModal) {
+    return (
+      <PlayModeModal
+        isOpen={showModeModal}
+        gameTitle="Speed Match"
+        gameIcon="🎯"
+        onClose={() => navigate('/games')}
+        onSelectMode={handleSelectMode}
+      />
+    );
+  }
+
+  // === MATCHMAKING LOBBY ===
+  if (showMatchmaking) {
+    return (
+      <MatchmakingLobby
+        isOpen={showMatchmaking}
+        gameSlug="speed-match"
+        gameTitle="Speed Match"
+        mode={playMode === 'FRIEND' ? 'FRIEND' : 'RANKED'}
+        friendTarget={invitedFriend}
+        difficulty={difficulty}
+        initialMatch={currentMatch}
+        onClose={() => {
+          setShowMatchmaking(false);
+          setInvitedFriend(null);
+          setShowModeModal(true);
+        }}
+        onMatchReady={handleMatchReady}
+      />
+    );
+  }
+
+  // === SOCIAL DRAWER ===
+  if (showSocialDrawer) {
+    return (
+      <SocialDrawer
+        isOpen={showSocialDrawer}
+        onClose={() => {
+          setShowSocialDrawer(false);
+          setShowModeModal(true);
+        }}
+        onInviteFriendToGame={(friend) => {
+          setShowSocialDrawer(false);
+          setInvitedFriend(friend);
+          setPlayMode('FRIEND');
+          setShowMatchmaking(true);
+        }}
+      />
+    );
+  }
+
+  // === WAITING FOR OPPONENT TO FINISH ===
+  if (waitingForOpponent) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>You finished!</h2>
+          <p style={{ color: '#64748B', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Your score: <strong style={{ color: '#4F46E5' }}>{scoreRef.current} / {rounds.length}</strong></p>
+          <p style={{ color: '#94A3B8', fontSize: '0.875rem' }}>Waiting for your opponent to finish...</p>
+          <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center', gap: '0.4rem' }}>
+            {[0,1,2].map(i => (
+              <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#6366F1', animation: `bounce 1.2s ${i * 0.2}s infinite` }} />
+            ))}
+          </div>
+          <style>{`@keyframes bounce { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }`}</style>
+        </div>
+      </div>
+    );
+  }
+
+  // === COMPETITIVE MATCH RESULTS SCREEN ===
+  if (competitiveResult) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px', paddingBottom: '3rem' }}>
+        <CompetitiveResults
+          matchResult={competitiveResult}
+          currentUserId={user?.id || currentMatch?.player1Id}
+          onRematch={() => {
+            if (playMode === 'FRIEND' && currentMatch) {
+              const oppId = currentMatch.player1Id === user?.id ? currentMatch.player2Id : currentMatch.player1Id;
+              const oppName = currentMatch.player1Id === user?.id ? currentMatch.player2Username : currentMatch.player1Username;
+              if (oppId && oppId !== 999999) {
+                setInvitedFriend({ id: oppId, username: oppName });
+              }
+            }
+            clearMatchStorage(currentMatch?.id);
+            setCompetitiveResult(null);
+            setShowMatchmaking(true);
+          }}
+          onDashboard={() => {
+            clearMatchStorage(currentMatch?.id);
+            navigate('/dashboard');
+          }}
+        />
+      </div>
+    );
+  }
+
+  // === DIFFICULTY SELECT (Practice Mode) ===
+  if (!difficulty && playMode === 'PRACTICE') {
+    return (
+      <DifficultySelector
+        title="Speed Match"
+        subtitle="Stroop effect challenge! Fast decision-making: does the word match the ink color?"
+        icon="🎯"
+        onSelectDifficulty={startGame}
+        onBack={() => setShowModeModal(true)}
+      />
+    );
+  }
+
   if (!difficulty) {
-    // Fallback if somehow difficulty is lost
     return null;
   }
 

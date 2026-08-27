@@ -18,6 +18,7 @@ import { getDailyQuestionSet } from '../../services/dailyQuestionService';
 import { getRandomQuestionSet } from '../../services/randomQuestionService';
 import { codeBreakerQuestions } from '../../data/codeBreakerQuestions';
 import api from '../../utils/api';
+import { useMatchSocket } from '../../hooks/useMatchSocket';
 
 const TIMER_SECONDS = { EASY: 150, MEDIUM: 120, HARD: 90 };
 const XP_PER_DIFFICULTY = { EASY: 15, MEDIUM: 30, HARD: 60 };
@@ -27,16 +28,18 @@ export default function CodeBreaker() {
   const { showXPPopup } = useGame();
   const navigate = useNavigate();
   const location = useLocation();
+  const acceptedMatch = location.state?.acceptedMatch;
 
   // Mode state
-  const [showModeModal, setShowModeModal] = useState(true);
-  const [playMode, setPlayMode] = useState('PRACTICE'); // 'PRACTICE' | 'RANKED' | 'FRIEND'
-  const [showMatchmaking, setShowMatchmaking] = useState(false);
+  const [showModeModal, setShowModeModal] = useState(!acceptedMatch);
+  const [playMode, setPlayMode] = useState(acceptedMatch ? 'FRIEND' : 'PRACTICE');
+  const [showMatchmaking, setShowMatchmaking] = useState(!!acceptedMatch);
   const [showSocialDrawer, setShowSocialDrawer] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [invitedFriend, setInvitedFriend] = useState(null);
-  const [currentMatch, setCurrentMatch] = useState(null);
+  const [currentMatch, setCurrentMatch] = useState(acceptedMatch || null);
   const [competitiveResult, setCompetitiveResult] = useState(null);
+  const [waitingForOpponent, setWaitingForOpponent] = useState(false);
 
   const [difficulty, setDifficulty] = useState(null);
   const [puzzles, setPuzzles] = useState([]);
@@ -52,6 +55,50 @@ export default function CodeBreaker() {
   const [totalXP, setTotalXP] = useState(0);
   const [showComplete, setShowComplete] = useState(false);
   const startTimeRef = useRef(Date.now());
+  const scoreRef = useRef(0);
+  const mistakesRef = useRef(0);
+
+  const clearMatchStorage = useCallback((matchId) => {
+    localStorage.removeItem('activeMatchId_code-breaker');
+    if (matchId) {
+      localStorage.removeItem('activeMatchIndex_' + matchId);
+      localStorage.removeItem('activeMatchScore_' + matchId);
+      localStorage.removeItem('activeMatchMistakes_' + matchId);
+    }
+  }, []);
+
+  // Listen for MATCH_FINISHED / MATCH_COMPLETED from opponent
+  useMatchSocket(currentMatch?.id, (event) => {
+    if (event.type === 'MATCH_FINISHED' || event.type === 'MATCH_COMPLETED' || event.data?.status === 'FINISHED') {
+      setWaitingForOpponent(false);
+      setCompetitiveResult(event.data);
+      clearMatchStorage(currentMatch?.id);
+    }
+  });
+
+  // Poll for match completion while waiting for opponent (as bulletproof fallback)
+  useEffect(() => {
+    if (!waitingForOpponent || !currentMatch?.id) return;
+    
+    let isCancelled = false;
+    const interval = setInterval(async () => {
+      try {
+        const res = await api.get(`/api/matches/${currentMatch.id}`);
+        if (!isCancelled && res.status === 200 && res.data?.status === 'FINISHED') {
+          setWaitingForOpponent(false);
+          setCompetitiveResult(res.data);
+          clearMatchStorage(currentMatch.id);
+        }
+      } catch (e) {
+        console.warn("Match status check while waiting:", e);
+      }
+    }, 1500);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
+  }, [waitingForOpponent, currentMatch?.id, clearMatchStorage]);
 
   const puzzle = puzzles[index];
   const digitCount = puzzle?.digitCount || 3;
@@ -63,10 +110,81 @@ export default function CodeBreaker() {
     { onComplete: () => handleSubmit(true) }
   );
 
-  // Auto-start match if accepted from invite
+  // Check for active match on mount
+  useEffect(() => {
+    if (!user) return;
+    const activeMatchId = localStorage.getItem('activeMatchId_code-breaker');
+    if (!activeMatchId) return;
+    
+    const checkActiveMatch = async () => {
+      try {
+        const res = await api.get(`/api/matches/active?gameSlug=code-breaker`);
+        if (res.status === 200 && res.data) {
+          const match = res.data;
+          
+          if (match.status === 'FINISHED') {
+            setCurrentMatch(match);
+            setCompetitiveResult(match);
+            setShowModeModal(false);
+            clearMatchStorage(match.id);
+          } else {
+            setCurrentMatch(match);
+            setShowModeModal(false);
+            
+            const isP1 = match.player1Id === user.id;
+            const finished = isP1 ? match.player1Finished : match.player2Finished;
+            
+            if (finished) {
+              setWaitingForOpponent(true);
+            } else {
+              // Restore questions and progress
+              handleMatchReady(match);
+              
+              const savedIndex = localStorage.getItem('activeMatchIndex_' + match.id);
+              const savedScore = localStorage.getItem('activeMatchScore_' + match.id);
+              const savedMistakes = localStorage.getItem('activeMatchMistakes_' + match.id);
+              
+              if (savedIndex !== null) setIndex(parseInt(savedIndex, 10));
+              if (savedScore !== null) {
+                setScore(parseInt(savedScore, 10));
+                scoreRef.current = parseInt(savedScore, 10);
+              }
+              if (savedMistakes !== null) {
+                setMistakes(parseInt(savedMistakes, 10));
+                mistakesRef.current = parseInt(savedMistakes, 10);
+              }
+            }
+          }
+        } else {
+          localStorage.removeItem('activeMatchId_code-breaker');
+        }
+      } catch (e) {
+        console.error("Failed to check active match", e);
+        localStorage.removeItem('activeMatchId_code-breaker');
+      }
+    };
+    
+    checkActiveMatch();
+  }, [user, clearMatchStorage]);
+
+  // Save active match progress in localStorage
+  useEffect(() => {
+    if (currentMatch && currentMatch.status !== 'FINISHED' && puzzles.length > 0) {
+      localStorage.setItem('activeMatchId_code-breaker', currentMatch.id);
+      localStorage.setItem('activeMatchIndex_' + currentMatch.id, index);
+      localStorage.setItem('activeMatchScore_' + currentMatch.id, score);
+      localStorage.setItem('activeMatchMistakes_' + currentMatch.id, mistakes);
+    }
+  }, [index, score, mistakes, currentMatch, puzzles]);
+
+  // Auto-start match if accepted from invite (go through countdown lobby first)
   useEffect(() => {
     if (location.state?.acceptedMatch) {
-      handleMatchReady(location.state.acceptedMatch);
+      const match = location.state.acceptedMatch;
+      setCurrentMatch(match);
+      setPlayMode('FRIEND');
+      setShowModeModal(false);
+      setShowMatchmaking(true);
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
@@ -88,6 +206,7 @@ export default function CodeBreaker() {
       try {
         await api.post(`/api/matches/${currentMatch.id}/abandon`);
       } catch (e) {}
+      clearMatchStorage(currentMatch.id);
     } else if (showMatchmaking) {
       try {
         await api.post('/api/matches/queue/cancel?gameSlug=code-breaker');
@@ -102,16 +221,30 @@ export default function CodeBreaker() {
     setCurrentMatch(match);
     startTimeRef.current = Date.now();
 
-    const selected = getDailyQuestionSet({
-      gameType: 'code-breaker',
-      difficulty: 'MEDIUM',
-      questionBank: codeBreakerQuestions,
-      count: 4,
-      userShuffle: false
-    });
+    let challengeQuestions = [];
+    try {
+      if (match.challengeData) {
+        const parsed = typeof match.challengeData === 'string' ? JSON.parse(match.challengeData) : match.challengeData;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          challengeQuestions = parsed;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not parse match challengeData", e);
+    }
 
-    const activeList = selected.length > 0 ? selected : codeBreakerQuestions.slice(0, 4);
-    setPuzzles(activeList);
+    if (challengeQuestions.length === 0) {
+      const selected = getDailyQuestionSet({
+        gameType: 'code-breaker',
+        difficulty: 'MEDIUM',
+        questionBank: codeBreakerQuestions,
+        count: 4,
+        userShuffle: false
+      });
+      challengeQuestions = selected.length > 0 ? selected : codeBreakerQuestions.slice(0, 4);
+    }
+
+    setPuzzles(challengeQuestions);
     const matchDiff = match.difficulty || 'MEDIUM';
     setDifficulty(matchDiff);
     setIndex(0);
@@ -125,7 +258,7 @@ export default function CodeBreaker() {
     setShowComplete(false);
     setCompetitiveResult(null);
 
-    const count = activeList[0]?.digitCount || 3;
+    const count = challengeQuestions[0]?.digitCount || 3;
     setDigits(new Array(count).fill(''));
     setActiveDigit(0);
   };
@@ -273,16 +406,22 @@ export default function CodeBreaker() {
             };
             setCompetitiveResult(simResult);
           } else {
+            setWaitingForOpponent(true);
             const res = await api.post(`/api/matches/${currentMatch.id}/submit`, {
               score: score,
               timeTakenSeconds: totalDuration,
               mistakes: mistakes,
               detailedAnswers: 'Code Breaker Set Completed'
             });
-            setCompetitiveResult(res.data);
+             if (res.data?.status === 'FINISHED') {
+              setWaitingForOpponent(false);
+              setCompetitiveResult(res.data);
+              clearMatchStorage(currentMatch.id);
+            }
           }
         } catch (e) {
           console.error("Match result submit error", e);
+          setWaitingForOpponent(false);
         }
       }
     }
@@ -310,6 +449,7 @@ export default function CodeBreaker() {
         gameTitle="Code Breaker"
         mode={playMode === 'FRIEND' ? 'FRIEND' : 'RANKED'}
         friendTarget={invitedFriend}
+        initialMatch={currentMatch}
         onClose={() => {
           setShowMatchmaking(false);
           setInvitedFriend(null);
@@ -339,6 +479,25 @@ export default function CodeBreaker() {
     );
   }
 
+  // === WAITING FOR OPPONENT TO FINISH ===
+  if (waitingForOpponent) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>You finished!</h2>
+          <p style={{ color: '#64748B', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Waiting for your opponent to finish...</p>
+          <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center', gap: '0.4rem' }}>
+            {[0,1,2].map(i => (
+              <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#6366F1', animation: `bounce 1.2s ${i * 0.2}s infinite` }} />
+            ))}
+          </div>
+          <style>{`@keyframes bounce { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }`}</style>
+        </div>
+      </div>
+    );
+  }
+
   // === COMPETITIVE MATCH RESULTS SCREEN ===
   if (competitiveResult) {
     return (
@@ -347,10 +506,21 @@ export default function CodeBreaker() {
           matchResult={competitiveResult}
           currentUserId={user?.id || currentMatch?.player1Id}
           onRematch={() => {
+            if (playMode === 'FRIEND' && currentMatch) {
+              const oppId = currentMatch.player1Id === user?.id ? currentMatch.player2Id : currentMatch.player1Id;
+              const oppName = currentMatch.player1Id === user?.id ? currentMatch.player2Username : currentMatch.player1Username;
+              if (oppId && oppId !== 999999) {
+                setInvitedFriend({ id: oppId, username: oppName });
+              }
+            }
+            clearMatchStorage(currentMatch?.id);
             setCompetitiveResult(null);
             setShowMatchmaking(true);
           }}
-          onDashboard={() => navigate('/dashboard')}
+          onDashboard={() => {
+            clearMatchStorage(currentMatch?.id);
+            navigate('/dashboard');
+          }}
         />
       </div>
     );
