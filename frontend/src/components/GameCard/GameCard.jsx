@@ -1,28 +1,28 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Lock, ChevronRight, Hash, Eye, KeyRound, Zap, Grid3x3, Target, HelpCircle } from 'lucide-react';
+import { Lock, ChevronRight, Hash, Eye, KeyRound, Code2, Puzzle, Sparkles, HelpCircle } from 'lucide-react';
 
 const CATEGORY_TAGS = {
+  'Programming / DSA': 'PROGRAMMING',
+  'Reasoning': 'REASONING',
+  'Brain Training': 'BRAIN TRAINING',
   'Logic': 'LOGIC',
   'Memory': 'MEMORY',
-  'Reaction': 'REACTION',
-  'Patterns': 'PATTERNS',
-  'Decision Making': 'DECISION',
 };
 
 const DIFFICULTY_STYLES = {
-  EASY:   { bg: '#ECFDF5', color: '#059669', border: '#A7F3D0', label: 'Easy' },
-  MEDIUM: { bg: '#FFFBEB', color: '#D97706', border: '#FDE68A', label: 'Medium' },
-  HARD:   { bg: '#FFF1F2', color: '#E11D48', border: '#FECDD3', label: 'Hard' },
+  EASY:   { bg: 'rgba(34, 197, 94, 0.12)', color: '#4ADE80', border: 'rgba(34, 197, 94, 0.25)', label: 'Easy' },
+  MEDIUM: { bg: 'rgba(245, 158, 11, 0.12)', color: '#FBBF24', border: 'rgba(245, 158, 11, 0.25)', label: 'Medium' },
+  HARD:   { bg: 'rgba(244, 63, 94, 0.12)', color: '#FB7185', border: 'rgba(244, 63, 94, 0.25)', label: 'Hard' },
 };
 
 const SLUG_ICONS = {
+  'dsa-master-quiz': Code2,
+  'logic-puzzle': Puzzle,
+  'brain-teaser-battle': Sparkles,
   'number-detective': Hash,
   'memory-challenge': Eye,
   'code-breaker': KeyRound,
-  'reaction-rush': Zap,
-  'grid-puzzle': Grid3x3,
-  'speed-match': Target,
 };
 
 export default function GameCard({ game, index = 0, isDashboardFeatured = false }) {
@@ -32,9 +32,9 @@ export default function GameCard({ game, index = 0, isDashboardFeatured = false 
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.04 }}
+      transition={{ duration: 0.25, delay: index * 0.03 }}
       whileHover={game.isUnlocked ? { y: -2, transition: { duration: 0.15 } } : {}}
       style={{ position: 'relative' }}
     >
@@ -43,27 +43,29 @@ export default function GameCard({ game, index = 0, isDashboardFeatured = false 
         style={{
           display: 'block',
           textDecoration: 'none',
-          background: '#FFFFFF',
-          border: '1px solid #E2E8F0',
+          background: '#242424',
+          border: '1px solid #2E2E2E',
           borderRadius: '1rem',
-          padding: '1.25rem 1.35rem',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
-          transition: 'all 0.2s ease',
+          padding: '1.35rem 1.45rem',
+          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25)',
+          transition: 'all 0.15s ease',
           cursor: game.isUnlocked ? 'pointer' : 'default',
-          opacity: game.isUnlocked ? 1 : 0.65,
+          opacity: game.isUnlocked ? 1 : 0.6,
         }}
         onMouseEnter={e => {
           if (game.isUnlocked) {
-            e.currentTarget.style.borderColor = '#C7D2FE';
-            e.currentTarget.style.boxShadow = '0 6px 16px rgba(99, 102, 241, 0.08)';
+            e.currentTarget.style.borderColor = '#22C55E';
+            e.currentTarget.style.boxShadow = '0 6px 20px -2px rgba(0, 0, 0, 0.4)';
+            e.currentTarget.style.background = '#282828';
           }
         }}
         onMouseLeave={e => {
-          e.currentTarget.style.borderColor = '#E2E8F0';
-          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.02)';
+          e.currentTarget.style.borderColor = '#2E2E2E';
+          e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.25)';
+          e.currentTarget.style.background = '#242424';
         }}
       >
-        {/* Top Header: Category Tag & Optional NEW Pill */}
+        {/* Top Header: Category Tag & NEW Pill */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
           <span style={{
             fontSize: '0.675rem',
@@ -80,9 +82,9 @@ export default function GameCard({ game, index = 0, isDashboardFeatured = false 
               fontWeight: 800,
               padding: '0.15rem 0.45rem',
               borderRadius: '4px',
-              background: '#FFF1F2',
-              color: '#E11D48',
-              border: '1px solid #FECDD3',
+              background: 'rgba(34, 197, 94, 0.15)',
+              color: '#4ADE80',
+              border: '1px solid rgba(34, 197, 94, 0.3)',
               letterSpacing: '0.04em'
             }}>
               NEW
@@ -91,33 +93,33 @@ export default function GameCard({ game, index = 0, isDashboardFeatured = false 
         </div>
 
         {/* Content Row: Icon Box, Title & Difficulty Pill, Chevron */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
           {/* Icon Box */}
           <div style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '12px',
-            background: '#F8FAFC',
-            border: '1px solid #E2E8F0',
+            width: '44px',
+            height: '44px',
+            borderRadius: '10px',
+            background: '#1A1A1A',
+            border: '1px solid #333333',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0
           }}>
             {game.isUnlocked ? (
-              <IconComponent size={22} color="#4F46E5" />
+              <IconComponent size={20} color="#22C55E" />
             ) : (
-              <Lock size={18} color="#94A3B8" />
+              <Lock size={16} color="#64748B" />
             )}
           </div>
 
           {/* Title & Difficulty Badge */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <h3 className="font-display" style={{
-              fontSize: '1.05rem',
+              fontSize: '1rem',
               fontWeight: 800,
-              color: '#0F172A',
-              marginBottom: '0.35rem',
+              color: '#F8FAFC',
+              marginBottom: '0.25rem',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis'
@@ -129,7 +131,7 @@ export default function GameCard({ game, index = 0, isDashboardFeatured = false 
               display: 'inline-block',
               fontSize: '0.675rem',
               fontWeight: 700,
-              padding: '0.15rem 0.55rem',
+              padding: '0.1rem 0.45rem',
               borderRadius: '4px',
               background: diff.bg,
               color: diff.color,
@@ -139,9 +141,9 @@ export default function GameCard({ game, index = 0, isDashboardFeatured = false 
             </span>
           </div>
 
-          {/* Navigation Chevron Indicator */}
-          <div style={{ color: '#94A3B8', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-            <ChevronRight size={18} />
+          {/* Navigation Chevron */}
+          <div style={{ color: '#64748B', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+            <ChevronRight size={17} />
           </div>
         </div>
       </Link>

@@ -13,15 +13,15 @@ export default function RankCard({ rating = 500, matchesPlayed = 0, matchesWon =
       <div style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: '0.5rem',
-        padding: '0.35rem 0.75rem',
+        gap: '0.45rem',
+        padding: '0.3rem 0.75rem',
         borderRadius: '999px',
         background: currentRank.bg,
         border: `1px solid ${currentRank.border}`,
       }}>
-        <span style={{ fontSize: '1rem' }}>{currentRank.badge}</span>
-        <span style={{ fontSize: '0.825rem', fontWeight: 800, color: currentRank.color }}>{currentRank.name}</span>
-        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748B' }}>• {rating} pts</span>
+        <span style={{ fontSize: '0.85rem' }}>{currentRank.badge}</span>
+        <span style={{ fontSize: '0.8rem', fontWeight: 800, color: currentRank.color }}>{currentRank.name}</span>
+        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8' }}>• {rating} pts</span>
       </div>
     );
   }
@@ -31,11 +31,11 @@ export default function RankCard({ rating = 500, matchesPlayed = 0, matchesWon =
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       style={{
-        background: '#FFFFFF',
-        border: '1px solid #E2E8F0',
-        borderRadius: '1.25rem',
-        padding: '1.5rem',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
+        background: '#242424',
+        border: '1px solid #2E2E2E',
+        borderRadius: '1.15rem',
+        padding: '1.75rem',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -45,29 +45,29 @@ export default function RankCard({ rating = 500, matchesPlayed = 0, matchesWon =
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: '1rem'
+        marginBottom: '1.25rem'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{
             width: '42px',
             height: '42px',
-            borderRadius: '12px',
+            borderRadius: '10px',
             background: currentRank.bg,
             border: `1px solid ${currentRank.border}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '1.5rem'
+            fontSize: '1.35rem'
           }}>
             {currentRank.badge}
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', fontFamily: 'var(--font-display)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#F8FAFC', fontFamily: 'var(--font-display)' }}>
                 {currentRank.name}
               </span>
               <span style={{
-                fontSize: '0.675rem',
+                fontSize: '0.625rem',
                 fontWeight: 800,
                 color: currentRank.color,
                 background: currentRank.bg,
@@ -77,10 +77,10 @@ export default function RankCard({ rating = 500, matchesPlayed = 0, matchesWon =
                 textTransform: 'uppercase',
                 letterSpacing: '0.04em'
               }}>
-                Competitive
+                1v1 Ranked
               </span>
             </div>
-            <p style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 500 }}>
+            <p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 500 }}>
               {currentRank.desc}
             </p>
           </div>
@@ -88,10 +88,10 @@ export default function RankCard({ rating = 500, matchesPlayed = 0, matchesWon =
 
         {/* Rating display */}
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0F172A', fontFamily: 'var(--font-display)', lineHeight: 1.1 }}>
+          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F8FAFC', fontFamily: 'var(--font-display)', lineHeight: 1.1 }}>
             {rating}
           </div>
-          <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
             Rating Elo
           </div>
         </div>
@@ -99,7 +99,7 @@ export default function RankCard({ rating = 500, matchesPlayed = 0, matchesWon =
 
       {/* Progress to next tier */}
       <div style={{ marginBottom: '1.25rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 600, color: '#64748B', marginBottom: '0.35rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8', marginBottom: '0.4rem' }}>
           <span>Tier Progress</span>
           {nextRank ? (
             <span>Next: <strong style={{ color: nextRank.color }}>{nextRank.name} ({nextRank.minRating} pts)</strong></span>
@@ -107,12 +107,12 @@ export default function RankCard({ rating = 500, matchesPlayed = 0, matchesWon =
             <span style={{ color: currentRank.color, fontWeight: 700 }}>Max Tier Reached 👑</span>
           )}
         </div>
-        <div style={{ width: '100%', height: '8px', background: '#F1F5F9', borderRadius: '999px', overflow: 'hidden' }}>
+        <div style={{ width: '100%', height: '7px', background: '#1A1A1A', borderRadius: '999px', overflow: 'hidden', border: '1px solid #2E2E2E' }}>
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
-            style={{ height: '100%', background: `linear-gradient(90deg, ${currentRank.color}, #4F46E5)`, borderRadius: '999px' }}
+            style={{ height: '100%', background: `linear-gradient(90deg, ${currentRank.color}, #22C55E)`, borderRadius: '999px', boxShadow: '0 0 8px rgba(34, 197, 94, 0.3)' }}
           />
         </div>
       </div>
@@ -123,19 +123,19 @@ export default function RankCard({ rating = 500, matchesPlayed = 0, matchesWon =
         gridTemplateColumns: 'repeat(3, 1fr)',
         gap: '0.5rem',
         paddingTop: '0.85rem',
-        borderTop: '1px solid #F1F5F9',
+        borderTop: '1px solid #2E2E2E',
         textAlign: 'center'
       }}>
         <div>
-          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A' }}>{matchesPlayed}</div>
+          <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#F8FAFC' }}>{matchesPlayed}</div>
           <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 600 }}>Matches</div>
         </div>
         <div>
-          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#059669' }}>{matchesWon}</div>
+          <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#4ADE80' }}>{matchesWon}</div>
           <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 600 }}>Victories</div>
         </div>
         <div>
-          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#2563EB' }}>{winRate}%</div>
+          <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#38BDF8' }}>{winRate}%</div>
           <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 600 }}>Win Rate</div>
         </div>
       </div>

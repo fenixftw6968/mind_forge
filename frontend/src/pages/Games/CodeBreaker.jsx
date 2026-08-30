@@ -531,7 +531,7 @@ export default function CodeBreaker() {
     return (
       <DifficultySelector
         title="Code Breaker"
-        subtitle="Crack the vault! Use logical deduction clues to identify the secret combination."
+        subtitle="Use deductive reasoning and clues to crack the secret lock combination."
         icon="🔐"
         onSelectDifficulty={(diff) => startGame(diff)}
         onBack={() => setShowModeModal(true)}
@@ -552,7 +552,7 @@ export default function CodeBreaker() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px' }}>
+    <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', color: '#F8FAFC' }}>
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1.5rem' }}>
         <GameProgress
           current={index + 1}
@@ -579,25 +579,25 @@ export default function CodeBreaker() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
               style={{
-                background: '#FFFFFF',
-                border: '1px solid #E2E8F0',
+                background: '#242424',
+                border: '1px solid #2E2E2E',
                 borderRadius: '1.25rem',
                 padding: '2rem',
-                boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03)',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
                 position: 'relative'
               }}
             >
               {/* Header Title */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#EEF2FF', border: '1px solid #C7D2FE', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <KeyRound size={22} color="#4F46E5" />
+                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#1A1A1A', border: '1px solid #333333', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <KeyRound size={22} color="#4ADE80" />
                   </div>
                   <div>
-                    <h2 className="font-display" style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A' }}>
+                    <h2 className="font-display" style={{ fontSize: '1.25rem', fontWeight: 800, color: '#F8FAFC' }}>
                       {puzzle.title || "Crack the Code"}
                     </h2>
-                    <p style={{ fontSize: '0.775rem', color: '#64748B', fontWeight: 500 }}>
+                    <p style={{ fontSize: '0.775rem', color: '#94A3B8', fontWeight: 500 }}>
                       Deduce the {digitCount}-digit secret code using the clues below
                     </p>
                   </div>
@@ -606,13 +606,11 @@ export default function CodeBreaker() {
                 <button
                   onClick={() => { setShowHint(true); setHintUsed(true); }}
                   disabled={showHint || showResult}
+                  className="btn-secondary"
                   style={{
                     display: 'flex', alignItems: 'center', gap: '0.4rem',
                     padding: '0.4rem 0.85rem', borderRadius: '8px',
-                    background: showHint ? '#FFFBEB' : '#FFFFFF',
-                    border: '1px solid #FDE68A',
-                    color: '#B45309', fontSize: '0.8rem', fontWeight: 700,
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                    fontSize: '0.8rem', fontWeight: 700,
                     cursor: showHint || showResult ? 'default' : 'pointer'
                   }}
                 >
@@ -629,8 +627,8 @@ export default function CodeBreaker() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '1rem',
-                      background: '#F8FAFC',
-                      border: '1px solid #E2E8F0',
+                      background: '#1C1C1C',
+                      border: '1px solid #2E2E2E',
                       borderRadius: '0.75rem',
                       padding: '0.75rem 1rem'
                     }}
@@ -644,15 +642,15 @@ export default function CodeBreaker() {
                             width: '32px',
                             height: '36px',
                             borderRadius: '6px',
-                            background: '#FFFFFF',
-                            border: '1px solid #C7D2FE',
+                            background: '#242424',
+                            border: '1px solid #333333',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             fontFamily: 'var(--font-display)',
                             fontWeight: 800,
                             fontSize: '1.1rem',
-                            color: '#4F46E5'
+                            color: '#4ADE80'
                           }}
                         >
                           {char}
@@ -661,7 +659,7 @@ export default function CodeBreaker() {
                     </div>
 
                     {/* Clue Text */}
-                    <div style={{ fontSize: '0.875rem', color: '#1E293B', fontWeight: 600, flex: 1 }}>
+                    <div style={{ fontSize: '0.875rem', color: '#F8FAFC', fontWeight: 600, flex: 1 }}>
                       {clue.text}
                     </div>
                   </div>
@@ -674,13 +672,13 @@ export default function CodeBreaker() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   style={{
-                    background: '#FFFBEB',
-                    border: '1px solid #FDE68A',
+                    background: 'rgba(34, 197, 94, 0.08)',
+                    border: '1px solid rgba(34, 197, 94, 0.25)',
                     borderRadius: '0.75rem',
                     padding: '0.85rem 1rem',
                     marginBottom: '1.5rem',
                     fontSize: '0.85rem',
-                    color: '#B45309',
+                    color: '#4ADE80',
                     display: 'flex',
                     gap: '0.5rem',
                     alignItems: 'center'
@@ -693,7 +691,7 @@ export default function CodeBreaker() {
 
               {/* Player Code Input Slots */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                <div style={{ fontSize: '0.8rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
+                <div style={{ fontSize: '0.8rem', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
                   Enter Your Secret Code
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -707,17 +705,17 @@ export default function CodeBreaker() {
                           width: '56px',
                           height: '64px',
                           borderRadius: '12px',
-                          background: digit !== '' ? '#EEF2FF' : '#F8FAFC',
-                          border: isSelected ? '2px solid #6366F1' : '1px solid #E2E8F0',
+                          background: digit !== '' ? 'rgba(34, 197, 94, 0.15)' : '#1C1C1C',
+                          border: isSelected ? '2px solid #22C55E' : '1px solid #2E2E2E',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           fontSize: '1.85rem',
                           fontWeight: 800,
-                          color: '#0F172A',
+                          color: '#F8FAFC',
                           fontFamily: 'var(--font-display)',
                           cursor: showResult ? 'default' : 'pointer',
-                          boxShadow: isSelected ? '0 0 0 3px rgba(99, 102, 241, 0.15)' : '0 1px 2px rgba(0,0,0,0.03)',
+                          boxShadow: isSelected ? '0 0 0 3px rgba(34, 197, 94, 0.2)' : '0 2px 6px rgba(0,0,0,0.2)',
                           transition: 'all 0.15s ease'
                         }}
                       >
@@ -778,8 +776,8 @@ export default function CodeBreaker() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   style={{
-                    background: result === 'correct' ? '#ECFDF5' : '#FFF1F2',
-                    border: `1px solid ${result === 'correct' ? '#A7F3D0' : '#FECDD3'}`,
+                    background: result === 'correct' ? 'rgba(34, 197, 94, 0.12)' : 'rgba(244, 63, 94, 0.12)',
+                    border: `1px solid ${result === 'correct' ? 'rgba(34, 197, 94, 0.25)' : 'rgba(244, 63, 94, 0.25)'}`,
                     borderRadius: '1rem',
                     padding: '1.25rem',
                     marginTop: '1.5rem',
@@ -787,13 +785,13 @@ export default function CodeBreaker() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    {result === 'correct' ? <CheckCircle2 size={24} color="#059669" /> : <XCircle size={24} color="#E11D48" />}
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: result === 'correct' ? '#047857' : '#BE123C' }}>
+                    {result === 'correct' ? <CheckCircle2 size={24} color="#4ADE80" /> : <XCircle size={24} color="#FB7185" />}
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: result === 'correct' ? '#4ADE80' : '#FB7185' }}>
                       {result === 'correct' ? 'Vault Unlocked! 🎉' : 'Incorrect Code'}
                     </h3>
                   </div>
 
-                  <p style={{ color: '#334155', fontSize: '0.9rem', marginBottom: '1rem', lineHeight: 1.5, fontWeight: 500 }}>
+                  <p style={{ color: '#CBD5E1', fontSize: '0.9rem', marginBottom: '1rem', lineHeight: 1.5, fontWeight: 500 }}>
                     {puzzle.explanation}
                   </p>
 

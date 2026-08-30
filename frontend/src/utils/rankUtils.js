@@ -1,13 +1,13 @@
-// Rank definition and utilities
+// Rank definition and utilities in Dark Theme
 export const COMPETITIVE_RANKS = [
-  { name: "Rookie",   minRating: 0,    maxRating: 199,  badge: "🌱", color: "#64748B", bg: "#F1F5F9", border: "#CBD5E1", desc: "Starting tier" },
-  { name: "Scout",    minRating: 200,  maxRating: 399,  badge: "🧭", color: "#0284C7", bg: "#F0F9FF", border: "#BAE6FD", desc: "Sharpening reflexes" },
-  { name: "Knight",   minRating: 400,  maxRating: 599,  badge: "🛡️", color: "#2563EB", bg: "#EFF6FF", border: "#BFDBFE", desc: "Tactical challenger" },
-  { name: "Guardian", minRating: 600,  maxRating: 799,  badge: "⚔️", color: "#7C3AED", bg: "#F5F3FF", border: "#DDD6FE", desc: "Proven defender" },
-  { name: "Champion", minRating: 800,  maxRating: 1049, badge: "🌟", color: "#D97706", bg: "#FFFBEB", border: "#FDE68A", desc: "Grand competitor" },
-  { name: "Elite",    minRating: 1050, maxRating: 1349, badge: "⚡", color: "#E11D48", bg: "#FFF1F2", border: "#FECDD3", desc: "Master of speed" },
-  { name: "Legend",   minRating: 1350, maxRating: 1699, badge: "🔮", color: "#9333EA", bg: "#FAF5FF", border: "#E9D5FF", desc: "Grandmaster mind" },
-  { name: "Mythic",   minRating: 1700, maxRating: 9999, badge: "👑", color: "#4F46E5", bg: "#EEF2FF", border: "#C7D2FE", desc: "Peak intellect" },
+  { name: "Rookie",   minRating: 0,    maxRating: 199,  badge: "🌱", color: "#94A3B8", bg: "rgba(148, 163, 184, 0.12)", border: "rgba(148, 163, 184, 0.25)", desc: "Starting tier" },
+  { name: "Scout",    minRating: 200,  maxRating: 399,  badge: "🧭", color: "#38BDF8", bg: "rgba(56, 189, 248, 0.12)", border: "rgba(56, 189, 248, 0.25)", desc: "Sharpening reflexes" },
+  { name: "Knight",   minRating: 400,  maxRating: 599,  badge: "🛡️", color: "#60A5FA", bg: "rgba(96, 165, 250, 0.12)", border: "rgba(96, 165, 250, 0.25)", desc: "Tactical challenger" },
+  { name: "Guardian", minRating: 600,  maxRating: 799,  badge: "⚔️", color: "#C084FC", bg: "rgba(192, 132, 252, 0.12)", border: "rgba(192, 132, 252, 0.25)", desc: "Proven defender" },
+  { name: "Champion", minRating: 800,  maxRating: 1049, badge: "🌟", color: "#FBBF24", bg: "rgba(251, 191, 36, 0.12)", border: "rgba(251, 191, 36, 0.25)", desc: "Grand competitor" },
+  { name: "Elite",    minRating: 1050, maxRating: 1349, badge: "⚡", color: "#FB7185", bg: "rgba(251, 113, 133, 0.12)", border: "rgba(251, 113, 133, 0.25)", desc: "Master of speed" },
+  { name: "Legend",   minRating: 1350, maxRating: 1699, badge: "🔮", color: "#E879F9", bg: "rgba(232, 121, 249, 0.12)", border: "rgba(232, 121, 249, 0.25)", desc: "Grandmaster mind" },
+  { name: "Mythic",   minRating: 1700, maxRating: 9999, badge: "👑", color: "#4ADE80", bg: "rgba(74, 222, 128, 0.12)", border: "rgba(74, 222, 128, 0.25)", desc: "Peak intellect" },
 ];
 
 export const getRankFromRating = (rating) => {

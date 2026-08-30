@@ -708,60 +708,6 @@ public class MatchService {
             }
         }
 
-        if ("speed-match".equalsIgnoreCase(gameSlug)) {
-            List<Map<String, Object>> rounds = new ArrayList<>();
-            List<Map<String, String>> colors = List.of(
-                Map.of("name", "RED", "hex", "#E11D48"),
-                Map.of("name", "BLUE", "hex", "#2563EB"),
-                Map.of("name", "GREEN", "hex", "#059669"),
-                Map.of("name", "YELLOW", "hex", "#D97706"),
-                Map.of("name", "PURPLE", "hex", "#7C3AED"),
-                Map.of("name", "CYAN", "hex", "#0284C7")
-            );
-            
-            Random rand = new Random();
-            for (int i = 0; i < 4; i++) {
-                boolean isMatch = rand.nextBoolean();
-                int textIdx = rand.nextInt(colors.size());
-                Map<String, String> textColorObj = colors.get(textIdx);
-                Map<String, String> displayColorObj;
-                
-                if (isMatch) {
-                    displayColorObj = textColorObj;
-                } else {
-                    List<Map<String, String>> others = colors.stream()
-                        .filter(c -> !c.get("name").equals(textColorObj.get("name")))
-                        .toList();
-                    displayColorObj = others.get(rand.nextInt(others.size()));
-                }
-                
-                rounds.add(Map.of(
-                    "word", textColorObj.get("name"),
-                    "color", displayColorObj.get("hex"),
-                    "colorName", displayColorObj.get("name"),
-                    "isMatch", isMatch
-                ));
-            }
-            try {
-                return objectMapper.writeValueAsString(rounds);
-            } catch (Exception e) {
-                return "[]";
-            }
-        }
-
-        if ("reaction-rush".equalsIgnoreCase(gameSlug)) {
-            List<Integer> delays = new ArrayList<>();
-            Random rand = new Random();
-            for (int i = 0; i < 4; i++) {
-                delays.add(1500 + rand.nextInt(2000));
-            }
-            try {
-                return objectMapper.writeValueAsString(delays);
-            } catch (Exception e) {
-                return "[]";
-            }
-        }
-
         try {
             List<PuzzleDto> puzzles = gameService.getPuzzlesByGame(gameSlug, difficulty != null ? difficulty : "MEDIUM");
             if (puzzles == null || puzzles.isEmpty()) {
@@ -769,7 +715,7 @@ public class MatchService {
             }
             if (puzzles != null && !puzzles.isEmpty()) {
                 Collections.shuffle(puzzles);
-                List<PuzzleDto> chosen = puzzles.stream().limit(4).toList();
+                List<PuzzleDto> chosen = puzzles.stream().limit(10).toList();
                 return objectMapper.writeValueAsString(chosen);
             }
         } catch (Exception e) {

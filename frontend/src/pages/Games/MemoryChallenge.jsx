@@ -519,14 +519,9 @@ export default function MemoryChallenge() {
       <DifficultySelector
         title="Memory Challenge"
         subtitle="Study the complex scene carefully before it disappears. Then answer from memory."
-        icon="👁️"
+        icon="🧠"
         onSelectDifficulty={(diff) => startGame(diff)}
         onBack={() => setShowModeModal(true)}
-        customTiers={[
-          { id: 'EASY', label: 'Easy', icon: '🌱', color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', xp: '+15 XP', time: '8s Study', desc: '6 everyday objects with clear colors and positions' },
-          { id: 'MEDIUM', label: 'Medium', icon: '🧠', color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', xp: '+25 XP', time: '6s Study', desc: '6 detailed technical items with sub-descriptors' },
-          { id: 'HARD', label: 'Hard', icon: '🔥', color: '#E11D48', bg: '#FFF1F2', border: '#FECDD3', xp: '+50 XP', time: '5s Study', desc: '9 complex forensic/cyber metrics with numbers and parameters' }
-        ]}
       />
     );
   }
@@ -548,7 +543,7 @@ export default function MemoryChallenge() {
   const choicesList = scene.options || (scene.questions?.[0]?.choices) || [];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px' }}>
+    <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', color: '#F8FAFC' }}>
       <XPPopup popups={xpPopups} />
       <div style={{ maxWidth: '750px', margin: '0 auto', padding: '2rem 1.5rem' }}>
         
@@ -576,16 +571,16 @@ export default function MemoryChallenge() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <Eye size={20} color="#4F46E5" />
-                <span className="font-accent" style={{ fontSize: '1.2rem', fontWeight: 800, color: '#4F46E5' }}>
+                <Eye size={20} color="#4ADE80" />
+                <span className="font-accent" style={{ fontSize: '1.2rem', fontWeight: 800, color: '#4ADE80' }}>
                   {scene.title}
                 </span>
               </div>
-              <p style={{ color: '#64748B', fontSize: '0.9rem', fontWeight: 500 }}>{scene.description}</p>
+              <p style={{ color: '#94A3B8', fontSize: '0.9rem', fontWeight: 500 }}>{scene.description}</p>
             </div>
 
             {/* Scene Matrix Display */}
-            <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '1.25rem', padding: '2rem', marginBottom: '1.5rem', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.05)' }}>
+            <div style={{ background: '#242424', border: '1px solid #2E2E2E', borderRadius: '1.25rem', padding: '2rem', marginBottom: '1.5rem', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
               <div style={{ display: 'grid', gridTemplateColumns: `repeat(${scene.items.length > 6 ? 3 : 3}, 1fr)`, gap: '1rem' }}>
                 {scene.items.map((item, i) => (
                   <motion.div
@@ -598,16 +593,16 @@ export default function MemoryChallenge() {
                       flexDirection: 'column',
                       alignItems: 'center',
                       padding: '1.25rem 0.75rem',
-                      background: '#F8FAFC',
-                      border: '1px solid #E2E8F0',
+                      background: '#1A1A1A',
+                      border: '1px solid #333333',
                       borderRadius: '0.875rem',
                       gap: '0.5rem',
                       textAlign: 'center',
-                      boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
                     }}
                   >
                     <span style={{ fontSize: '2.5rem' }}>{item.emoji}</span>
-                    <span style={{ fontSize: '0.8rem', color: '#1E293B', fontWeight: 700, lineHeight: 1.3 }}>{item.label}</span>
+                    <span style={{ fontSize: '0.8rem', color: '#F8FAFC', fontWeight: 700, lineHeight: 1.3 }}>{item.label}</span>
                   </motion.div>
                 ))}
               </div>
@@ -615,15 +610,15 @@ export default function MemoryChallenge() {
 
             {/* Countdown bar */}
             <div style={{ textAlign: 'center' }}>
-              <div style={{ height: '6px', background: '#E2E8F0', borderRadius: '999px', overflow: 'hidden', maxWidth: '300px', margin: '0 auto' }}>
+              <div style={{ height: '6px', background: '#2E2E2E', borderRadius: '999px', overflow: 'hidden', maxWidth: '300px', margin: '0 auto' }}>
                 <motion.div
-                  style={{ height: '100%', borderRadius: '999px', background: timeLeft <= 2 ? '#E11D48' : 'linear-gradient(90deg, #6366F1, #4F46E5)' }}
+                  style={{ height: '100%', borderRadius: '999px', background: timeLeft <= 2 ? '#FB7185' : 'linear-gradient(90deg, #22C55E, #4ADE80)' }}
                   initial={{ width: '100%' }}
                   animate={{ width: `${(timeLeft / (scene.revealTime || 8)) * 100}%` }}
                   transition={{ duration: 1, ease: 'linear' }}
                 />
               </div>
-              <p style={{ marginTop: '0.75rem', color: '#64748B', fontSize: '0.825rem', fontWeight: 600 }}>Scene hidden in {timeLeft}s...</p>
+              <p style={{ marginTop: '0.75rem', color: '#94A3B8', fontSize: '0.825rem', fontWeight: 600 }}>Scene hidden in {timeLeft}s...</p>
             </div>
           </motion.div>
         )}
@@ -634,33 +629,33 @@ export default function MemoryChallenge() {
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                  <EyeOff size={18} color="#E11D48" />
-                  <span className="font-accent" style={{ fontSize: '1.1rem', fontWeight: 800, color: '#E11D48' }}>
+                  <EyeOff size={18} color="#FB7185" />
+                  <span className="font-accent" style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FB7185' }}>
                     Scene Hidden — Answer from Memory
                   </span>
                 </div>
               </div>
 
-              <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '1.25rem', padding: '2rem', marginBottom: '1.25rem', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.05)' }}>
-                <p style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', marginBottom: '1.75rem', textAlign: 'center' }}>
+              <div style={{ background: '#242424', border: '1px solid #2E2E2E', borderRadius: '1.25rem', padding: '2rem', marginBottom: '1.25rem', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+                <p style={{ fontSize: '1.15rem', fontWeight: 800, color: '#F8FAFC', marginBottom: '1.75rem', textAlign: 'center' }}>
                   {scene.question}
                 </p>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
                   {choicesList.map(choice => {
-                    let borderColor = '#E2E8F0';
-                    let bg = '#FFFFFF';
-                    let color = '#1E293B';
+                    let borderColor = '#2E2E2E';
+                    let bg = '#1C1C1C';
+                    let color = '#F8FAFC';
 
                     if (selected) {
                       if (choice === scene.correctAnswer) {
-                        borderColor = '#A7F3D0';
-                        bg = '#ECFDF5';
-                        color = '#047857';
+                        borderColor = 'rgba(34, 197, 94, 0.5)';
+                        bg = 'rgba(34, 197, 94, 0.15)';
+                        color = '#4ADE80';
                       } else if (selected === choice) {
-                        borderColor = '#FECDD3';
-                        bg = '#FFF1F2';
-                        color = '#BE123C';
+                        borderColor = 'rgba(244, 63, 94, 0.5)';
+                        bg = 'rgba(244, 63, 94, 0.15)';
+                        color = '#FB7185';
                       }
                     }
 
@@ -679,16 +674,11 @@ export default function MemoryChallenge() {
                           cursor: selected ? 'default' : 'pointer',
                           fontSize: '0.95rem',
                           fontWeight: 700,
-                          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)',
-                          transition: 'all 0.15s ease',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.5rem'
+                          textAlign: 'center',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                          transition: 'all 0.15s ease'
                         }}
                       >
-                        {selected && choice === scene.correctAnswer && <CheckCircle size={17} color="#059669" />}
-                        {selected === choice && choice !== scene.correctAnswer && <XCircle size={17} color="#E11D48" />}
                         {choice}
                       </motion.button>
                     );
@@ -696,15 +686,31 @@ export default function MemoryChallenge() {
                 </div>
               </div>
 
-              {/* Explanation & Next */}
+              {/* Reveal Result Info */}
               {showResult && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                  <div style={{ padding: '1rem 1.25rem', borderRadius: '0.875rem', background: '#F8FAFC', border: '1px solid #E2E8F0', marginBottom: '1.25rem' }}>
-                    <p style={{ fontSize: '0.725rem', fontWeight: 800, color: '#0284C7', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '0.35rem' }}>Memory Recall Verified</p>
-                    <p style={{ fontSize: '0.875rem', color: '#334155', lineHeight: 1.6, fontWeight: 500 }}>{scene.explanation}</p>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      padding: '1rem 1.25rem',
+                      borderRadius: '0.85rem',
+                      background: selected === scene.correctAnswer ? 'rgba(34, 197, 94, 0.12)' : 'rgba(244, 63, 94, 0.12)',
+                      border: `1px solid ${selected === scene.correctAnswer ? 'rgba(34, 197, 94, 0.25)' : 'rgba(244, 63, 94, 0.25)'}`,
+                      marginBottom: '1rem'
+                    }}
+                  >
+                    {selected === scene.correctAnswer ? <CheckCircle size={22} color="#4ADE80" /> : <XCircle size={22} color="#FB7185" />}
+                    <div>
+                      <div style={{ fontWeight: 800, color: selected === scene.correctAnswer ? '#4ADE80' : '#FB7185', fontSize: '0.95rem' }}>
+                        {selected === scene.correctAnswer ? '🎉 Perfect Recall!' : `Incorrect — The correct item was: ${scene.correctAnswer}`}
+                      </div>
+                    </div>
                   </div>
+
                   <button onClick={handleNext} className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}>
-                    {sceneIndex + 1 >= scenes.length ? 'See Results 🏆' : 'Next Memory Challenge →'}
+                    {sceneIndex + 1 >= scenes.length ? 'See Results 🏆' : 'Next Scene →'}
                   </button>
                 </motion.div>
               )}

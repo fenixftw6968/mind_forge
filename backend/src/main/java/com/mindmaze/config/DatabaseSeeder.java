@@ -19,19 +19,22 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final AchievementRepository achievementRepository;
     private final MysteryCaseRepository mysteryCaseRepository;
     private final DailyChallengeRepository dailyChallengeRepository;
+    private final com.mindmaze.service.DailyChallengeService dailyChallengeService;
 
     public DatabaseSeeder(
             GameRepository gameRepository,
             PuzzleRepository puzzleRepository,
             AchievementRepository achievementRepository,
             MysteryCaseRepository mysteryCaseRepository,
-            DailyChallengeRepository dailyChallengeRepository
+            DailyChallengeRepository dailyChallengeRepository,
+            com.mindmaze.service.DailyChallengeService dailyChallengeService
     ) {
         this.gameRepository = gameRepository;
         this.puzzleRepository = puzzleRepository;
         this.achievementRepository = achievementRepository;
         this.mysteryCaseRepository = mysteryCaseRepository;
         this.dailyChallengeRepository = dailyChallengeRepository;
+        this.dailyChallengeService = dailyChallengeService;
     }
 
     @Override
@@ -139,17 +142,53 @@ public class DatabaseSeeder implements CommandLineRunner {
     private void seedGamesAndPuzzles() {
         log.info("Synchronizing games and puzzles for the 6-game lineup...");
 
-        // Define the 6 games
+        // Define the active games lineup
         List<Game> activeGames = List.of(
+            Game.builder()
+                .slug("dsa-master-quiz")
+                .title("DSA Master Quiz")
+                .description("Test your coding knowledge, DSA concepts, code output skills, and complexity understanding.")
+                .category("Programming / DSA")
+                .icon("🧠")
+                .difficulty("HARD")
+                .xpRewardEasy(15).xpRewardMedium(30).xpRewardHard(60)
+                .isUnlocked(true).isNew(true).isFeatured(true)
+                .totalPlayers(24500).completionRate(64)
+                .estimatedTime("3-5 min")
+                .build(),
+            Game.builder()
+                .slug("logic-puzzle")
+                .title("Logic Puzzle")
+                .description("Solve patterns, sequences, deduction problems, and logical puzzles.")
+                .category("Reasoning")
+                .icon("🧩")
+                .difficulty("MEDIUM")
+                .xpRewardEasy(15).xpRewardMedium(25).xpRewardHard(50)
+                .isUnlocked(true).isNew(true).isFeatured(true)
+                .totalPlayers(19800).completionRate(72)
+                .estimatedTime("3-4 min")
+                .build(),
+            Game.builder()
+                .slug("brain-teaser-battle")
+                .title("Brain Teaser Battle")
+                .description("Challenge your mind with riddles, aptitude questions, mental math, and quick-thinking problems.")
+                .category("Brain Training")
+                .icon("⚡")
+                .difficulty("MEDIUM")
+                .xpRewardEasy(15).xpRewardMedium(30).xpRewardHard(55)
+                .isUnlocked(true).isNew(true).isFeatured(true)
+                .totalPlayers(21400).completionRate(69)
+                .estimatedTime("2-4 min")
+                .build(),
             Game.builder()
                 .slug("number-detective")
                 .title("Number Detective")
                 .description("Crack the code hidden in number sequences. Find the pattern and discover the missing number.")
-                .category("Logic")
+                .category("Reasoning")
                 .icon("🔢")
                 .difficulty("MEDIUM")
                 .xpRewardEasy(10).xpRewardMedium(25).xpRewardHard(50)
-                .isUnlocked(true).isNew(false).isFeatured(true)
+                .isUnlocked(true).isNew(false).isFeatured(false)
                 .totalPlayers(12450).completionRate(68)
                 .estimatedTime("3-5 min")
                 .build(),
@@ -157,7 +196,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .slug("memory-challenge")
                 .title("Memory Challenge")
                 .description("Observe the scene, then recall every detail. Train your observation and memory skills.")
-                .category("Memory")
+                .category("Brain Training")
                 .icon("🧠")
                 .difficulty("EASY")
                 .xpRewardEasy(15).xpRewardMedium(25).xpRewardHard(50)
@@ -169,49 +208,13 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .slug("code-breaker")
                 .title("Code Breaker")
                 .description("Use logical clues to deduce the secret code. Test your deductive reasoning and elimination skills.")
-                .category("Logic")
+                .category("Reasoning")
                 .icon("🔐")
                 .difficulty("MEDIUM")
                 .xpRewardEasy(15).xpRewardMedium(30).xpRewardHard(60)
-                .isUnlocked(true).isNew(true).isFeatured(true)
+                .isUnlocked(true).isNew(false).isFeatured(false)
                 .totalPlayers(9420).completionRate(62)
                 .estimatedTime("3-5 min")
-                .build(),
-            Game.builder()
-                .slug("reaction-rush")
-                .title("Reaction Rush")
-                .description("Test your speed, focus, and reaction time. Wait for the green signal and click as fast as possible.")
-                .category("Reaction")
-                .icon("⚡")
-                .difficulty("MEDIUM")
-                .xpRewardEasy(10).xpRewardMedium(20).xpRewardHard(40)
-                .isUnlocked(true).isNew(true).isFeatured(false)
-                .totalPlayers(14200).completionRate(85)
-                .estimatedTime("1-2 min")
-                .build(),
-            Game.builder()
-                .slug("grid-puzzle")
-                .title("Grid Puzzle")
-                .description("Find the missing piece and complete the pattern across symbolic, shape, and numeric matrices.")
-                .category("Patterns")
-                .icon("🧩")
-                .difficulty("MEDIUM")
-                .xpRewardEasy(15).xpRewardMedium(25).xpRewardHard(50)
-                .isUnlocked(true).isNew(true).isFeatured(false)
-                .totalPlayers(11300).completionRate(71)
-                .estimatedTime("3-5 min")
-                .build(),
-            Game.builder()
-                .slug("speed-match")
-                .title("Speed Match")
-                .description("Make fast decisions and test your concentration with rapid Stroop and color-word matching.")
-                .category("Decision Making")
-                .icon("🎯")
-                .difficulty("HARD")
-                .xpRewardEasy(15).xpRewardMedium(30).xpRewardHard(55)
-                .isUnlocked(true).isNew(true).isFeatured(true)
-                .totalPlayers(16750).completionRate(64)
-                .estimatedTime("2-3 min")
                 .build()
         );
 
@@ -239,7 +242,15 @@ public class DatabaseSeeder implements CommandLineRunner {
         }
 
         // Clean up obsolete games from database safely
-        List<String> obsoleteSlugs = List.of("who-is-lying", "pattern-detective", "spot-the-fallacy", "solve-crime");
+        List<String> obsoleteSlugs = List.of(
+            "reaction-rush",
+            "grid-puzzle",
+            "speed-match",
+            "who-is-lying",
+            "pattern-detective",
+            "spot-the-fallacy",
+            "solve-crime"
+        );
         for (String oldSlug : obsoleteSlugs) {
             gameRepository.findBySlug(oldSlug).ifPresent(oldGame -> {
                 try {
@@ -320,25 +331,8 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     private void seedDailyChallenge() {
-        LocalDate today = LocalDate.now();
-        if (dailyChallengeRepository.findByChallengeDate(today).isPresent()) {
-            log.info("Daily challenge already seeded for today.");
-            return;
-        }
-
-        log.info("Seeding daily challenge...");
-        DailyChallenge challenge = DailyChallenge.builder()
-                .title("The Paradox Sequence")
-                .description("A master-level number sequence that has stumped 80% of players. Do you have what it takes?")
-                .challengeDate(today)
-                .type("number-detective")
-                .difficulty("HARD")
-                .xpReward(100)
-                .coinReward(50)
-                .puzzle("{\"question\": \"1, 1, 2, 3, 5, 8, 13, 21, ?\", \"answer\": \"34\", \"explanation\": \"This is the Fibonacci sequence. Each number is the sum of the two preceding ones. 13 + 21 = 34.\", \"hint\": \"Look at the sum of consecutive pairs.\"}")
-                .build();
-
-        dailyChallengeRepository.save(challenge);
-        log.info("Seeding daily challenge complete.");
+        LocalDate today = LocalDate.now(java.time.ZoneId.of("Asia/Kolkata"));
+        dailyChallengeService.ensureChallengeForDate(today);
+        log.info("Daily challenge initialized for date {}", today);
     }
 }

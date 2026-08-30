@@ -39,12 +39,12 @@ public class GameService {
     private final ObjectMapper objectMapper;
 
     private static final List<String> ACTIVE_SLUGS = List.of(
+        "dsa-master-quiz",
+        "logic-puzzle",
+        "brain-teaser-battle",
         "number-detective",
         "memory-challenge",
-        "code-breaker",
-        "reaction-rush",
-        "grid-puzzle",
-        "speed-match"
+        "code-breaker"
     );
 
     @Transactional(readOnly = true)
@@ -181,18 +181,18 @@ public class GameService {
 
     private List<String> getTagsForSlug(String slug) {
         switch (slug) {
+            case "dsa-master-quiz":
+                return List.of("dsa", "c++", "algorithms", "trees", "dp", "complexity");
+            case "logic-puzzle":
+                return List.of("logic", "sequences", "deduction", "analogies", "reasoning");
+            case "brain-teaser-battle":
+                return List.of("riddles", "math", "aptitude", "lateral-thinking", "quick");
             case "number-detective":
                 return List.of("numbers", "sequences", "logic", "math");
             case "memory-challenge":
                 return List.of("memory", "observation", "attention", "visual");
             case "code-breaker":
                 return List.of("logic", "deduction", "code", "mastermind");
-            case "reaction-rush":
-                return List.of("speed", "reflexes", "timing", "focus");
-            case "grid-puzzle":
-                return List.of("patterns", "grids", "matrices", "shapes");
-            case "speed-match":
-                return List.of("speed", "stroop", "focus", "decision");
             default:
                 return List.of("brain-training");
         }

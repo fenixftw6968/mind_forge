@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Zap, Trophy, Flame, Coins, LogOut, Menu, X, ChevronDown, Users, Swords } from 'lucide-react';
+import { Brain, Zap, Trophy, Flame, Coins, LogOut, Menu, X, ChevronDown, Users, Swords, User } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getRankFromRating } from '../../utils/rankUtils';
@@ -14,6 +14,7 @@ export default function Navbar() {
   const navigate  = useNavigate();
   const location  = useLocation();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [socialOpen, setSocialOpen] = useState(false);
   const [pendingInvite, setPendingInvite] = useState(null);
   const [processingInviteId, setProcessingInviteId] = useState(null);
@@ -68,7 +69,6 @@ export default function Navbar() {
     setPendingInvite(null);
     try {
       const res = await api.post(`/api/matches/${invite.id}/accept`);
-      // Navigate to game with active match state
       navigate(`/games/${invite.gameSlug}`, { state: { acceptedMatch: res.data } });
     } catch (e) {
       console.error("Failed to accept invite", e);
@@ -101,10 +101,11 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { to: '/dashboard', label: 'Dashboard' },
-    { to: '/games',     label: 'Games' },
-    { to: '/leaderboard', label: 'Leaderboard' },
-    { to: '/profile',   label: 'Profile' },
+    { to: '/dashboard',       label: 'Dashboard' },
+    { to: '/games',           label: 'Games' },
+    { to: '/daily-challenge', label: 'Challenges' },
+    { to: '/leaderboard',     label: 'Progress' },
+    { to: '/profile',         label: 'Profile' },
   ];
 
   const isActive = (to) => location.pathname === to;
@@ -114,55 +115,61 @@ export default function Navbar() {
     <>
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        background: 'rgba(255, 255, 255, 0.92)',
+        background: 'rgba(21, 21, 21, 0.92)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid #E2E8F0',
-        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)',
+        borderBottom: '1px solid #282828',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.4)',
       }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', height: '64px', gap: '2rem' }}>
-          {/* Logo */}
-          <Link to={isAuthenticated ? '/dashboard' : '/'} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-            <div style={{
-              width: '36px', height: '36px', borderRadius: '10px',
-              background: 'linear-gradient(135deg, #6366F1, #4F46E5)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(99, 102, 241, 0.3)',
-            }}>
-              <Brain size={20} color="white" />
-            </div>
-            <span className="font-display" style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
-              Mind<span style={{ color: '#6366F1' }}>Forge</span>
-            </span>
-          </Link>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', height: '64px', justifyContent: 'space-between' }}>
+          
+          {/* Left: Brand Logo + Desktop Nav */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
+            <Link to={isAuthenticated ? '/dashboard' : '/'} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+              <div style={{
+                width: '36px', height: '36px', borderRadius: '10px',
+                background: '#242424',
+                border: '1px solid #383838',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 0 10px rgba(34, 197, 94, 0.15)',
+              }}>
+                <Brain size={20} color="#22C55E" />
+              </div>
+              <span className="font-display" style={{ fontSize: '1.2rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.02em' }}>
+                Mind<span style={{ color: '#22C55E' }}>Forge</span>
+              </span>
+            </Link>
 
-          {/* Desktop Nav Links */}
-          {isAuthenticated && (
-            <div style={{ display: 'flex', gap: '0.35rem', flex: 1 }}>
-              {navLinks.map(link => {
-                const active = isActive(link.to);
-                return (
-                  <Link key={link.to} to={link.to} style={{
-                    padding: '0.45rem 0.9rem',
-                    borderRadius: '0.5rem',
-                    textDecoration: 'none',
-                    fontSize: '0.875rem',
-                    fontWeight: active ? 600 : 500,
-                    color: active ? '#4F46E5' : '#475569',
-                    background: active ? '#EEF2FF' : 'transparent',
-                    transition: 'all 0.15s ease',
-                  }}
-                  onMouseEnter={e => { if (!active) { e.target.style.color = '#0F172A'; e.target.style.background = '#F1F5F9'; }}}
-                  onMouseLeave={e => { if (!active) { e.target.style.color = '#475569'; e.target.style.background = 'transparent'; }}}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
+            {/* Desktop Nav Links */}
+            {isAuthenticated && (
+              <div className="hidden md:flex" style={{ display: 'flex', gap: '0.35rem' }}>
+                {navLinks.map(link => {
+                  const active = isActive(link.to);
+                  return (
+                    <Link key={link.to} to={link.to} style={{
+                      padding: '0.45rem 0.85rem',
+                      borderRadius: '0.5rem',
+                      textDecoration: 'none',
+                      fontSize: '0.875rem',
+                      fontWeight: active ? 700 : 500,
+                      color: active ? '#4ADE80' : '#94A3B8',
+                      background: active ? '#242424' : 'transparent',
+                      border: active ? '1px solid #2E2E2E' : '1px solid transparent',
+                      transition: 'all 0.15s ease',
+                    }}
+                    onMouseEnter={e => { if (!active) { e.target.style.color = '#F8FAFC'; e.target.style.background = '#1E1E1E'; }}}
+                    onMouseLeave={e => { if (!active) { e.target.style.color = '#94A3B8'; e.target.style.background = 'transparent'; }}}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          {/* Right: User Stats & Actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             {isAuthenticated && user ? (
               <>
                 {/* Stats pills */}
@@ -181,17 +188,14 @@ export default function Navbar() {
                     <span style={{ fontSize: '0.775rem', fontWeight: 800, color: currentRank.color }}>{user.competitiveRating || 500} pts</span>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.3rem 0.65rem', borderRadius: '999px', background: '#FFFBEB', border: '1px solid #FDE68A' }}>
-                    <Coins size={13} style={{ color: '#D97706' }} />
-                    <span style={{ fontSize: '0.775rem', fontWeight: 700, color: '#B45309' }}>{user.coins}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.3rem 0.65rem', borderRadius: '999px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
+                    <Coins size={13} style={{ color: '#FBBF24' }} />
+                    <span style={{ fontSize: '0.775rem', fontWeight: 700, color: '#FBBF24' }}>{user.coins}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.3rem 0.65rem', borderRadius: '999px', background: '#FFF1F2', border: '1px solid #FECDD3' }}>
-                    <Flame size={13} style={{ color: '#E11D48' }} />
-                    <span style={{ fontSize: '0.775rem', fontWeight: 700, color: '#BE123C' }}>{user.currentStreak}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.3rem 0.65rem', borderRadius: '999px', background: '#EEF2FF', border: '1px solid #C7D2FE' }}>
-                    <Zap size={13} style={{ color: '#6366F1' }} />
-                    <span style={{ fontSize: '0.775rem', fontWeight: 700, color: '#4338CA' }}>Lv.{user.level}</span>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.3rem 0.65rem', borderRadius: '999px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.25)' }}>
+                    <Flame size={13} style={{ color: '#FB7185' }} />
+                    <span style={{ fontSize: '0.775rem', fontWeight: 700, color: '#FB7185' }}>{user.currentStreak}</span>
                   </div>
                 </div>
 
@@ -206,81 +210,80 @@ export default function Navbar() {
                     width: '36px',
                     height: '36px',
                     borderRadius: '50%',
-                    background: '#F8FAFC',
-                    border: '1px solid #E2E8F0',
+                    background: '#242424',
+                    border: '1px solid #2E2E2E',
                     cursor: 'pointer',
-                    color: '#4F46E5',
+                    color: '#4ADE80',
                     transition: 'all 0.15s ease'
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#EEF2FF'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = '#F8FAFC'; }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#2A2A2A'; e.currentTarget.style.borderColor = '#22C55E'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = '#242424'; e.currentTarget.style.borderColor = '#2E2E2E'; }}
                 >
-                  <Users size={17} />
+                  <Users size={16} />
                 </button>
 
-              {/* User menu */}
-              <div style={{ position: 'relative' }}>
-                <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '0.5rem',
-                    background: '#FFFFFF', border: '1px solid #E2E8F0',
-                    borderRadius: '0.625rem', padding: '0.35rem 0.75rem',
-                    cursor: 'pointer', color: '#0F172A', transition: 'all 0.15s ease',
-                    boxShadow: '0 1px 2px 0 rgba(0,0,0,0.03)',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#CBD5E1'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                >
-                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg, #6366F1, #4F46E5)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 700 }}>
-                    {user.username?.[0]?.toUpperCase()}
-                  </div>
-                  <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{user.username}</span>
-                  <ChevronDown size={14} style={{ color: '#64748B', transform: userMenuOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
-                </button>
+                {/* User menu dropdown */}
+                <div style={{ position: 'relative' }}>
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.45rem',
+                      background: '#242424', border: '1px solid #2E2E2E',
+                      borderRadius: '999px', padding: '0.25rem 0.65rem 0.25rem 0.35rem',
+                      cursor: 'pointer', color: '#F8FAFC', transition: 'all 0.15s ease',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#3D3D3D'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#2E2E2E'; }}
+                  >
+                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#22C55E', color: '#05200C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800 }}>
+                      {user.username?.[0]?.toUpperCase()}
+                    </div>
+                    <span style={{ fontSize: '0.825rem', fontWeight: 700 }}>{user.username}</span>
+                    <ChevronDown size={13} style={{ color: '#94A3B8', transform: userMenuOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                  </button>
 
-                <AnimatePresence>
-                  {userMenuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                      style={{
-                        position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-                        background: '#FFFFFF', border: '1px solid #E2E8F0',
-                        borderRadius: '0.75rem', padding: '0.5rem',
-                        minWidth: '170px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04)',
-                        zIndex: 200,
-                      }}
-                    >
-                      <Link to="/profile" onClick={() => setUserMenuOpen(false)} style={{ display: 'block', padding: '0.6rem 0.85rem', borderRadius: '0.5rem', color: '#334155', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500, transition: 'all 0.15s' }}
-                        onMouseEnter={e => { e.target.style.background = '#EEF2FF'; e.target.style.color = '#4F46E5'; }}
-                        onMouseLeave={e => { e.target.style.background = 'transparent'; e.target.style.color = '#334155'; }}>
-                        👤 Profile
-                      </Link>
-                      <button
-                        onClick={() => { setUserMenuOpen(false); handleLogout(); }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.6rem 0.85rem', borderRadius: '0.5rem', color: '#E11D48', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, transition: 'all 0.15s' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = '#FFF1F2'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                  <AnimatePresence>
+                    {userMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                        transition={{ duration: 0.12 }}
+                        style={{
+                          position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+                          background: '#222222', border: '1px solid #2E2E2E',
+                          borderRadius: '0.75rem', padding: '0.4rem',
+                          minWidth: '170px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+                          zIndex: 200,
+                        }}
                       >
-                        <LogOut size={14} /> Log Out
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                        <Link to="/profile" onClick={() => setUserMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 0.75rem', borderRadius: '0.5rem', color: '#CBD5E1', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.15s' }}
+                          onMouseEnter={e => { e.target.style.background = '#2A2A2A'; e.target.style.color = '#4ADE80'; }}
+                          onMouseLeave={e => { e.target.style.background = 'transparent'; e.target.style.color = '#CBD5E1'; }}>
+                          <User size={14} /> Profile
+                        </Link>
+                        <button
+                          onClick={() => { setUserMenuOpen(false); handleLogout(); }}
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.55rem 0.75rem', borderRadius: '0.5rem', color: '#F43F5E', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.15s' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(244, 63, 94, 0.1)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          <LogOut size={14} /> Log Out
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </>
+            ) : (
+              <div style={{ display: 'flex', gap: '0.65rem' }}>
+                <Link to="/login" className="btn-secondary" style={{ padding: '0.45rem 1.15rem', fontSize: '0.85rem' }}>Log In</Link>
+                <Link to="/signup" className="btn-primary" style={{ padding: '0.45rem 1.15rem', fontSize: '0.85rem' }}>Sign Up</Link>
               </div>
-            </>
-          ) : (
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <Link to="/login" className="btn-secondary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.875rem' }}>Log In</Link>
-              <Link to="/signup" className="btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.875rem' }}>Sign Up</Link>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
 
       {/* Incoming Friend Match Invitation Popup */}
       <IncomingInviteModal
@@ -293,7 +296,7 @@ export default function Navbar() {
       <SocialDrawer
         isOpen={socialOpen}
         onClose={() => setSocialOpen(false)}
-        onInviteFriendToGame={(friend) => {
+        onInviteFriendToGame={() => {
           setSocialOpen(false);
           navigate('/games');
         }}

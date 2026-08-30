@@ -480,7 +480,7 @@ export default function NumberDetective() {
   // === COMPETITIVE MATCH RESULTS SCREEN ===
   if (competitiveResult) {
     return (
-      <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px', paddingBottom: '3rem' }}>
+      <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', paddingBottom: '3rem', color: '#F8FAFC' }}>
         <CompetitiveResults
           matchResult={competitiveResult}
           currentUserId={user?.id || currentMatch?.player1Id}
@@ -508,15 +508,15 @@ export default function NumberDetective() {
   // === WAITING FOR OPPONENT TO FINISH ===
   if (waitingForOpponent) {
     return (
-      <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', padding: '2rem' }}>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>You finished!</h2>
-          <p style={{ color: '#64748B', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Your score: <strong style={{ color: '#4F46E5' }}>{scoreRef.current} / {puzzles.length}</strong></p>
-          <p style={{ color: '#94A3B8', fontSize: '0.875rem' }}>Waiting for your opponent to finish...</p>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#F8FAFC', marginBottom: '0.5rem' }}>You finished!</h2>
+          <p style={{ color: '#94A3B8', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Your score: <strong style={{ color: '#4ADE80' }}>{scoreRef.current} / {puzzles.length}</strong></p>
+          <p style={{ color: '#64748B', fontSize: '0.875rem' }}>Waiting for your opponent to finish...</p>
           <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center', gap: '0.4rem' }}>
             {[0,1,2].map(i => (
-              <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#6366F1', animation: `bounce 1.2s ${i * 0.2}s infinite` }} />
+              <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#22C55E', animation: `bounce 1.2s ${i * 0.2}s infinite` }} />
             ))}
           </div>
           <style>{`@keyframes bounce { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }`}</style>
@@ -534,11 +534,6 @@ export default function NumberDetective() {
         icon="🔢"
         onSelectDifficulty={(diff) => startGame(diff)}
         onBack={() => setShowModeModal(true)}
-        customTiers={[
-          { id: 'EASY', label: 'Easy', icon: '🌱', color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', xp: '+10 XP', time: '2 min', desc: 'Simple arithmetic and doubling sequences' },
-          { id: 'MEDIUM', label: 'Medium', icon: '⚡', color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', xp: '+25 XP', time: '90 sec', desc: 'Multi-step formulas, primes, and squares' },
-          { id: 'HARD', label: 'Hard', icon: '🔥', color: '#E11D48', bg: '#FFF1F2', border: '#FECDD3', xp: '+50 XP', time: '60 sec', desc: 'Cubes, factorials, and complex recursive rules' }
-        ]}
       />
     );
   }
@@ -559,7 +554,7 @@ export default function NumberDetective() {
   if (!puzzle) return null;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px' }}>
+    <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', color: '#F8FAFC' }}>
       <XPPopup popups={xpPopups} />
       <div style={{ maxWidth: '700px', margin: '0 auto', padding: '2rem 1.5rem' }}>
         
@@ -591,16 +586,16 @@ export default function NumberDetective() {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
             style={{
-              background: '#FFFFFF',
-              border: '1px solid #E2E8F0',
+              background: '#242424',
+              border: '1px solid #2E2E2E',
               borderRadius: '1.25rem',
               padding: '2rem',
               marginBottom: '1.5rem',
-              boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03)'
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)'
             }}
           >
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              <p style={{ fontSize: '0.8rem', color: '#64748B', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
+              <p style={{ fontSize: '0.8rem', color: '#94A3B8', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
                 Find the missing number in the sequence
               </p>
               <div
@@ -608,12 +603,12 @@ export default function NumberDetective() {
                 style={{
                   fontSize: 'clamp(1.5rem, 4vw, 2.3rem)',
                   fontWeight: 800,
-                  color: '#0F172A',
+                  color: '#4ADE80',
                   letterSpacing: '0.05em',
                   padding: '1.5rem',
-                  background: '#F8FAFC',
+                  background: '#1A1A1A',
                   borderRadius: '1rem',
-                  border: '1px solid #E2E8F0'
+                  border: '1px solid #333333'
                 }}
               >
                 {puzzle.question}
@@ -628,15 +623,15 @@ export default function NumberDetective() {
                 style={{
                   display: 'flex',
                   gap: '0.5rem',
-                  background: '#FFFBEB',
-                  border: '1px solid #FDE68A',
+                  background: 'rgba(34, 197, 94, 0.08)',
+                  border: '1px solid rgba(34, 197, 94, 0.25)',
                   borderRadius: '0.75rem',
                   padding: '0.85rem 1rem',
                   marginBottom: '1.25rem'
                 }}
               >
-                <Lightbulb size={16} color="#D97706" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <p style={{ fontSize: '0.85rem', color: '#B45309', lineHeight: 1.5, fontWeight: 500 }}>{puzzle.hint}</p>
+                <Lightbulb size={16} color="#4ADE80" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <p style={{ fontSize: '0.85rem', color: '#4ADE80', lineHeight: 1.5, fontWeight: 500 }}>{puzzle.hint}</p>
               </motion.div>
             )}
 
@@ -652,14 +647,14 @@ export default function NumberDetective() {
                         style={{
                           padding: '1.1rem',
                           borderRadius: '0.875rem',
-                          border: answer === opt ? '2px solid #6366F1' : '1px solid #E2E8F0',
-                          background: answer === opt ? '#EEF2FF' : '#FFFFFF',
-                          color: answer === opt ? '#4F46E5' : '#0F172A',
+                          border: answer === opt ? '2px solid #22C55E' : '1px solid #2E2E2E',
+                          background: answer === opt ? 'rgba(34, 197, 94, 0.15)' : '#1C1C1C',
+                          color: answer === opt ? '#4ADE80' : '#F8FAFC',
                           fontSize: '1.25rem',
                           fontFamily: 'var(--font-display)',
                           fontWeight: 800,
                           cursor: 'pointer',
-                          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.04)',
+                          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
                           transition: 'all 0.15s ease'
                         }}
                       >
@@ -676,7 +671,7 @@ export default function NumberDetective() {
                       onKeyDown={e => e.key === 'Enter' && answer && handleSubmit()}
                       placeholder="Enter your answer..."
                       className="input-dark"
-                      style={{ flex: 1, textAlign: 'center', fontSize: '1.25rem', fontFamily: 'var(--font-display)', fontWeight: 800, background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '0.75rem', padding: '0.85rem' }}
+                      style={{ flex: 1, textAlign: 'center', fontSize: '1.25rem', fontFamily: 'var(--font-display)', fontWeight: 800, background: '#1C1C1C', border: '1px solid #2E2E2E', borderRadius: '0.75rem', padding: '0.85rem', color: '#F8FAFC' }}
                       autoFocus
                     />
                   </div>
@@ -701,23 +696,23 @@ export default function NumberDetective() {
                     gap: '0.75rem',
                     padding: '1rem 1.25rem',
                     borderRadius: '0.85rem',
-                    background: result === 'correct' ? '#ECFDF5' : '#FFF1F2',
-                    border: `1px solid ${result === 'correct' ? '#A7F3D0' : '#FECDD3'}`,
+                    background: result === 'correct' ? 'rgba(34, 197, 94, 0.12)' : 'rgba(244, 63, 94, 0.12)',
+                    border: `1px solid ${result === 'correct' ? 'rgba(34, 197, 94, 0.25)' : 'rgba(244, 63, 94, 0.25)'}`,
                     marginBottom: '1rem'
                   }}
                 >
-                  {result === 'correct' ? <CheckCircle size={22} color="#059669" /> : <XCircle size={22} color="#E11D48" />}
+                  {result === 'correct' ? <CheckCircle size={22} color="#4ADE80" /> : <XCircle size={22} color="#FB7185" />}
                   <div>
-                    <div style={{ fontWeight: 800, color: result === 'correct' ? '#047857' : '#BE123C', fontSize: '0.95rem' }}>
+                    <div style={{ fontWeight: 800, color: result === 'correct' ? '#4ADE80' : '#FB7185', fontSize: '0.95rem' }}>
                       {result === 'correct' ? '🎉 Correct!' : `Incorrect — The correct answer was ${puzzle.correctAnswer || puzzle.answer}`}
                     </div>
                   </div>
                 </div>
 
                 {/* Explanation */}
-                <div style={{ padding: '1rem 1.25rem', borderRadius: '0.85rem', background: '#F8FAFC', border: '1px solid #E2E8F0', marginBottom: '1.25rem' }}>
-                  <p style={{ fontSize: '0.725rem', fontWeight: 800, color: '#0284C7', marginBottom: '0.3rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Explanation</p>
-                  <p style={{ fontSize: '0.875rem', color: '#334155', lineHeight: 1.6, fontWeight: 500 }}>{puzzle.explanation}</p>
+                <div style={{ padding: '1rem 1.25rem', borderRadius: '0.85rem', background: '#1C1C1C', border: '1px solid #2E2E2E', marginBottom: '1.25rem' }}>
+                  <p style={{ fontSize: '0.725rem', fontWeight: 800, color: '#38BDF8', marginBottom: '0.3rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Explanation</p>
+                  <p style={{ fontSize: '0.875rem', color: '#CBD5E1', lineHeight: 1.6, fontWeight: 500 }}>{puzzle.explanation}</p>
                 </div>
 
                 <button onClick={handleNext} className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}>
@@ -734,20 +729,14 @@ export default function NumberDetective() {
             {!hintUsed && puzzle.hint && (
               <button
                 onClick={() => setHintUsed(true)}
+                className="btn-secondary"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  background: '#FFFBEB',
-                  border: '1px solid #FDE68A',
-                  color: '#B45309',
-                  borderRadius: '0.75rem',
                   padding: '0.5rem 1rem',
-                  cursor: 'pointer',
                   fontSize: '0.825rem',
-                  fontWeight: 600,
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
-                  transition: 'all 0.15s ease'
+                  fontWeight: 600
                 }}
               >
                 <Lightbulb size={14} /> Use Hint (-30% XP)

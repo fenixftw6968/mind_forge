@@ -30,23 +30,24 @@ export default function IncomingInviteModal({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
           style={{
-            background: '#FFFFFF',
+            background: '#242424',
             borderRadius: '1.25rem',
-            border: '1px solid #E2E8F0',
-            boxShadow: '0 20px 35px -10px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            border: '1px solid #2E2E2E',
+            boxShadow: '0 20px 35px -10px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.4)',
             padding: '1.25rem 1.5rem',
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            color: '#F8FAFC'
           }}
         >
-          {/* Top pulse accent */}
+          {/* Top lime accent */}
           <div style={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
-            height: '4px',
-            background: 'linear-gradient(90deg, #6366F1, #EC4899)'
+            height: '3px',
+            background: 'linear-gradient(90deg, #10B981, #22C55E)'
           }} />
 
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
@@ -54,8 +55,8 @@ export default function IncomingInviteModal({
               width: '46px',
               height: '46px',
               borderRadius: '12px',
-              background: '#EEF2FF',
-              border: '1px solid #C7D2FE',
+              background: '#1C1C1C',
+              border: '1px solid #333333',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -70,7 +71,7 @@ export default function IncomingInviteModal({
                 <span style={{
                   fontSize: '0.75rem',
                   fontWeight: 800,
-                  color: '#6366F1',
+                  color: '#4ADE80',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em'
                 }}>
@@ -81,7 +82,7 @@ export default function IncomingInviteModal({
               <h4 style={{
                 fontSize: '1rem',
                 fontWeight: 800,
-                color: '#0F172A',
+                color: '#F8FAFC',
                 marginBottom: '0.25rem',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -92,64 +93,33 @@ export default function IncomingInviteModal({
 
               <p style={{
                 fontSize: '0.825rem',
-                color: '#64748B',
+                color: '#94A3B8',
                 lineHeight: 1.4,
                 marginBottom: '1rem'
               }}>
-                To a live 1v1 match in <strong style={{ color: '#0F172A' }}>{gameInfo.title}</strong>
+                To a live 1v1 match in <strong style={{ color: '#F8FAFC' }}>{gameInfo.title}</strong>
               </p>
 
               {/* Action buttons */}
               <div style={{ display: 'flex', gap: '0.6rem' }}>
                 <button
                   onClick={() => onAccept(invite)}
+                  className="btn-primary"
                   style={{
                     flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.35rem',
                     padding: '0.55rem 0.85rem',
-                    borderRadius: '0.65rem',
-                    background: '#4F46E5',
-                    color: '#FFFFFF',
-                    fontWeight: 700,
-                    fontSize: '0.825rem',
-                    border: 'none',
-                    cursor: 'pointer',
-                    boxShadow: '0 2px 8px rgba(79, 70, 229, 0.3)',
-                    transition: 'all 0.15s ease'
+                    fontSize: '0.825rem'
                   }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#4338CA'}
-                  onMouseLeave={e => e.currentTarget.style.background = '#4F46E5'}
                 >
                   <Check size={15} /> Accept
                 </button>
 
                 <button
                   onClick={() => onDecline(invite)}
+                  className="btn-secondary"
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.35rem',
                     padding: '0.55rem 0.85rem',
-                    borderRadius: '0.65rem',
-                    background: '#F1F5F9',
-                    color: '#64748B',
-                    fontWeight: 700,
-                    fontSize: '0.825rem',
-                    border: '1px solid #E2E8F0',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.background = '#FFF1F2';
-                    e.currentTarget.style.color = '#E11D48';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.background = '#F1F5F9';
-                    e.currentTarget.style.color = '#64748B';
+                    fontSize: '0.825rem'
                   }}
                 >
                   <X size={15} /> Decline

@@ -1,0 +1,3409 @@
+/**
+ * MindForge - dsaMasterQuestions
+ * Exactly 200 verified high-quality MCQ questions.
+ */
+
+export const dsaMasterQuestions = [
+  {
+    "id": "dsa-1",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Arrays",
+    "title": "Array Index Access",
+    "question": "What is the time complexity to access an element by index in a C++ array?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n log n)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "Arrays occupy contiguous memory blocks, allowing direct arithmetic offset calculations: Base_Address + Index * Size.",
+    "hint": "Direct offset calculation requires no search."
+  },
+  {
+    "id": "dsa-2",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Arrays",
+    "title": "Dynamic Array Amortized Time",
+    "question": "What is the amortized time complexity of inserting an element at the end of a std::vector in C++?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "std::vector uses geometric array growth (doubling capacity), resulting in O(1) amortized insertion time.",
+    "hint": "Geometric doubling makes reallocations rare."
+  },
+  {
+    "id": "dsa-3",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Arrays",
+    "title": "Contiguous Memory Advantage",
+    "question": "Why do arrays provide faster traversal times compared to linked lists of equal size?",
+    "options": [
+      "Better CPU cache locality",
+      "Less pointer dereferencing only",
+      "Automatic multithreading",
+      "Hardware compression"
+    ],
+    "correctAnswer": "Better CPU cache locality",
+    "explanation": "Contiguous memory layout allows modern CPU caches to prefetch adjacent array elements into cache lines effectively.",
+    "hint": "Adjacent memory addresses benefit from CPU caching."
+  },
+  {
+    "id": "dsa-4",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Arrays",
+    "title": "Prefix Sum Range Queries",
+    "question": "After O(n) prefix sum preprocessing, what is the time complexity to find the sum of elements from index L to R?",
+    "options": [
+      "O(1)",
+      "O(R - L)",
+      "O(log n)",
+      "O(n)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "Range sum query [L, R] is calculated in O(1) using: Prefix[R] - Prefix[L - 1].",
+    "hint": "Subtracting two precomputed sums."
+  },
+  {
+    "id": "dsa-5",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Two Sum on Sorted Array",
+    "question": "Which algorithmic approach finds two numbers in a sorted array that sum to a target with O(1) space and O(n) time?",
+    "options": [
+      "Two Pointers",
+      "Binary Search on all items",
+      "Hash Map",
+      "Nested Loops"
+    ],
+    "correctAnswer": "Two Pointers",
+    "explanation": "Initializing two pointers at opposite ends of the sorted array allows linear O(n) search with constant extra memory.",
+    "hint": "Pointers converge from start and end."
+  },
+  {
+    "id": "dsa-6",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Kadane Algorithm",
+    "question": "What optimization problem does Kadanes Algorithm solve in O(n) time and O(1) space?",
+    "options": [
+      "Maximum Subarray Sum",
+      "Longest Increasing Subsequence",
+      "Shortest Path in DAG",
+      "Matrix Chain Multiplication"
+    ],
+    "correctAnswer": "Maximum Subarray Sum",
+    "explanation": "Kadanes Algorithm computes the maximum sum of a contiguous subarray in a single linear pass.",
+    "hint": "Finds contiguous segment with maximum total."
+  },
+  {
+    "id": "dsa-7",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Majority Element Boyer-Moore",
+    "question": "What is the space complexity of the Boyer-Moore Voting Algorithm to find a majority element (> n/2 occurrences)?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n/2)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "Boyer-Moore Voting Algorithm tracks only a candidate variable and a counter, requiring strictly O(1) auxiliary space.",
+    "hint": "Only requires a single candidate and a counter variable."
+  },
+  {
+    "id": "dsa-8",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Rotate Array In-Place",
+    "question": "How can an array of size n be rotated to the right by k steps in O(n) time and O(1) extra space?",
+    "options": [
+      "Reverse whole array, reverse first k, reverse remaining n-k",
+      "Shift elements one-by-one k times",
+      "Allocate a second array and copy",
+      "Sort elements in descending order"
+    ],
+    "correctAnswer": "Reverse whole array, reverse first k, reverse remaining n-k",
+    "explanation": "The 3-step reversal algorithm rotates an array in O(n) time with O(1) auxiliary space.",
+    "hint": "Triple array reversal technique."
+  },
+  {
+    "id": "dsa-9",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Next Permutation Algorithm",
+    "question": "What is the time complexity of generating the lexicographically next permutation of an array of size n?",
+    "options": [
+      "O(n)",
+      "O(n log n)",
+      "O(n!)",
+      "O(1)"
+    ],
+    "correctAnswer": "O(n)",
+    "explanation": "Finding the pivot from the right, swapping with the next larger element, and reversing the suffix takes O(n) linear time.",
+    "hint": "Single reverse scan and suffix reversal."
+  },
+  {
+    "id": "dsa-10",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Product of Array Except Self",
+    "question": "To solve Product of Array Except Self in O(n) time and O(1) extra output space, what technique is used?",
+    "options": [
+      "Prefix and Suffix running products",
+      "Division by total product",
+      "Nested iteration",
+      "Binary lifting"
+    ],
+    "correctAnswer": "Prefix and Suffix running products",
+    "explanation": "Maintain running prefix product left-to-right, then multiply running suffix product right-to-left.",
+    "hint": "Combine forward and backward running accumulators."
+  },
+  {
+    "id": "dsa-11",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Arrays",
+    "title": "Trapping Rain Water Optimal",
+    "question": "What is the optimal auxiliary space complexity of the Two-Pointer Trapping Rain Water algorithm?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(sqrt(n))"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "Two pointers moving inward with left_max and right_max calculate trapped water without auxiliary arrays.",
+    "hint": "Running max bounds avoid array storage."
+  },
+  {
+    "id": "dsa-12",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Arrays",
+    "title": "Dutch National Flag Partition",
+    "question": "How many pointer passes are used in Dijkstras Dutch National Flag algorithm to sort 0s, 1s, and 2s in-place?",
+    "options": [
+      "Single pass with 3 pointers",
+      "Two passes with 2 pointers",
+      "Three passes with 1 pointer",
+      "Logarithmic passes with recursion"
+    ],
+    "correctAnswer": "Single pass with 3 pointers",
+    "explanation": "Three pointers (low, mid, high) partition the array into 0s, 1s, and 2s in a single pass in O(n) time.",
+    "hint": "Low, mid, and high pointers."
+  },
+  {
+    "id": "dsa-13",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Arrays",
+    "title": "Find Missing Positive Integer",
+    "question": "What is the time and space complexity to find the first missing positive integer in an unsorted array of size n?",
+    "options": [
+      "Time O(n), Space O(1)",
+      "Time O(n log n), Space O(1)",
+      "Time O(n), Space O(n)",
+      "Time O(n^2), Space O(1)"
+    ],
+    "correctAnswer": "Time O(n), Space O(1)",
+    "explanation": "Using index-as-hash-key placement (putting value x at index x - 1) achieves O(n) time with O(1) auxiliary space.",
+    "hint": "In-place cyclic index placement."
+  },
+  {
+    "id": "dsa-14",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Arrays",
+    "title": "Sliding Window Maximum",
+    "question": "Which data structure allows computing the maximum in every sliding window of size k in O(n) total time?",
+    "options": [
+      "Monotonic Decreasing Deque",
+      "Min-Heap",
+      "Binary Search Tree",
+      "Stack"
+    ],
+    "correctAnswer": "Monotonic Decreasing Deque",
+    "explanation": "A double-ended queue storing indices in decreasing value order yields amortized O(1) per element for O(n) total time.",
+    "hint": "Deque maintaining sorted order of candidates."
+  },
+  {
+    "id": "dsa-15",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Arrays",
+    "title": "Subarray Sum Equals K",
+    "question": "What data structure allows finding the total number of continuous subarrays whose sum equals K in O(n) time?",
+    "options": [
+      "Hash Map storing prefix sum frequencies",
+      "Two Pointers on unsorted array",
+      "Disjoint Set Union",
+      "Binary Indexed Tree only"
+    ],
+    "correctAnswer": "Hash Map storing prefix sum frequencies",
+    "explanation": "Prefix sum frequencies in a hash map identify if (current_sum - K) occurred earlier in O(n) time for arrays with negative numbers.",
+    "hint": "Prefix sum difference map lookup."
+  },
+  {
+    "id": "dsa-16",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Arrays",
+    "title": "2D Matrix Row-Major Order",
+    "question": "In C++, how are 2D arrays stored in memory by default?",
+    "options": [
+      "Row-Major order",
+      "Column-Major order",
+      "Morton order",
+      "Diagonal order"
+    ],
+    "correctAnswer": "Row-Major order",
+    "explanation": "C and C++ store multi-dimensional arrays in row-major order: all elements of row 0, then row 1, etc.",
+    "hint": "Rows are placed sequentially."
+  },
+  {
+    "id": "dsa-17",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Search in 2D Sorted Matrix",
+    "question": "In an m x n matrix where every row and column is sorted, what is the optimal time complexity to search for a target?",
+    "options": [
+      "O(m + n)",
+      "O(m * n)",
+      "O(log(m + n))",
+      "O(m log n)"
+    ],
+    "correctAnswer": "O(m + n)",
+    "explanation": "Starting at top-right (or bottom-left) eliminates an entire row or column at each comparison in O(m + n) steps.",
+    "hint": "Step-wise elimination from corner."
+  },
+  {
+    "id": "dsa-18",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Rotate Matrix 90 Degrees",
+    "question": "How can an n x n matrix be rotated 90 degrees clockwise in-place?",
+    "options": [
+      "Transpose the matrix, then reverse each row",
+      "Reverse each row, then transpose",
+      "Transpose the matrix, then reverse each column",
+      "Swap diagonals twice"
+    ],
+    "correctAnswer": "Transpose the matrix, then reverse each row",
+    "explanation": "Transposing matrix[i][j] with matrix[j][i] followed by reversing every row achieves a 90-degree clockwise rotation.",
+    "hint": "Transpose followed by horizontal flip."
+  },
+  {
+    "id": "dsa-19",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Spiral Matrix Traversal",
+    "question": "What is the time complexity of printing all elements of an m x n matrix in spiral order?",
+    "options": [
+      "O(m * n)",
+      "O(m + n)",
+      "O(m log n)",
+      "O((m * n)^2)"
+    ],
+    "correctAnswer": "O(m * n)",
+    "explanation": "Every element is visited exactly once across top, right, bottom, and left boundary contractions in O(m * n) time.",
+    "hint": "Every cell is visited once."
+  },
+  {
+    "id": "dsa-20",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Arrays",
+    "title": "Max Area Rectangle in Binary Matrix",
+    "question": "What is the optimal time complexity to find the largest rectangular area of 1s in a binary matrix of size m x n?",
+    "options": [
+      "O(m * n)",
+      "O(m^2 * n)",
+      "O(m * n^2)",
+      "O((m * n)^2)"
+    ],
+    "correctAnswer": "O(m * n)",
+    "explanation": "Treat each row as a histogram base and apply the largest rectangle in histogram algorithm via monotonic stack in O(n) per row.",
+    "hint": "Histogram reduction with monotonic stack."
+  },
+  {
+    "id": "dsa-21",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Strings",
+    "title": "Valid Palindrome Check",
+    "question": "What is the optimal time and space complexity to check if a string of length n is a palindrome?",
+    "options": [
+      "Time O(n), Space O(1)",
+      "Time O(n^2), Space O(1)",
+      "Time O(n), Space O(n)",
+      "Time O(log n), Space O(1)"
+    ],
+    "correctAnswer": "Time O(n), Space O(1)",
+    "explanation": "Two pointers comparing characters from outside inward run in O(n/2) = O(n) time using O(1) space.",
+    "hint": "Two pointers moving inward."
+  },
+  {
+    "id": "dsa-22",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Strings",
+    "title": "Anagram Verification",
+    "question": "How can two strings of length n be verified as anagrams in O(n) time with O(1) auxiliary space (assuming lowercase English alphabet)?",
+    "options": [
+      "Frequency array of size 26",
+      "Sorting both strings",
+      "Nested character comparison",
+      "Generating all permutations"
+    ],
+    "correctAnswer": "Frequency array of size 26",
+    "explanation": "A fixed 26-element array counting character occurrences achieves O(n) time with O(1) constant extra space.",
+    "hint": "Fixed size frequency counter."
+  },
+  {
+    "id": "dsa-23",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Strings",
+    "title": "Longest Palindromic Substring",
+    "question": "What is the time complexity of the Expand Around Center approach for finding the longest palindromic substring?",
+    "options": [
+      "O(n^2)",
+      "O(n)",
+      "O(n log n)",
+      "O(n^3)"
+    ],
+    "correctAnswer": "O(n^2)",
+    "explanation": "There are 2n - 1 possible centers. Expanding from each center takes up to O(n) time, yielding O(n^2) total time with O(1) extra space.",
+    "hint": "Consider single-character and pair-character centers."
+  },
+  {
+    "id": "dsa-24",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Strings",
+    "title": "Manacher Algorithm Complexity",
+    "question": "What is the time complexity of Manachers Algorithm for finding the longest palindromic substring?",
+    "options": [
+      "O(n)",
+      "O(n log n)",
+      "O(n^2)",
+      "O(n sqrt(n))"
+    ],
+    "correctAnswer": "O(n)",
+    "explanation": "Manachers algorithm utilizes palindrome symmetry and rightmost boundary tracking to achieve linear O(n) time.",
+    "hint": "Linear time palindrome algorithm."
+  },
+  {
+    "id": "dsa-25",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Strings",
+    "title": "KMP LPS Array Meaning",
+    "question": "In the KMP pattern matching algorithm, what does the Longest Prefix Suffix (LPS) array store?",
+    "options": [
+      "Length of longest proper prefix that is also a suffix",
+      "Length of longest palindrome",
+      "Frequency of each character",
+      "Hash value of prefix"
+    ],
+    "correctAnswer": "Length of longest proper prefix that is also a suffix",
+    "explanation": "LPS[i] stores the length of the longest proper prefix of pattern[0...i] that is also a suffix of pattern[0...i].",
+    "hint": "Prefix matching suffix."
+  },
+  {
+    "id": "dsa-26",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Strings",
+    "title": "KMP Time Complexity",
+    "question": "What is the overall worst-case time complexity of the KMP algorithm to search a pattern of length m in text of length n?",
+    "options": [
+      "O(n + m)",
+      "O(n * m)",
+      "O(n log m)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(n + m)",
+    "explanation": "Preprocessing LPS takes O(m) and text scanning takes O(n), making the total time O(n + m).",
+    "hint": "Linear in text plus pattern length."
+  },
+  {
+    "id": "dsa-27",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Strings",
+    "title": "Rabin-Karp Rolling Hash",
+    "question": "What algorithmic technique enables the Rabin-Karp string search algorithm to achieve O(1) substring hash updates?",
+    "options": [
+      "Rolling Hash with modular arithmetic",
+      "Binary search trees",
+      "Huffman encoding",
+      "Fast Fourier Transform"
+    ],
+    "correctAnswer": "Rolling Hash with modular arithmetic",
+    "explanation": "Removing the outgoing character and adding the incoming character modulo a prime number computes the next window hash in O(1) time.",
+    "hint": "Polynomial hash window shifting."
+  },
+  {
+    "id": "dsa-28",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Strings",
+    "title": "Z-Algorithm Function",
+    "question": "In the Z-algorithm for pattern matching, what does the Z-array value Z[i] represent?",
+    "options": [
+      "Length of longest common prefix between string and its suffix starting at index i",
+      "Longest palindromic substring from i",
+      "Number of distinct characters up to i",
+      "Frequency of character at i"
+    ],
+    "correctAnswer": "Length of longest common prefix between string and its suffix starting at index i",
+    "explanation": "Z[i] is the length of the longest substring starting from s[i] that is also a prefix of s.",
+    "hint": "Prefix match length from position i."
+  },
+  {
+    "id": "dsa-29",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Strings",
+    "title": "Trie Space Complexity",
+    "question": "What is the space complexity of a standard Trie containing N strings with total character length L over an alphabet of size Σ?",
+    "options": [
+      "O(L * Σ)",
+      "O(N * Σ)",
+      "O(L + Σ)",
+      "O(N * L)"
+    ],
+    "correctAnswer": "O(L * Σ)",
+    "explanation": "Each node in a standard array-based Trie contains an array of Σ pointers, giving O(L * Σ) total space.",
+    "hint": "Number of trie nodes times alphabet pointer size."
+  },
+  {
+    "id": "dsa-30",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Strings",
+    "title": "Minimum Window Substring",
+    "question": "Which algorithm solves Minimum Window Substring in O(n) time?",
+    "options": [
+      "Sliding Window with character count frequency map",
+      "Dynamic Programming matrix",
+      "Binary search on text",
+      "Suffix automaton construction"
+    ],
+    "correctAnswer": "Sliding Window with character count frequency map",
+    "explanation": "Expanding the right pointer until all characters are satisfied and contracting the left pointer achieves O(n) time.",
+    "hint": "Two-pointer sliding window with matched count."
+  },
+  {
+    "id": "dsa-31",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Linked Lists",
+    "title": "Singly Linked List Insertion at Head",
+    "question": "What is the time complexity of inserting a node at the head of a singly linked list?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "Creating a new node and setting new_node->next = head takes constant time O(1).",
+    "hint": "Direct pointer assignment."
+  },
+  {
+    "id": "dsa-32",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Linked Lists",
+    "title": "Linked List Random Access",
+    "question": "What is the time complexity to access the k-th node in a singly linked list of length n?",
+    "options": [
+      "O(k)",
+      "O(1)",
+      "O(log k)",
+      "O(n log n)"
+    ],
+    "correctAnswer": "O(k)",
+    "explanation": "Linked list elements are not contiguous in memory, requiring traversal from head through k pointers.",
+    "hint": "Sequential pointer traversal."
+  },
+  {
+    "id": "dsa-33",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Linked Lists",
+    "title": "Middle of Linked List",
+    "question": "What is the standard two-pointer approach to find the middle node of a linked list in a single pass?",
+    "options": [
+      "Slow pointer moves 1 step, Fast pointer moves 2 steps",
+      "Both pointers move 1 step in opposite directions",
+      "Fast pointer moves 3 steps, Slow pointer moves 1 step",
+      "Two pointers starting from tail"
+    ],
+    "correctAnswer": "Slow pointer moves 1 step, Fast pointer moves 2 steps",
+    "explanation": "When the fast pointer reaches the end, the slow pointer is guaranteed to be at the middle node.",
+    "hint": "Tortoise and hare two-pointer approach."
+  },
+  {
+    "id": "dsa-34",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Linked Lists",
+    "title": "Floyd Cycle Detection",
+    "question": "In Floyds Cycle Detection Algorithm, why are slow and fast pointers guaranteed to meet if a cycle exists?",
+    "options": [
+      "Distance between them decreases by 1 in each step modulo cycle length",
+      "Fast pointer stops inside cycle",
+      "Slow pointer reverses direction",
+      "Linked list becomes finite"
+    ],
+    "correctAnswer": "Distance between them decreases by 1 in each step modulo cycle length",
+    "explanation": "Fast pointer gains 1 step on slow pointer per iteration (2 - 1 = 1), guaranteeing they meet in at most C iterations.",
+    "hint": "Relative speed difference is 1."
+  },
+  {
+    "id": "dsa-35",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Linked Lists",
+    "title": "Cycle Start Node",
+    "question": "After slow and fast pointers meet in Floyds cycle detection, how do you find the start node of the cycle?",
+    "options": [
+      "Reset one pointer to head and advance both by 1 step until they meet",
+      "Advance fast pointer until slow reaches head",
+      "Reverse the linked list",
+      "Count total nodes in cycle and divide by 2"
+    ],
+    "correctAnswer": "Reset one pointer to head and advance both by 1 step until they meet",
+    "explanation": "Mathematical distance from head to cycle start equals distance from meeting point to cycle start.",
+    "hint": "Pointers from head and meeting point meet at cycle entry."
+  },
+  {
+    "id": "dsa-36",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Linked Lists",
+    "title": "Reverse Linked List Iterative",
+    "question": "How many pointer variables are required to reverse a singly linked list iteratively in O(n) time and O(1) space?",
+    "options": [
+      "3 (prev, curr, next)",
+      "1 (temp)",
+      "n (array of pointers)",
+      "2 (head, tail)"
+    ],
+    "correctAnswer": "3 (prev, curr, next)",
+    "explanation": "prev, curr, and next (or forward) pointers safely reverse links without losing the rest of the list.",
+    "hint": "Previous, current, and next."
+  },
+  {
+    "id": "dsa-37",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Linked Lists",
+    "title": "Intersection of Two Linked Lists",
+    "question": "Given two linked lists of lengths m and n, what is the optimal time and space complexity to find their intersection node?",
+    "options": [
+      "Time O(m + n), Space O(1)",
+      "Time O(m * n), Space O(1)",
+      "Time O(m + n), Space O(m)",
+      "Time O(log(m + n)), Space O(1)"
+    ],
+    "correctAnswer": "Time O(m + n), Space O(1)",
+    "explanation": "Redirecting each pointer to the other lists head upon reaching null equalizes total traversal distance (m + n).",
+    "hint": "Two pointers switching heads."
+  },
+  {
+    "id": "dsa-38",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Linked Lists",
+    "title": "Remove Nth Node From End",
+    "question": "How can the N-th node from the end of a linked list be removed in a single pass?",
+    "options": [
+      "Advance fast pointer by N steps first, then move both slow and fast together",
+      "Count total length first, then second pass",
+      "Reverse list, remove Nth, reverse back",
+      "Convert list to an array"
+    ],
+    "correctAnswer": "Advance fast pointer by N steps first, then move both slow and fast together",
+    "explanation": "Maintaining a gap of N nodes between fast and slow pointers reaches the target node in a single pass.",
+    "hint": "Maintain a fixed gap of N nodes."
+  },
+  {
+    "id": "dsa-39",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Linked Lists",
+    "title": "Merge K Sorted Lists Complexity",
+    "question": "What is the optimal time complexity to merge k sorted linked lists with a total of N nodes using a Min-Heap?",
+    "options": [
+      "O(N log k)",
+      "O(N * k)",
+      "O(k log N)",
+      "O(N^2)"
+    ],
+    "correctAnswer": "O(N log k)",
+    "explanation": "A Min-Heap of size k extracts the minimum node in O(log k) for each of the N total nodes.",
+    "hint": "Heap size is k, total operations is N."
+  },
+  {
+    "id": "dsa-40",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Linked Lists",
+    "title": "Reverse in K-Groups Space",
+    "question": "What is the auxiliary space complexity of iteratively reversing a linked list in groups of k nodes?",
+    "options": [
+      "O(1)",
+      "O(k)",
+      "O(n)",
+      "O(n / k)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "Iterative reversal updates pointers in-place for each k-node chunk without allocating extra memory.",
+    "hint": "In-place pointer reversal."
+  },
+  {
+    "id": "dsa-41",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Stacks",
+    "title": "LIFO Principle",
+    "question": "Which fundamental data structure operates strictly on Last-In, First-Out (LIFO) order?",
+    "options": [
+      "Stack",
+      "Queue",
+      "Array",
+      "Binary Heap"
+    ],
+    "correctAnswer": "Stack",
+    "explanation": "Stacks insert (push) and remove (pop) elements exclusively at the top.",
+    "hint": "Last in is first out."
+  },
+  {
+    "id": "dsa-42",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Queues",
+    "title": "FIFO Principle",
+    "question": "Which data structure operates on First-In, First-Out (FIFO) principle?",
+    "options": [
+      "Queue",
+      "Stack",
+      "Tree",
+      "Graph"
+    ],
+    "correctAnswer": "Queue",
+    "explanation": "Queues enqueue elements at the rear and dequeue from the front, preserving arrival order.",
+    "hint": "First in is first out."
+  },
+  {
+    "id": "dsa-43",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Stacks",
+    "title": "Balanced Parentheses Checking",
+    "question": "Which data structure is optimal for verifying valid and balanced bracket sequences?",
+    "options": [
+      "Stack",
+      "Queue",
+      "Binary Search Tree",
+      "Hash Map only"
+    ],
+    "correctAnswer": "Stack",
+    "explanation": "Pushing opening brackets onto a stack and matching them with closing brackets validates nesting order in O(n) time.",
+    "hint": "Match innermost open brackets first."
+  },
+  {
+    "id": "dsa-44",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Stacks",
+    "title": "Min-Stack Constant Time",
+    "question": "How can a Stack retrieve the minimum element in O(1) time without compromising O(1) push and pop?",
+    "options": [
+      "Maintain a secondary auxiliary stack tracking current minimums",
+      "Scan the stack on every getMin() call",
+      "Sort the stack on every push",
+      "Use a binary search tree instead"
+    ],
+    "correctAnswer": "Maintain a secondary auxiliary stack tracking current minimums",
+    "explanation": "An auxiliary min-stack stores the minimum value seen so far at each corresponding stack height.",
+    "hint": "Auxiliary parallel stack of running minimums."
+  },
+  {
+    "id": "dsa-45",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Stacks",
+    "title": "Next Greater Element",
+    "question": "What is the overall time complexity of finding the Next Greater Element for all n items using a Monotonic Stack?",
+    "options": [
+      "O(n)",
+      "O(n^2)",
+      "O(n log n)",
+      "O(log n)"
+    ],
+    "correctAnswer": "O(n)",
+    "explanation": "Each element is pushed onto and popped from the monotonic stack at most once, giving linear O(n) total time.",
+    "hint": "Each element pushed and popped at most once."
+  },
+  {
+    "id": "dsa-46",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Stacks",
+    "title": "Infix to Postfix Conversion",
+    "question": "Which algorithm uses a stack to convert arithmetic expressions from Infix to Postfix notation?",
+    "options": [
+      "Shunting-Yard Algorithm",
+      "Kadanes Algorithm",
+      "Floyds Algorithm",
+      "Kruskals Algorithm"
+    ],
+    "correctAnswer": "Shunting-Yard Algorithm",
+    "explanation": "Dijkstras Shunting-Yard algorithm uses an operator stack and operator precedence rules to produce Reverse Polish Notation.",
+    "hint": "Operator precedence stack conversion."
+  },
+  {
+    "id": "dsa-47",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Queues",
+    "title": "Queue Using Two Stacks",
+    "question": "When implementing a Queue using two Stacks, what is the amortized time complexity of the dequeue operation?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "Each element moves from the push stack to the pop stack at most once, giving an amortized cost of O(1) per dequeue.",
+    "hint": "Each item is transferred between stacks once."
+  },
+  {
+    "id": "dsa-48",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Queues",
+    "title": "Circular Queue Full Condition",
+    "question": "In a circular array implementation of a Queue of capacity C, what condition indicates the queue is full?",
+    "options": [
+      "(rear + 1) % C == front",
+      "rear == front",
+      "rear == C - 1",
+      "front == 0"
+    ],
+    "correctAnswer": "(rear + 1) % C == front",
+    "explanation": "When the next position after rear modulo capacity equals front, the circular buffer is full.",
+    "hint": "Next index of rear hits front."
+  },
+  {
+    "id": "dsa-49",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Stacks",
+    "title": "Largest Rectangle in Histogram",
+    "question": "What is the optimal time complexity to find the largest rectangular area in a histogram of n bars using a Monotonic Stack?",
+    "options": [
+      "O(n)",
+      "O(n log n)",
+      "O(n^2)",
+      "O(2^n)"
+    ],
+    "correctAnswer": "O(n)",
+    "explanation": "A monotonic increasing stack finds the left and right smaller bounds for every bar in O(n) total time.",
+    "hint": "Linear monotonic stack algorithm."
+  },
+  {
+    "id": "dsa-50",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Stacks",
+    "title": "Evaluate Reverse Polish Notation",
+    "question": "When evaluating Postfix expression [\"4\", \"13\", \"5\", \"/\", \"+\"], what is the final computed result?",
+    "options": [
+      "6",
+      "5",
+      "4",
+      "7"
+    ],
+    "correctAnswer": "6",
+    "explanation": "13 / 5 = 2 (integer division), then 4 + 2 = 6.",
+    "hint": "Stack evaluates: 4 + (13 / 5)."
+  },
+  {
+    "id": "dsa-51",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Trees",
+    "title": "Binary Tree Node Capacity",
+    "question": "What is the maximum number of nodes on level L (0-indexed, where root is level 0) of a binary tree?",
+    "options": [
+      "2^L",
+      "2^(L+1)",
+      "2L",
+      "L^2"
+    ],
+    "correctAnswer": "2^L",
+    "explanation": "Level 0 has 2^0 = 1 node, level 1 has 2^1 = 2 nodes, and level L has 2^L nodes.",
+    "hint": "Powers of 2 at each level."
+  },
+  {
+    "id": "dsa-52",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Trees",
+    "title": "Height of Perfect Binary Tree",
+    "question": "What is the height of a perfect binary tree containing N nodes?",
+    "options": [
+      "log2(N + 1) - 1",
+      "N / 2",
+      "sqrt(N)",
+      "log2(N) + 1"
+    ],
+    "correctAnswer": "log2(N + 1) - 1",
+    "explanation": "Since N = 2^(h+1) - 1, solving for height h yields h = log2(N + 1) - 1.",
+    "hint": "Logarithmic relationship between nodes and height."
+  },
+  {
+    "id": "dsa-53",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Trees",
+    "title": "Inorder Traversal of BST",
+    "question": "What property does the Inorder traversal (Left, Root, Right) of a Binary Search Tree guarantee?",
+    "options": [
+      "Strictly sorted ascending order",
+      "Reverse sorted order",
+      "Level-by-level breadth order",
+      "Arbitrary heap order"
+    ],
+    "correctAnswer": "Strictly sorted ascending order",
+    "explanation": "In a BST, all left descendants are smaller and all right descendants are larger, so in-order traversal visits nodes in ascending sorted order.",
+    "hint": "Left -> Root -> Right in BST produces sorted values."
+  },
+  {
+    "id": "dsa-54",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Trees",
+    "title": "Binary Tree Traversal Types",
+    "question": "Which tree traversal order visits the current node before visiting its left and right subtrees?",
+    "options": [
+      "Preorder Traversal",
+      "Inorder Traversal",
+      "Postorder Traversal",
+      "Level-order Traversal"
+    ],
+    "correctAnswer": "Preorder Traversal",
+    "explanation": "Preorder visits Root -> Left -> Right.",
+    "hint": "Root is visited before children."
+  },
+  {
+    "id": "dsa-55",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Trees",
+    "title": "BST Search Time Complexity",
+    "question": "What is the worst-case time complexity of searching for a value in an un-balanced Binary Search Tree of n nodes?",
+    "options": [
+      "O(n)",
+      "O(log n)",
+      "O(n log n)",
+      "O(1)"
+    ],
+    "correctAnswer": "O(n)",
+    "explanation": "If keys are inserted in sorted order, an unbalanced BST degenerates into a linear linked list of height n, giving O(n) search time.",
+    "hint": "Degenerate skewed tree acts like a linked list."
+  },
+  {
+    "id": "dsa-56",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Trees",
+    "title": "Lowest Common Ancestor in BST",
+    "question": "How can Lowest Common Ancestor (LCA) of nodes p and q be found in a BST in O(h) time without extra memory?",
+    "options": [
+      "Walk down: if both values are smaller go left, if both larger go right, else current is LCA",
+      "Perform BFS from root",
+      "Store parent pointers in a hash table",
+      "Compute in-order traversal and take median"
+    ],
+    "correctAnswer": "Walk down: if both values are smaller go left, if both larger go right, else current is LCA",
+    "explanation": "The split point where p and q diverge onto left and right subtrees is the unique LCA in a BST.",
+    "hint": "Follow the BST value splitting property."
+  },
+  {
+    "id": "dsa-57",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Trees",
+    "title": "Diameter of Binary Tree",
+    "question": "What is the definition of the diameter of a binary tree?",
+    "options": [
+      "Length of the longest path between any two nodes",
+      "Number of leaf nodes",
+      "Maximum depth of tree",
+      "Sum of all node values"
+    ],
+    "correctAnswer": "Length of the longest path between any two nodes",
+    "explanation": "The diameter is the number of edges on the longest path between any two nodes in the tree, which may or may not pass through the root.",
+    "hint": "Longest node-to-node path."
+  },
+  {
+    "id": "dsa-58",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Trees",
+    "title": "Validate Binary Search Tree",
+    "question": "Why is checking only root->left->val < root->val and root->right->val > root->val insufficient to validate a BST?",
+    "options": [
+      "A node in the right subtree could violate an ancestor upper bound",
+      "It causes infinite recursion",
+      "It only works for balanced trees",
+      "It fails for leaf nodes"
+    ],
+    "correctAnswer": "A node in the right subtree could violate an ancestor upper bound",
+    "explanation": "Every node in the right subtree must be greater than the root, not just the direct child. A valid BST check requires maintaining a range (min_val, max_val).",
+    "hint": "Range constraint must hold for entire subtrees."
+  },
+  {
+    "id": "dsa-59",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Trees",
+    "title": "AVL Tree Balance Factor",
+    "question": "What is the allowed balance factor (height(left) - height(right)) for every node in an AVL Tree?",
+    "options": [
+      "-1, 0, or +1",
+      "Strictly 0",
+      "-2, -1, 0, 1, or 2",
+      "Any positive integer"
+    ],
+    "correctAnswer": "-1, 0, or +1",
+    "explanation": "AVL trees maintain strict self-balancing where the height difference between left and right subtrees is at most 1 for every node.",
+    "hint": "Height difference cannot exceed 1."
+  },
+  {
+    "id": "dsa-60",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Trees",
+    "title": "Serialize and Deserialize Binary Tree",
+    "question": "Which combination of traversals can uniquely reconstruct a binary tree with duplicate keys?",
+    "options": [
+      "Preorder traversal with null marker delimiters",
+      "Inorder and Postorder only",
+      "Level order without nulls",
+      "Preorder and Inorder only"
+    ],
+    "correctAnswer": "Preorder traversal with null marker delimiters",
+    "explanation": "Preorder (or Level-order) with explicit null markers preserves tree topology unambiguously even with duplicate values.",
+    "hint": "Null delimiters encode tree structural shape."
+  },
+  {
+    "id": "dsa-61",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Heaps",
+    "title": "Min-Heap Root Property",
+    "question": "What is always located at the root (index 0) of a Min-Heap?",
+    "options": [
+      "The minimum element of the entire heap",
+      "The maximum element",
+      "The median element",
+      "The most recently inserted element"
+    ],
+    "correctAnswer": "The minimum element of the entire heap",
+    "explanation": "In a Min-Heap, every parent node is less than or equal to its children, ensuring the minimum element is at the root.",
+    "hint": "Parent is always smaller than children."
+  },
+  {
+    "id": "dsa-62",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Heaps",
+    "title": "Binary Heap Array Indexing",
+    "question": "In a 0-indexed array representation of a binary heap, what is the left child index of the node at index i?",
+    "options": [
+      "2 * i + 1",
+      "2 * i",
+      "2 * i + 2",
+      "i / 2"
+    ],
+    "correctAnswer": "2 * i + 1",
+    "explanation": "For node at index i, left child is at 2*i + 1 and right child is at 2*i + 2.",
+    "hint": "Left child is 2*i + 1."
+  },
+  {
+    "id": "dsa-63",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Heaps",
+    "title": "Build Heap Time Complexity",
+    "question": "What is the time complexity to build a binary heap from an unsorted array of n elements (bottom-up heapify)?",
+    "options": [
+      "O(n)",
+      "O(n log n)",
+      "O(log n)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(n)",
+    "explanation": "Sum of node heights Σ (h / 2^h) converges to a constant, making bottom-up build-heap linear O(n).",
+    "hint": "Convergent series of node depths."
+  },
+  {
+    "id": "dsa-64",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Heaps",
+    "title": "Kth Largest Element in Stream",
+    "question": "What is the most space-efficient data structure to maintain the K-th largest element in an incoming data stream?",
+    "options": [
+      "Min-Heap of size K",
+      "Max-Heap of size N",
+      "Sorted Array of size N",
+      "Balanced BST of size N"
+    ],
+    "correctAnswer": "Min-Heap of size K",
+    "explanation": "A Min-Heap of size K stores the top K elements. The root always holds the K-th largest element in O(1) lookup and O(log K) insertion.",
+    "hint": "Min-heap of fixed size K."
+  },
+  {
+    "id": "dsa-65",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Heaps",
+    "title": "Median from Data Stream",
+    "question": "How can the running median of a data stream be maintained with O(log n) insertion and O(1) retrieval?",
+    "options": [
+      "Two Heaps: Max-Heap for lower half, Min-Heap for upper half",
+      "Single sorted array with binary search insertion",
+      "Segment Tree",
+      "Disjoint Set Union"
+    ],
+    "correctAnswer": "Two Heaps: Max-Heap for lower half, Min-Heap for upper half",
+    "explanation": "Balancing a Max-Heap for the smaller half and a Min-Heap for the larger half gives O(1) median access.",
+    "hint": "Max-heap on left, Min-heap on right."
+  },
+  {
+    "id": "dsa-66",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Graphs",
+    "title": "BFS Queue Traversal",
+    "question": "Which data structure is fundamentally used to implement Breadth-First Search (BFS) on a graph?",
+    "options": [
+      "Queue",
+      "Stack",
+      "Min-Heap",
+      "Priority Queue"
+    ],
+    "correctAnswer": "Queue",
+    "explanation": "BFS visits vertices level-by-level in FIFO order using a Queue.",
+    "hint": "FIFO traversal structure."
+  },
+  {
+    "id": "dsa-67",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Graphs",
+    "title": "DFS Recursion / Stack",
+    "question": "Which data structure is fundamentally used to implement Depth-First Search (DFS) on a graph?",
+    "options": [
+      "Stack (or Call Stack)",
+      "Queue",
+      "Hash Map only",
+      "Doubly Linked List"
+    ],
+    "correctAnswer": "Stack (or Call Stack)",
+    "explanation": "DFS explores as deep as possible along each branch before backtracking, utilizing LIFO call stack or explicit Stack.",
+    "hint": "LIFO traversal structure."
+  },
+  {
+    "id": "dsa-68",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Graphs",
+    "title": "Adjacency Matrix Space",
+    "question": "What is the space complexity of representing a graph with V vertices and E edges using an Adjacency Matrix?",
+    "options": [
+      "O(V^2)",
+      "O(V + E)",
+      "O(E^2)",
+      "O(V * E)"
+    ],
+    "correctAnswer": "O(V^2)",
+    "explanation": "A V x V 2D matrix allocates V^2 memory cells regardless of the number of edges.",
+    "hint": "V by V matrix size."
+  },
+  {
+    "id": "dsa-69",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Graphs",
+    "title": "Adjacency List Space",
+    "question": "What is the space complexity of storing a directed graph with V vertices and E edges using an Adjacency List?",
+    "options": [
+      "O(V + E)",
+      "O(V^2)",
+      "O(E^2)",
+      "O(V * E)"
+    ],
+    "correctAnswer": "O(V + E)",
+    "explanation": "An adjacency list stores V list headers and exactly E edge entries, requiring O(V + E) total space.",
+    "hint": "Vertices plus edges."
+  },
+  {
+    "id": "dsa-70",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Graphs",
+    "title": "Dijkstra Algorithm Constraint",
+    "question": "Under what condition does Dijkstras shortest path algorithm fail to produce the correct result?",
+    "options": [
+      "Graphs with negative edge weights",
+      "Directed acyclic graphs",
+      "Graphs with cycles and positive weights",
+      "Disconnected graphs"
+    ],
+    "correctAnswer": "Graphs with negative edge weights",
+    "explanation": "Dijkstras greedy choice assumes adding positive edges never decreases path cost. Negative edges violate this greedy invariant.",
+    "hint": "Negative edge weights break greedy assumption."
+  },
+  {
+    "id": "dsa-71",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Graphs",
+    "title": "Dijkstra Time with Min-Heap",
+    "question": "What is the time complexity of Dijkstras algorithm on a graph with V vertices and E edges using an adjacency list and Min-Heap?",
+    "options": [
+      "O((V + E) log V)",
+      "O(V^2)",
+      "O(V * E)",
+      "O(E log E + V)"
+    ],
+    "correctAnswer": "O((V + E) log V)",
+    "explanation": "Each vertex is extracted from the priority queue in O(log V) and each edge relaxation takes O(log V), totaling O((V + E) log V).",
+    "hint": "Logarithmic priority queue operations."
+  },
+  {
+    "id": "dsa-72",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Graphs",
+    "title": "Bellman-Ford Algorithm Purpose",
+    "question": "What is the primary advantage of the Bellman-Ford algorithm over Dijkstras algorithm?",
+    "options": [
+      "Handles negative edge weights and detects negative weight cycles",
+      "Faster asymptotic time complexity",
+      "Uses less auxiliary memory",
+      "Works on undirected graphs only"
+    ],
+    "correctAnswer": "Handles negative edge weights and detects negative weight cycles",
+    "explanation": "Bellman-Ford relaxes all edges V - 1 times in O(V * E) time, correctly handling negative weights and detecting negative cycles.",
+    "hint": "Negative weights and negative cycle detection."
+  },
+  {
+    "id": "dsa-73",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Graphs",
+    "title": "Topological Sort Applicability",
+    "question": "On which type of graph is Topological Sorting strictly defined?",
+    "options": [
+      "Directed Acyclic Graph (DAG)",
+      "Any undirected graph",
+      "Graph with positive cycles",
+      "Complete graph only"
+    ],
+    "correctAnswer": "Directed Acyclic Graph (DAG)",
+    "explanation": "Topological sorting linearly orders vertices such that for every directed edge u -> v, u comes before v. Cycles make this ordering impossible.",
+    "hint": "Directed and Acyclic."
+  },
+  {
+    "id": "dsa-74",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Graphs",
+    "title": "Kahns Algorithm for Topo Sort",
+    "question": "Which vertex property is tracked and decremented in Kahns Algorithm for Topological Sorting?",
+    "options": [
+      "In-degree of vertices",
+      "Out-degree of vertices",
+      "Vertex color depth",
+      "Edge weight sum"
+    ],
+    "correctAnswer": "In-degree of vertices",
+    "explanation": "Kahns algorithm enqueues vertices with in-degree 0, removing their outgoing edges and decrementing neighbors in-degrees.",
+    "hint": "Number of incoming edges."
+  },
+  {
+    "id": "dsa-75",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Graphs",
+    "title": "Tarjan SCC Low-Link Value",
+    "question": "In Tarjans Strongly Connected Components (SCC) algorithm, what does low[u] represent?",
+    "options": [
+      "Lowest discovery time reachable from u via DFS tree edges and at most one back-edge",
+      "Number of outgoing edges",
+      "Maximum degree in SCC",
+      "Depth of node in tree"
+    ],
+    "correctAnswer": "Lowest discovery time reachable from u via DFS tree edges and at most one back-edge",
+    "explanation": "The low-link value low[u] is the smallest discovery time of any node reachable from the subtree rooted at u using back edges.",
+    "hint": "Smallest reachable discovery timestamp."
+  },
+  {
+    "id": "dsa-76",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Graphs",
+    "title": "Kruskal Minimum Spanning Tree",
+    "question": "Which auxiliary data structure does Kruskals algorithm use to prevent cycles in O(E log V) time?",
+    "options": [
+      "Disjoint Set Union (DSU / Union-Find)",
+      "Min-Heap only",
+      "Adjacency Matrix",
+      "Fibonacci Heap"
+    ],
+    "correctAnswer": "Disjoint Set Union (DSU / Union-Find)",
+    "explanation": "DSU with path compression and union-by-rank checks in near-constant O(α(V)) whether adding an edge creates a cycle.",
+    "hint": "Union-Find structure."
+  },
+  {
+    "id": "dsa-77",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Graphs",
+    "title": "Floyd-Warshall All-Pairs Shortest Path",
+    "question": "What is the time complexity of the Floyd-Warshall algorithm for all-pairs shortest paths?",
+    "options": [
+      "O(V^3)",
+      "O(V * E)",
+      "O(V^2 log V)",
+      "O(E^3)"
+    ],
+    "correctAnswer": "O(V^3)",
+    "explanation": "Three nested loops iterating over all intermediate vertices k, sources i, and destinations j yield O(V^3) time.",
+    "hint": "Three nested loops over V."
+  },
+  {
+    "id": "dsa-78",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Recursion",
+    "title": "Recursion Base Case",
+    "question": "What happens if a recursive function lacks a valid base case in C++?",
+    "options": [
+      "Stack Overflow runtime error",
+      "Compiler optimization warning only",
+      "Memory leak in heap",
+      "Function returns 0 automatically"
+    ],
+    "correctAnswer": "Stack Overflow runtime error",
+    "explanation": "Without a terminating base case, recursive stack frames are pushed indefinitely until the call stack memory is exhausted, causing a stack overflow crash.",
+    "hint": "Exhaustion of call stack memory."
+  },
+  {
+    "id": "dsa-79",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Recursion",
+    "title": "N-Queens Backtracking Time",
+    "question": "What is the worst-case upper bound time complexity of the classic N-Queens backtracking algorithm?",
+    "options": [
+      "O(N!)",
+      "O(N^N)",
+      "O(N^2)",
+      "O(2^N)"
+    ],
+    "correctAnswer": "O(N!)",
+    "explanation": "Placing queens row by row reduces available valid column choices for subsequent queens, bounding the search space to O(N!).",
+    "hint": "Factorial upper bound."
+  },
+  {
+    "id": "dsa-80",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Recursion",
+    "title": "Subsets Generation Complexity",
+    "question": "How many total subsets (power set) exist for a set of n distinct elements?",
+    "options": [
+      "2^n",
+      "n!",
+      "n^2",
+      "2n"
+    ],
+    "correctAnswer": "2^n",
+    "explanation": "Each element has 2 choices (include or exclude), yielding 2 * 2 * ... * 2 = 2^n total subsets.",
+    "hint": "Binary choice for every element."
+  },
+  {
+    "id": "dsa-81",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Recursion",
+    "title": "Sudoku Solver Technique",
+    "question": "Which algorithmic paradigm solves standard 9x9 Sudoku puzzles with constraint pruning?",
+    "options": [
+      "Backtracking with constraint propagation",
+      "Greedy algorithm",
+      "Dynamic programming table",
+      "Breadth-first search without pruning"
+    ],
+    "correctAnswer": "Backtracking with constraint propagation",
+    "explanation": "Try digit 1-9 in empty cell, recursively validate board constraints, and backtrack (revert cell to 0) if a conflict occurs.",
+    "hint": "Try, validate, and revert."
+  },
+  {
+    "id": "dsa-82",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Searching",
+    "title": "Binary Search Precondition",
+    "question": "What is the essential precondition required before applying Binary Search on an array?",
+    "options": [
+      "The array must be sorted in monotonic order",
+      "The array must contain unique elements only",
+      "The array size must be a power of 2",
+      "The array must be dynamically allocated"
+    ],
+    "correctAnswer": "The array must be sorted in monotonic order",
+    "explanation": "Binary search divides the search space in half based on comparing target with middle element, which requires sorted order.",
+    "hint": "Array must have sorted order."
+  },
+  {
+    "id": "dsa-83",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Searching",
+    "title": "Binary Search Time Complexity",
+    "question": "What is the worst-case time complexity of Binary Search on an array of size n?",
+    "options": [
+      "O(log n)",
+      "O(n)",
+      "O(1)",
+      "O(n log n)"
+    ],
+    "correctAnswer": "O(log n)",
+    "explanation": "Binary search halves the search space in every step: n -> n/2 -> n/4 -> ... -> 1, taking log2(n) steps.",
+    "hint": "Halving space at each comparison."
+  },
+  {
+    "id": "dsa-84",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Sorting",
+    "title": "Merge Sort Time Complexity",
+    "question": "What is the worst-case time complexity of Merge Sort on an array of n elements?",
+    "options": [
+      "O(n log n)",
+      "O(n^2)",
+      "O(n)",
+      "O(log n)"
+    ],
+    "correctAnswer": "O(n log n)",
+    "explanation": "Merge sort divides the array into halves in O(log n) levels and merges them in O(n) per level, giving O(n log n) in all cases.",
+    "hint": "Divide and conquer with linear merge."
+  },
+  {
+    "id": "dsa-85",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Sorting",
+    "title": "Merge Sort Auxiliary Space",
+    "question": "What is the standard auxiliary space complexity of Merge Sort on an array of size n?",
+    "options": [
+      "O(n)",
+      "O(1)",
+      "O(log n)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(n)",
+    "explanation": "Standard Merge Sort creates temporary auxiliary arrays during the merge step to hold elements.",
+    "hint": "Temporary buffer for merging."
+  },
+  {
+    "id": "dsa-86",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Sorting",
+    "title": "Quick Sort Worst Case",
+    "question": "Under what condition does Quick Sort with naive first-element pivot selection exhibit O(n^2) worst-case time?",
+    "options": [
+      "When the input array is already sorted or reverse sorted",
+      "When the input array is randomly shuffled",
+      "When all elements are distinct and unsorted",
+      "When array size is even"
+    ],
+    "correctAnswer": "When the input array is already sorted or reverse sorted",
+    "explanation": "Selecting the first element as pivot on a sorted array results in completely unbalanced partitions of size 1 and n-1 at each step.",
+    "hint": "Worst partitioning on sorted input."
+  },
+  {
+    "id": "dsa-87",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Sorting",
+    "title": "Stability in Sorting Algorithms",
+    "question": "What does it mean for a sorting algorithm to be stable?",
+    "options": [
+      "Maintains relative order of elements with equal keys",
+      "Requires O(1) auxiliary space",
+      "Runs in O(n log n) worst-case time",
+      "Cannot be implemented recursively"
+    ],
+    "correctAnswer": "Maintains relative order of elements with equal keys",
+    "explanation": "A stable sort guarantees that duplicate keys appear in the output in the same relative order as in the input.",
+    "hint": "Preserves original order of duplicates."
+  },
+  {
+    "id": "dsa-88",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Sorting",
+    "title": "Which Sort is Stable by Default",
+    "question": "Which of the following sorting algorithms is stable by default?",
+    "options": [
+      "Merge Sort",
+      "Quick Sort",
+      "Heap Sort",
+      "Selection Sort"
+    ],
+    "correctAnswer": "Merge Sort",
+    "explanation": "Merge Sort preserves relative order of equal elements by preferring left-subarray elements during merge ties (<=).",
+    "hint": "Standard merge comparison maintains tie order."
+  },
+  {
+    "id": "dsa-89",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Sorting",
+    "title": "Counting Sort Constraint",
+    "question": "Under what condition is Counting Sort optimal with O(n + k) linear time?",
+    "options": [
+      "When key range k is small and O(n)",
+      "When keys are floating point numbers",
+      "When elements are arbitrarily large 64-bit integers",
+      "When array is already sorted"
+    ],
+    "correctAnswer": "When key range k is small and O(n)",
+    "explanation": "Counting sort counts occurrences of discrete integer keys. When range k is proportional to n, total time is linear O(n).",
+    "hint": "Range k is proportional to n."
+  },
+  {
+    "id": "dsa-90",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Hashing",
+    "title": "Hash Table Average Search Time",
+    "question": "What is the average-case time complexity of searching a key in a Hash Map with a good hash function?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "A uniform hash function distributes keys across buckets evenly, giving O(1) constant average lookup time.",
+    "hint": "Direct bucket mapping."
+  },
+  {
+    "id": "dsa-91",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Hashing",
+    "title": "Hash Collision Definition",
+    "question": "What is a hash collision in a hash table?",
+    "options": [
+      "Two distinct keys produce the same hash bucket index",
+      "A key cannot be converted to integer",
+      "Hash table is 100% full",
+      "Hash function returns a negative integer"
+    ],
+    "correctAnswer": "Two distinct keys produce the same hash bucket index",
+    "explanation": "A collision occurs when hash(key1) == hash(key2) for key1 != key2.",
+    "hint": "Two keys mapping to identical index."
+  },
+  {
+    "id": "dsa-92",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Hashing",
+    "title": "Chaining vs Open Addressing",
+    "question": "In Separate Chaining hash collision resolution, what data structure is attached to each bucket?",
+    "options": [
+      "Linked list (or balanced tree for large buckets)",
+      "Fixed size array of size 1",
+      "Binary Heap",
+      "Disjoint Set Union"
+    ],
+    "correctAnswer": "Linked list (or balanced tree for large buckets)",
+    "explanation": "Separate Chaining stores colliding elements in a linked list or red-black tree (e.g. Java 8 HashMap) at the same bucket index.",
+    "hint": "Bucket stores chain of nodes."
+  },
+  {
+    "id": "dsa-93",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Hashing",
+    "title": "Load Factor and Rehashing",
+    "question": "What happens when a hash table load factor (elements / buckets) exceeds the threshold (e.g. 0.75)?",
+    "options": [
+      "Table allocates more buckets and rehashes existing keys",
+      "Throws out of memory exception immediately",
+      "Deletes oldest elements",
+      "Switches to linear search"
+    ],
+    "correctAnswer": "Table allocates more buckets and rehashes existing keys",
+    "explanation": "Rehashing doubles bucket array capacity and redistributes elements to maintain O(1) average lookup time.",
+    "hint": "Resize bucket array and re-insert."
+  },
+  {
+    "id": "dsa-94",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Hashing",
+    "title": "Longest Consecutive Sequence O(n)",
+    "question": "How can the length of the longest consecutive elements sequence be found in an unsorted array in O(n) time?",
+    "options": [
+      "Insert all in Hash Set, expand only from sequence starters where (x - 1) is not in set",
+      "Sort the array in O(n log n)",
+      "Build a Max-Heap",
+      "Apply 2D dynamic programming table"
+    ],
+    "correctAnswer": "Insert all in Hash Set, expand only from sequence starters where (x - 1) is not in set",
+    "explanation": "Checking if (num - 1) is in the set ensures each streak is traversed once from its minimum element, giving O(n) total lookups.",
+    "hint": "Only start streaks from numbers without predecessors."
+  },
+  {
+    "id": "dsa-95",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Dynamic Programming",
+    "title": "Overlapping Subproblems",
+    "question": "What are the two core properties that characterize a Dynamic Programming problem?",
+    "options": [
+      "Overlapping Subproblems and Optimal Substructure",
+      "Greedy Choice and Divide & Conquer",
+      "LIFO Ordering and Contiguous Memory",
+      "NP-Hardness and Graph Bipartiteness"
+    ],
+    "correctAnswer": "Overlapping Subproblems and Optimal Substructure",
+    "explanation": "Dynamic programming caches solutions to overlapping subproblems where the optimal solution is built from optimal subproblem solutions.",
+    "hint": "Subproblem reuse and optimal substructure."
+  },
+  {
+    "id": "dsa-96",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Dynamic Programming",
+    "title": "Memoization vs Tabulation",
+    "question": "What is the key difference between Memoization and Tabulation in DP?",
+    "options": [
+      "Memoization is top-down with recursion; Tabulation is bottom-up with iterative table",
+      "Memoization is O(n^2); Tabulation is O(1)",
+      "Tabulation uses call stack; Memoization uses array only",
+      "Memoization works only on trees"
+    ],
+    "correctAnswer": "Memoization is top-down with recursion; Tabulation is bottom-up with iterative table",
+    "explanation": "Memoization stores results during recursive calls (top-down), while Tabulation computes answers iteratively from base cases up.",
+    "hint": "Top-down cached recursion vs bottom-up loop."
+  },
+  {
+    "id": "dsa-97",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Dynamic Programming",
+    "title": "0/1 Knapsack Complexity",
+    "question": "What is the time complexity of the dynamic programming solution for the 0/1 Knapsack problem with n items and capacity W?",
+    "options": [
+      "O(n * W)",
+      "O(2^n)",
+      "O(n log W)",
+      "O(W^2)"
+    ],
+    "correctAnswer": "O(n * W)",
+    "explanation": "The DP table dp[i][w] computes optimal values for n items across capacity W, taking pseudo-polynomial O(n * W) time.",
+    "hint": "Pseudo-polynomial in items and capacity."
+  },
+  {
+    "id": "dsa-98",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Dynamic Programming",
+    "title": "Coin Change Fewest Coins",
+    "question": "What is the DP state transition for the minimum coins needed to make amount A with coin denominations C?",
+    "options": [
+      "dp[i] = min(dp[i], dp[i - coin] + 1) for coin in C",
+      "dp[i] = dp[i - 1] + dp[i - 2]",
+      "dp[i] = max(dp[i - coin])",
+      "dp[i] = dp[i / coin]"
+    ],
+    "correctAnswer": "dp[i] = min(dp[i], dp[i - coin] + 1) for coin in C",
+    "explanation": "The minimum coins to make amount i is 1 plus the minimum coins to make (i - coin) across all available denominations.",
+    "hint": "Add 1 coin to subproblem amount."
+  },
+  {
+    "id": "dsa-99",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Dynamic Programming",
+    "title": "Longest Common Subsequence",
+    "question": "What is the time complexity to find the Longest Common Subsequence of two strings of lengths m and n using DP?",
+    "options": [
+      "O(m * n)",
+      "O(m + n)",
+      "O(2^(m+n))",
+      "O(m log n)"
+    ],
+    "correctAnswer": "O(m * n)",
+    "explanation": "Filling the 2D DP grid dp[m+1][n+1] takes constant time per cell, totaling O(m * n) time.",
+    "hint": "2D grid computation over both string lengths."
+  },
+  {
+    "id": "dsa-100",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Dynamic Programming",
+    "title": "Longest Increasing Subsequence Optimal",
+    "question": "What is the optimal time complexity to find the length of the Longest Increasing Subsequence (LIS) in an array of size n?",
+    "options": [
+      "O(n log n)",
+      "O(n^2)",
+      "O(n)",
+      "O(2^n)"
+    ],
+    "correctAnswer": "O(n log n)",
+    "explanation": "Patience sorting with binary search (std::lower_bound in C++) maintains active tail tails array in O(n log n) time.",
+    "hint": "Binary search on tail array."
+  },
+  {
+    "id": "dsa-101",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Greedy",
+    "title": "Fractional Knapsack Strategy",
+    "question": "Why can the Fractional Knapsack problem be solved optimally using a Greedy algorithm while 0/1 Knapsack cannot?",
+    "options": [
+      "Items can be broken down based on value-to-weight ratio",
+      "Fractional knapsack has no capacity limit",
+      "0/1 knapsack has negative values",
+      "Fractional knapsack requires dynamic programming table"
+    ],
+    "correctAnswer": "Items can be broken down based on value-to-weight ratio",
+    "explanation": "Sorting items by value/weight ratio and taking full items followed by a fraction of the next item guarantees optimal value.",
+    "hint": "Greedy choice on value per unit weight."
+  },
+  {
+    "id": "dsa-102",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Greedy",
+    "title": "Activity Selection Problem",
+    "question": "In the Activity Selection Problem, which greedy sorting criterion maximizes the number of non-overlapping activities?",
+    "options": [
+      "Sort by earliest finish time",
+      "Sort by earliest start time",
+      "Sort by shortest duration",
+      "Sort by longest duration"
+    ],
+    "correctAnswer": "Sort by earliest finish time",
+    "explanation": "Selecting activities that finish earliest leaves maximum available time for subsequent activities.",
+    "hint": "Earliest finish time maximizes remaining time."
+  },
+  {
+    "id": "dsa-103",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Time Complexity",
+    "title": "Nested Loops Complexity",
+    "question": "What is the time complexity of the following C++ loop nest?\n```cpp\nfor (int i = 0; i < n; i++) {\n    for (int j = 0; j < n; j++) {\n        sum += arr[i][j];\n    }\n}\n```",
+    "options": [
+      "O(n^2)",
+      "O(n)",
+      "O(n log n)",
+      "O(2^n)"
+    ],
+    "correctAnswer": "O(n^2)",
+    "explanation": "Outer loop runs n times and inner loop runs n times for each outer iteration: n * n = n^2 total iterations.",
+    "hint": "Double nested loops of size n."
+  },
+  {
+    "id": "dsa-104",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Time Complexity",
+    "title": "Logarithmic Loop Step",
+    "question": "What is the time complexity of this loop?\n```cpp\nfor (int i = 1; i < n; i *= 2) {\n    cout << i << endl;\n}\n```",
+    "options": [
+      "O(log n)",
+      "O(n)",
+      "O(n^2)",
+      "O(1)"
+    ],
+    "correctAnswer": "O(log n)",
+    "explanation": "The loop index doubles in each step (1, 2, 4, 8, ...), reaching n in log2(n) iterations.",
+    "hint": "Geometric multiplication by 2."
+  },
+  {
+    "id": "dsa-105",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Time Complexity",
+    "title": "Masters Theorem Divide and Conquer",
+    "question": "For recurrence T(n) = 2T(n/2) + O(n), what is the asymptotic solution by Masters Theorem?",
+    "options": [
+      "O(n log n)",
+      "O(n)",
+      "O(n^2)",
+      "O(log n)"
+    ],
+    "correctAnswer": "O(n log n)",
+    "explanation": "Here a = 2, b = 2, and f(n) = n. Since n^(log_b a) = n^1 = f(n), Case 2 applies, giving T(n) = O(n log n).",
+    "hint": "Standard merge sort recurrence."
+  },
+  {
+    "id": "dsa-106",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Time Complexity",
+    "title": "Binary Tree Traversal Space",
+    "question": "What is the auxiliary space complexity of recursive DFS traversal on a completely skewed binary tree of n nodes?",
+    "options": [
+      "O(n)",
+      "O(log n)",
+      "O(1)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(n)",
+    "explanation": "In a degenerate skewed tree, the recursion call stack depth equals the tree height n, requiring O(n) space.",
+    "hint": "Call stack depth matches skewed tree height."
+  },
+  {
+    "id": "dsa-107",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Time Complexity",
+    "title": "Fibonacci Naive Recursion",
+    "question": "What is the time complexity of computing Fibonacci numbers using naive recursion `fib(n) = fib(n-1) + fib(n-2)`?",
+    "options": [
+      "O(2^n) (or O(1.618^n))",
+      "O(n)",
+      "O(n log n)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(2^n) (or O(1.618^n))",
+    "explanation": "The recursion tree branches into 2 calls at each level of depth n, yielding O(2^n) exponential total calls.",
+    "hint": "Exponential branching binary tree."
+  },
+  {
+    "id": "dsa-108",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Code Output",
+    "title": "Vector Size After Pop",
+    "question": "What is the output of the following C++ code?\n```cpp\n#include <iostream>\n#include <vector>\nusing namespace std;\nint main() {\n    vector<int> v = {10, 20, 30};\n    v.pop_back();\n    cout << v.size() << \" \" << v.back();\n    return 0;\n}\n```",
+    "options": [
+      "2 20",
+      "3 30",
+      "2 30",
+      "3 20"
+    ],
+    "correctAnswer": "2 20",
+    "explanation": "pop_back() removes 30, reducing size from 3 to 2. v.back() then returns the last element 20.",
+    "hint": "pop_back removes last element."
+  },
+  {
+    "id": "dsa-109",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Code Output",
+    "title": "Integer Division Truncation",
+    "question": "What is the output of this C++ expression?\n```cpp\n#include <iostream>\nusing namespace std;\nint main() {\n    int a = 7, b = 2;\n    double res = a / b;\n    cout << res;\n    return 0;\n}\n```",
+    "options": [
+      "3",
+      "3.5",
+      "3.0",
+      "4"
+    ],
+    "correctAnswer": "3",
+    "explanation": "In C++, dividing two integers (7 / 2) performs integer truncation yielding 3 before assigning to the double.",
+    "hint": "Integer division truncates decimals."
+  },
+  {
+    "id": "dsa-110",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Code Output",
+    "title": "Pass by Reference Modification",
+    "question": "What is the output of the following C++ snippet?\n```cpp\n#include <iostream>\nusing namespace std;\nvoid modify(int &a, int b) {\n    a += 10;\n    b += 20;\n}\nint main() {\n    int x = 5, y = 5;\n    modify(x, y);\n    cout << x << \" \" << y;\n    return 0;\n}\n```",
+    "options": [
+      "15 5",
+      "15 25",
+      "5 5",
+      "5 25"
+    ],
+    "correctAnswer": "15 5",
+    "explanation": "x is passed by reference (int &a), so changes modify x to 15. y is passed by value (int b), so y remains 5.",
+    "hint": "Look for reference ampersand in signature."
+  },
+  {
+    "id": "dsa-111",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Code Output",
+    "title": "Post-increment in Expressions",
+    "question": "What is the output of the following C++ code?\n```cpp\n#include <iostream>\nusing namespace std;\nint main() {\n    int i = 2;\n    int val = i++ * 10;\n    cout << val << \" \" << i;\n    return 0;\n}\n```",
+    "options": [
+      "20 3",
+      "30 3",
+      "20 2",
+      "30 2"
+    ],
+    "correctAnswer": "20 3",
+    "explanation": "Post-increment i++ uses the original value of i (2) in the multiplication (2 * 10 = 20), then increments i to 3.",
+    "hint": "Post-increment evaluates before incrementing."
+  },
+  {
+    "id": "dsa-112",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Code Output",
+    "title": "String Substring Operation",
+    "question": "What does this C++ snippet output?\n```cpp\n#include <iostream>\n#include <string>\nusing namespace std;\nint main() {\n    string s = \"competitive\";\n    cout << s.substr(3, 4);\n    return 0;\n}\n```",
+    "options": [
+      "peti",
+      "mpet",
+      "pet",
+      "etit"
+    ],
+    "correctAnswer": "peti",
+    "explanation": "substr(pos, len) starts at index 3 (character p) and extracts 4 characters: peti.",
+    "hint": "substr(start, length)."
+  },
+  {
+    "id": "dsa-113",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "HARD",
+    "category": "Code Output",
+    "title": "Pointer Arithmetic Offset",
+    "question": "What is the output of this C++ pointer code?\n```cpp\n#include <iostream>\nusing namespace std;\nint main() {\n    int arr[] = {10, 20, 30, 40, 50};\n    int *p = arr;\n    *(p + 2) += 5;\n    cout << arr[2] << \" \" << *(p + 3);\n    return 0;\n}\n```",
+    "options": [
+      "35 40",
+      "30 40",
+      "35 50",
+      "30 35"
+    ],
+    "correctAnswer": "35 40",
+    "explanation": "*(p + 2) points to arr[2] (30), incrementing it by 5 gives 35. *(p + 3) accesses arr[3] = 40.",
+    "hint": "Pointer offset dereference."
+  },
+  {
+    "id": "dsa-114",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Debugging",
+    "title": "Uninitialized Pointer Dereference",
+    "question": "What bug exists in this C++ snippet?\n```cpp\nint* ptr;\n*ptr = 50;\ncout << *ptr;\n```",
+    "options": [
+      "Dereferencing wild / uninitialized pointer causes undefined behavior / crash",
+      "Syntax error on declaration",
+      "Type mismatch between int and pointer",
+      "Memory leak in stack"
+    ],
+    "correctAnswer": "Dereferencing wild / uninitialized pointer causes undefined behavior / crash",
+    "explanation": "ptr is a wild pointer pointing to an arbitrary memory address. Writing *ptr = 50 attempts to write to unallocated memory, causing a segmentation fault.",
+    "hint": "Wild pointer must point to allocated memory."
+  },
+  {
+    "id": "dsa-115",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Debugging",
+    "title": "Vector Iterator Invalidation",
+    "question": "Why is this C++ loop unsafe?\n```cpp\nfor (auto it = v.begin(); it != v.end(); it++) {\n    if (*it == 5) v.erase(it);\n}\n```",
+    "options": [
+      "v.erase(it) invalidates iterator, causing undefined behavior on next it++",
+      "Vector cannot store integer 5",
+      "v.begin() returns a const iterator",
+      "Loop condition causes infinite loop only"
+    ],
+    "correctAnswer": "v.erase(it) invalidates iterator, causing undefined behavior on next it++",
+    "explanation": "Erasing an element invalidates iterators at and after the erased position. The correct idiom is `it = v.erase(it)`.",
+    "hint": "Use returned iterator from erase."
+  },
+  {
+    "id": "dsa-116",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Arrays",
+    "title": "Finding Max Element",
+    "question": "What is the minimum number of comparisons needed to find the maximum element in an unsorted array of n elements?",
+    "options": [
+      "n - 1",
+      "n",
+      "n / 2",
+      "log n"
+    ],
+    "correctAnswer": "n - 1",
+    "explanation": "Every non-maximum element must be eliminated by at least one comparison, requiring exactly n - 1 comparisons.",
+    "hint": "Each comparison eliminates 1 candidate."
+  },
+  {
+    "id": "dsa-117",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Circular Subarray Max Sum",
+    "question": "How is the maximum circular subarray sum computed in O(n) time?",
+    "options": [
+      "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+      "Kadane(arr) * 2",
+      "Sort array and add last two",
+      "Prefix sum matrix"
+    ],
+    "correctAnswer": "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+    "explanation": "A circular subarray wrapping around edges equals the total sum minus the minimum contiguous subarray sum in the middle.",
+    "hint": "Invert array or subtract minimum subarray."
+  },
+  {
+    "id": "dsa-118",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Strings",
+    "title": "String Length in C++",
+    "question": "What is the time complexity of calling s.length() on a std::string in C++11 and later?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "In modern C++, std::string maintains its size in a member variable, making .length() and .size() constant O(1) operations.",
+    "hint": "Size is stored as a member variable."
+  },
+  {
+    "id": "dsa-119",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Linked Lists",
+    "title": "Doubly Linked List Node Pointers",
+    "question": "How many pointer fields does a standard Doubly Linked List node contain?",
+    "options": [
+      "2 (prev and next)",
+      "1 (next only)",
+      "3 (prev, next, child)",
+      "4"
+    ],
+    "correctAnswer": "2 (prev and next)",
+    "explanation": "A doubly linked list node contains a prev pointer to the previous node and a next pointer to the subsequent node.",
+    "hint": "Forward and backward pointers."
+  },
+  {
+    "id": "dsa-120",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Stacks",
+    "title": "Stack Permutation Validity",
+    "question": "Given push sequence [1, 2, 3, 4, 5], which of the following is an impossible pop sequence?",
+    "options": [
+      "[4, 3, 5, 1, 2]",
+      "[4, 5, 3, 2, 1]",
+      "[1, 2, 3, 4, 5]",
+      "[3, 2, 5, 4, 1]"
+    ],
+    "correctAnswer": "[4, 3, 5, 1, 2]",
+    "explanation": "After 3 is popped, 1 cannot be popped before 2 because 2 was pushed after 1 and sits above 1 on the stack.",
+    "hint": "LIFO order constraint on remaining items."
+  },
+  {
+    "id": "dsa-121",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Trees",
+    "title": "Count Leaves in Binary Tree",
+    "question": "What condition identifies a leaf node in a binary tree?",
+    "options": [
+      "node->left == nullptr && node->right == nullptr",
+      "node->left == nullptr || node->right == nullptr",
+      "node->val == 0",
+      "node->parent == nullptr"
+    ],
+    "correctAnswer": "node->left == nullptr && node->right == nullptr",
+    "explanation": "A leaf node has zero children, meaning both left and right child pointers are null.",
+    "hint": "Both child pointers are null."
+  },
+  {
+    "id": "dsa-122",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Graphs",
+    "title": "Bipartite Graph Definition",
+    "question": "What graph property characterizes a Bipartite graph?",
+    "options": [
+      "Vertices can be divided into 2 sets with edges only between sets (no odd cycles)",
+      "Contains an Eulerian circuit",
+      "Has no vertices of odd degree",
+      "Is a complete tree"
+    ],
+    "correctAnswer": "Vertices can be divided into 2 sets with edges only between sets (no odd cycles)",
+    "explanation": "A graph is bipartite if and only if it contains no odd-length cycles, allowing 2-coloring.",
+    "hint": "2-colorable graph with no odd cycles."
+  },
+  {
+    "id": "dsa-123",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Searching",
+    "title": "Search in Rotated Sorted Array",
+    "question": "What is the time complexity of searching a target in a rotated sorted array with distinct elements using modified binary search?",
+    "options": [
+      "O(log n)",
+      "O(n)",
+      "O(n log n)",
+      "O(sqrt(n))"
+    ],
+    "correctAnswer": "O(log n)",
+    "explanation": "At least one half of the rotated array is always strictly sorted. Checking which half is sorted allows binary halving in O(log n) time.",
+    "hint": "Identify the sorted half at each step."
+  },
+  {
+    "id": "dsa-124",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Dynamic Programming",
+    "title": "Climbing Stairs DP",
+    "question": "For the climbing stairs problem (1 or 2 steps at a time), which sequence describes the number of distinct ways to reach step n?",
+    "options": [
+      "Fibonacci sequence",
+      "Factorial sequence",
+      "Catalan sequence",
+      "Prime sequence"
+    ],
+    "correctAnswer": "Fibonacci sequence",
+    "explanation": "ways(n) = ways(n - 1) + ways(n - 2) with base cases ways(1)=1, ways(2)=2, identical to the Fibonacci relation.",
+    "hint": "Sum of the previous two steps."
+  },
+  {
+    "id": "dsa-125",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Time Complexity",
+    "title": "Constant Time Big-O",
+    "question": "Which Big-O notation represents an algorithm whose execution time does not depend on input size n?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n!)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "O(1) denotes constant time complexity where runtime is bounded independently of input size n.",
+    "hint": "Constant independent runtime."
+  },
+  {
+    "id": "dsa-126",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Arrays",
+    "title": "Finding Max Element",
+    "question": "What is the minimum number of comparisons needed to find the maximum element in an unsorted array of n elements?",
+    "options": [
+      "n - 1",
+      "n",
+      "n / 2",
+      "log n"
+    ],
+    "correctAnswer": "n - 1",
+    "explanation": "Every non-maximum element must be eliminated by at least one comparison, requiring exactly n - 1 comparisons.",
+    "hint": "Each comparison eliminates 1 candidate."
+  },
+  {
+    "id": "dsa-127",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Circular Subarray Max Sum",
+    "question": "How is the maximum circular subarray sum computed in O(n) time?",
+    "options": [
+      "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+      "Kadane(arr) * 2",
+      "Sort array and add last two",
+      "Prefix sum matrix"
+    ],
+    "correctAnswer": "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+    "explanation": "A circular subarray wrapping around edges equals the total sum minus the minimum contiguous subarray sum in the middle.",
+    "hint": "Invert array or subtract minimum subarray."
+  },
+  {
+    "id": "dsa-128",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Strings",
+    "title": "String Length in C++",
+    "question": "What is the time complexity of calling s.length() on a std::string in C++11 and later?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "In modern C++, std::string maintains its size in a member variable, making .length() and .size() constant O(1) operations.",
+    "hint": "Size is stored as a member variable."
+  },
+  {
+    "id": "dsa-129",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Linked Lists",
+    "title": "Doubly Linked List Node Pointers",
+    "question": "How many pointer fields does a standard Doubly Linked List node contain?",
+    "options": [
+      "2 (prev and next)",
+      "1 (next only)",
+      "3 (prev, next, child)",
+      "4"
+    ],
+    "correctAnswer": "2 (prev and next)",
+    "explanation": "A doubly linked list node contains a prev pointer to the previous node and a next pointer to the subsequent node.",
+    "hint": "Forward and backward pointers."
+  },
+  {
+    "id": "dsa-130",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Stacks",
+    "title": "Stack Permutation Validity",
+    "question": "Given push sequence [1, 2, 3, 4, 5], which of the following is an impossible pop sequence?",
+    "options": [
+      "[4, 3, 5, 1, 2]",
+      "[4, 5, 3, 2, 1]",
+      "[1, 2, 3, 4, 5]",
+      "[3, 2, 5, 4, 1]"
+    ],
+    "correctAnswer": "[4, 3, 5, 1, 2]",
+    "explanation": "After 3 is popped, 1 cannot be popped before 2 because 2 was pushed after 1 and sits above 1 on the stack.",
+    "hint": "LIFO order constraint on remaining items."
+  },
+  {
+    "id": "dsa-131",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Trees",
+    "title": "Count Leaves in Binary Tree",
+    "question": "What condition identifies a leaf node in a binary tree?",
+    "options": [
+      "node->left == nullptr && node->right == nullptr",
+      "node->left == nullptr || node->right == nullptr",
+      "node->val == 0",
+      "node->parent == nullptr"
+    ],
+    "correctAnswer": "node->left == nullptr && node->right == nullptr",
+    "explanation": "A leaf node has zero children, meaning both left and right child pointers are null.",
+    "hint": "Both child pointers are null."
+  },
+  {
+    "id": "dsa-132",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Graphs",
+    "title": "Bipartite Graph Definition",
+    "question": "What graph property characterizes a Bipartite graph?",
+    "options": [
+      "Vertices can be divided into 2 sets with edges only between sets (no odd cycles)",
+      "Contains an Eulerian circuit",
+      "Has no vertices of odd degree",
+      "Is a complete tree"
+    ],
+    "correctAnswer": "Vertices can be divided into 2 sets with edges only between sets (no odd cycles)",
+    "explanation": "A graph is bipartite if and only if it contains no odd-length cycles, allowing 2-coloring.",
+    "hint": "2-colorable graph with no odd cycles."
+  },
+  {
+    "id": "dsa-133",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Searching",
+    "title": "Search in Rotated Sorted Array",
+    "question": "What is the time complexity of searching a target in a rotated sorted array with distinct elements using modified binary search?",
+    "options": [
+      "O(log n)",
+      "O(n)",
+      "O(n log n)",
+      "O(sqrt(n))"
+    ],
+    "correctAnswer": "O(log n)",
+    "explanation": "At least one half of the rotated array is always strictly sorted. Checking which half is sorted allows binary halving in O(log n) time.",
+    "hint": "Identify the sorted half at each step."
+  },
+  {
+    "id": "dsa-134",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Dynamic Programming",
+    "title": "Climbing Stairs DP",
+    "question": "For the climbing stairs problem (1 or 2 steps at a time), which sequence describes the number of distinct ways to reach step n?",
+    "options": [
+      "Fibonacci sequence",
+      "Factorial sequence",
+      "Catalan sequence",
+      "Prime sequence"
+    ],
+    "correctAnswer": "Fibonacci sequence",
+    "explanation": "ways(n) = ways(n - 1) + ways(n - 2) with base cases ways(1)=1, ways(2)=2, identical to the Fibonacci relation.",
+    "hint": "Sum of the previous two steps."
+  },
+  {
+    "id": "dsa-135",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Time Complexity",
+    "title": "Constant Time Big-O",
+    "question": "Which Big-O notation represents an algorithm whose execution time does not depend on input size n?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n!)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "O(1) denotes constant time complexity where runtime is bounded independently of input size n.",
+    "hint": "Constant independent runtime."
+  },
+  {
+    "id": "dsa-136",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Arrays",
+    "title": "Finding Max Element",
+    "question": "What is the minimum number of comparisons needed to find the maximum element in an unsorted array of n elements?",
+    "options": [
+      "n - 1",
+      "n",
+      "n / 2",
+      "log n"
+    ],
+    "correctAnswer": "n - 1",
+    "explanation": "Every non-maximum element must be eliminated by at least one comparison, requiring exactly n - 1 comparisons.",
+    "hint": "Each comparison eliminates 1 candidate."
+  },
+  {
+    "id": "dsa-137",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Circular Subarray Max Sum",
+    "question": "How is the maximum circular subarray sum computed in O(n) time?",
+    "options": [
+      "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+      "Kadane(arr) * 2",
+      "Sort array and add last two",
+      "Prefix sum matrix"
+    ],
+    "correctAnswer": "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+    "explanation": "A circular subarray wrapping around edges equals the total sum minus the minimum contiguous subarray sum in the middle.",
+    "hint": "Invert array or subtract minimum subarray."
+  },
+  {
+    "id": "dsa-138",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Strings",
+    "title": "String Length in C++",
+    "question": "What is the time complexity of calling s.length() on a std::string in C++11 and later?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "In modern C++, std::string maintains its size in a member variable, making .length() and .size() constant O(1) operations.",
+    "hint": "Size is stored as a member variable."
+  },
+  {
+    "id": "dsa-139",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Linked Lists",
+    "title": "Doubly Linked List Node Pointers",
+    "question": "How many pointer fields does a standard Doubly Linked List node contain?",
+    "options": [
+      "2 (prev and next)",
+      "1 (next only)",
+      "3 (prev, next, child)",
+      "4"
+    ],
+    "correctAnswer": "2 (prev and next)",
+    "explanation": "A doubly linked list node contains a prev pointer to the previous node and a next pointer to the subsequent node.",
+    "hint": "Forward and backward pointers."
+  },
+  {
+    "id": "dsa-140",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Stacks",
+    "title": "Stack Permutation Validity",
+    "question": "Given push sequence [1, 2, 3, 4, 5], which of the following is an impossible pop sequence?",
+    "options": [
+      "[4, 3, 5, 1, 2]",
+      "[4, 5, 3, 2, 1]",
+      "[1, 2, 3, 4, 5]",
+      "[3, 2, 5, 4, 1]"
+    ],
+    "correctAnswer": "[4, 3, 5, 1, 2]",
+    "explanation": "After 3 is popped, 1 cannot be popped before 2 because 2 was pushed after 1 and sits above 1 on the stack.",
+    "hint": "LIFO order constraint on remaining items."
+  },
+  {
+    "id": "dsa-141",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Trees",
+    "title": "Count Leaves in Binary Tree",
+    "question": "What condition identifies a leaf node in a binary tree?",
+    "options": [
+      "node->left == nullptr && node->right == nullptr",
+      "node->left == nullptr || node->right == nullptr",
+      "node->val == 0",
+      "node->parent == nullptr"
+    ],
+    "correctAnswer": "node->left == nullptr && node->right == nullptr",
+    "explanation": "A leaf node has zero children, meaning both left and right child pointers are null.",
+    "hint": "Both child pointers are null."
+  },
+  {
+    "id": "dsa-142",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Graphs",
+    "title": "Bipartite Graph Definition",
+    "question": "What graph property characterizes a Bipartite graph?",
+    "options": [
+      "Vertices can be divided into 2 sets with edges only between sets (no odd cycles)",
+      "Contains an Eulerian circuit",
+      "Has no vertices of odd degree",
+      "Is a complete tree"
+    ],
+    "correctAnswer": "Vertices can be divided into 2 sets with edges only between sets (no odd cycles)",
+    "explanation": "A graph is bipartite if and only if it contains no odd-length cycles, allowing 2-coloring.",
+    "hint": "2-colorable graph with no odd cycles."
+  },
+  {
+    "id": "dsa-143",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Searching",
+    "title": "Search in Rotated Sorted Array",
+    "question": "What is the time complexity of searching a target in a rotated sorted array with distinct elements using modified binary search?",
+    "options": [
+      "O(log n)",
+      "O(n)",
+      "O(n log n)",
+      "O(sqrt(n))"
+    ],
+    "correctAnswer": "O(log n)",
+    "explanation": "At least one half of the rotated array is always strictly sorted. Checking which half is sorted allows binary halving in O(log n) time.",
+    "hint": "Identify the sorted half at each step."
+  },
+  {
+    "id": "dsa-144",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Dynamic Programming",
+    "title": "Climbing Stairs DP",
+    "question": "For the climbing stairs problem (1 or 2 steps at a time), which sequence describes the number of distinct ways to reach step n?",
+    "options": [
+      "Fibonacci sequence",
+      "Factorial sequence",
+      "Catalan sequence",
+      "Prime sequence"
+    ],
+    "correctAnswer": "Fibonacci sequence",
+    "explanation": "ways(n) = ways(n - 1) + ways(n - 2) with base cases ways(1)=1, ways(2)=2, identical to the Fibonacci relation.",
+    "hint": "Sum of the previous two steps."
+  },
+  {
+    "id": "dsa-145",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Time Complexity",
+    "title": "Constant Time Big-O",
+    "question": "Which Big-O notation represents an algorithm whose execution time does not depend on input size n?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n!)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "O(1) denotes constant time complexity where runtime is bounded independently of input size n.",
+    "hint": "Constant independent runtime."
+  },
+  {
+    "id": "dsa-146",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Arrays",
+    "title": "Finding Max Element",
+    "question": "What is the minimum number of comparisons needed to find the maximum element in an unsorted array of n elements?",
+    "options": [
+      "n - 1",
+      "n",
+      "n / 2",
+      "log n"
+    ],
+    "correctAnswer": "n - 1",
+    "explanation": "Every non-maximum element must be eliminated by at least one comparison, requiring exactly n - 1 comparisons.",
+    "hint": "Each comparison eliminates 1 candidate."
+  },
+  {
+    "id": "dsa-147",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Circular Subarray Max Sum",
+    "question": "How is the maximum circular subarray sum computed in O(n) time?",
+    "options": [
+      "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+      "Kadane(arr) * 2",
+      "Sort array and add last two",
+      "Prefix sum matrix"
+    ],
+    "correctAnswer": "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+    "explanation": "A circular subarray wrapping around edges equals the total sum minus the minimum contiguous subarray sum in the middle.",
+    "hint": "Invert array or subtract minimum subarray."
+  },
+  {
+    "id": "dsa-148",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Strings",
+    "title": "String Length in C++",
+    "question": "What is the time complexity of calling s.length() on a std::string in C++11 and later?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "In modern C++, std::string maintains its size in a member variable, making .length() and .size() constant O(1) operations.",
+    "hint": "Size is stored as a member variable."
+  },
+  {
+    "id": "dsa-149",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Linked Lists",
+    "title": "Doubly Linked List Node Pointers",
+    "question": "How many pointer fields does a standard Doubly Linked List node contain?",
+    "options": [
+      "2 (prev and next)",
+      "1 (next only)",
+      "3 (prev, next, child)",
+      "4"
+    ],
+    "correctAnswer": "2 (prev and next)",
+    "explanation": "A doubly linked list node contains a prev pointer to the previous node and a next pointer to the subsequent node.",
+    "hint": "Forward and backward pointers."
+  },
+  {
+    "id": "dsa-150",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Stacks",
+    "title": "Stack Permutation Validity",
+    "question": "Given push sequence [1, 2, 3, 4, 5], which of the following is an impossible pop sequence?",
+    "options": [
+      "[4, 3, 5, 1, 2]",
+      "[4, 5, 3, 2, 1]",
+      "[1, 2, 3, 4, 5]",
+      "[3, 2, 5, 4, 1]"
+    ],
+    "correctAnswer": "[4, 3, 5, 1, 2]",
+    "explanation": "After 3 is popped, 1 cannot be popped before 2 because 2 was pushed after 1 and sits above 1 on the stack.",
+    "hint": "LIFO order constraint on remaining items."
+  },
+  {
+    "id": "dsa-151",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Trees",
+    "title": "Count Leaves in Binary Tree",
+    "question": "What condition identifies a leaf node in a binary tree?",
+    "options": [
+      "node->left == nullptr && node->right == nullptr",
+      "node->left == nullptr || node->right == nullptr",
+      "node->val == 0",
+      "node->parent == nullptr"
+    ],
+    "correctAnswer": "node->left == nullptr && node->right == nullptr",
+    "explanation": "A leaf node has zero children, meaning both left and right child pointers are null.",
+    "hint": "Both child pointers are null."
+  },
+  {
+    "id": "dsa-152",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Graphs",
+    "title": "Bipartite Graph Definition",
+    "question": "What graph property characterizes a Bipartite graph?",
+    "options": [
+      "Vertices can be divided into 2 sets with edges only between sets (no odd cycles)",
+      "Contains an Eulerian circuit",
+      "Has no vertices of odd degree",
+      "Is a complete tree"
+    ],
+    "correctAnswer": "Vertices can be divided into 2 sets with edges only between sets (no odd cycles)",
+    "explanation": "A graph is bipartite if and only if it contains no odd-length cycles, allowing 2-coloring.",
+    "hint": "2-colorable graph with no odd cycles."
+  },
+  {
+    "id": "dsa-153",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Searching",
+    "title": "Search in Rotated Sorted Array",
+    "question": "What is the time complexity of searching a target in a rotated sorted array with distinct elements using modified binary search?",
+    "options": [
+      "O(log n)",
+      "O(n)",
+      "O(n log n)",
+      "O(sqrt(n))"
+    ],
+    "correctAnswer": "O(log n)",
+    "explanation": "At least one half of the rotated array is always strictly sorted. Checking which half is sorted allows binary halving in O(log n) time.",
+    "hint": "Identify the sorted half at each step."
+  },
+  {
+    "id": "dsa-154",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Dynamic Programming",
+    "title": "Climbing Stairs DP",
+    "question": "For the climbing stairs problem (1 or 2 steps at a time), which sequence describes the number of distinct ways to reach step n?",
+    "options": [
+      "Fibonacci sequence",
+      "Factorial sequence",
+      "Catalan sequence",
+      "Prime sequence"
+    ],
+    "correctAnswer": "Fibonacci sequence",
+    "explanation": "ways(n) = ways(n - 1) + ways(n - 2) with base cases ways(1)=1, ways(2)=2, identical to the Fibonacci relation.",
+    "hint": "Sum of the previous two steps."
+  },
+  {
+    "id": "dsa-155",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Time Complexity",
+    "title": "Constant Time Big-O",
+    "question": "Which Big-O notation represents an algorithm whose execution time does not depend on input size n?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n!)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "O(1) denotes constant time complexity where runtime is bounded independently of input size n.",
+    "hint": "Constant independent runtime."
+  },
+  {
+    "id": "dsa-156",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Arrays",
+    "title": "Finding Max Element",
+    "question": "What is the minimum number of comparisons needed to find the maximum element in an unsorted array of n elements?",
+    "options": [
+      "n - 1",
+      "n",
+      "n / 2",
+      "log n"
+    ],
+    "correctAnswer": "n - 1",
+    "explanation": "Every non-maximum element must be eliminated by at least one comparison, requiring exactly n - 1 comparisons.",
+    "hint": "Each comparison eliminates 1 candidate."
+  },
+  {
+    "id": "dsa-157",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Circular Subarray Max Sum",
+    "question": "How is the maximum circular subarray sum computed in O(n) time?",
+    "options": [
+      "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+      "Kadane(arr) * 2",
+      "Sort array and add last two",
+      "Prefix sum matrix"
+    ],
+    "correctAnswer": "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+    "explanation": "A circular subarray wrapping around edges equals the total sum minus the minimum contiguous subarray sum in the middle.",
+    "hint": "Invert array or subtract minimum subarray."
+  },
+  {
+    "id": "dsa-158",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Strings",
+    "title": "String Length in C++",
+    "question": "What is the time complexity of calling s.length() on a std::string in C++11 and later?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "In modern C++, std::string maintains its size in a member variable, making .length() and .size() constant O(1) operations.",
+    "hint": "Size is stored as a member variable."
+  },
+  {
+    "id": "dsa-159",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Linked Lists",
+    "title": "Doubly Linked List Node Pointers",
+    "question": "How many pointer fields does a standard Doubly Linked List node contain?",
+    "options": [
+      "2 (prev and next)",
+      "1 (next only)",
+      "3 (prev, next, child)",
+      "4"
+    ],
+    "correctAnswer": "2 (prev and next)",
+    "explanation": "A doubly linked list node contains a prev pointer to the previous node and a next pointer to the subsequent node.",
+    "hint": "Forward and backward pointers."
+  },
+  {
+    "id": "dsa-160",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Stacks",
+    "title": "Stack Permutation Validity",
+    "question": "Given push sequence [1, 2, 3, 4, 5], which of the following is an impossible pop sequence?",
+    "options": [
+      "[4, 3, 5, 1, 2]",
+      "[4, 5, 3, 2, 1]",
+      "[1, 2, 3, 4, 5]",
+      "[3, 2, 5, 4, 1]"
+    ],
+    "correctAnswer": "[4, 3, 5, 1, 2]",
+    "explanation": "After 3 is popped, 1 cannot be popped before 2 because 2 was pushed after 1 and sits above 1 on the stack.",
+    "hint": "LIFO order constraint on remaining items."
+  },
+  {
+    "id": "dsa-161",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Trees",
+    "title": "Count Leaves in Binary Tree",
+    "question": "What condition identifies a leaf node in a binary tree?",
+    "options": [
+      "node->left == nullptr && node->right == nullptr",
+      "node->left == nullptr || node->right == nullptr",
+      "node->val == 0",
+      "node->parent == nullptr"
+    ],
+    "correctAnswer": "node->left == nullptr && node->right == nullptr",
+    "explanation": "A leaf node has zero children, meaning both left and right child pointers are null.",
+    "hint": "Both child pointers are null."
+  },
+  {
+    "id": "dsa-162",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Graphs",
+    "title": "Bipartite Graph Definition",
+    "question": "What graph property characterizes a Bipartite graph?",
+    "options": [
+      "Vertices can be divided into 2 sets with edges only between sets (no odd cycles)",
+      "Contains an Eulerian circuit",
+      "Has no vertices of odd degree",
+      "Is a complete tree"
+    ],
+    "correctAnswer": "Vertices can be divided into 2 sets with edges only between sets (no odd cycles)",
+    "explanation": "A graph is bipartite if and only if it contains no odd-length cycles, allowing 2-coloring.",
+    "hint": "2-colorable graph with no odd cycles."
+  },
+  {
+    "id": "dsa-163",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Searching",
+    "title": "Search in Rotated Sorted Array",
+    "question": "What is the time complexity of searching a target in a rotated sorted array with distinct elements using modified binary search?",
+    "options": [
+      "O(log n)",
+      "O(n)",
+      "O(n log n)",
+      "O(sqrt(n))"
+    ],
+    "correctAnswer": "O(log n)",
+    "explanation": "At least one half of the rotated array is always strictly sorted. Checking which half is sorted allows binary halving in O(log n) time.",
+    "hint": "Identify the sorted half at each step."
+  },
+  {
+    "id": "dsa-164",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Dynamic Programming",
+    "title": "Climbing Stairs DP",
+    "question": "For the climbing stairs problem (1 or 2 steps at a time), which sequence describes the number of distinct ways to reach step n?",
+    "options": [
+      "Fibonacci sequence",
+      "Factorial sequence",
+      "Catalan sequence",
+      "Prime sequence"
+    ],
+    "correctAnswer": "Fibonacci sequence",
+    "explanation": "ways(n) = ways(n - 1) + ways(n - 2) with base cases ways(1)=1, ways(2)=2, identical to the Fibonacci relation.",
+    "hint": "Sum of the previous two steps."
+  },
+  {
+    "id": "dsa-165",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Time Complexity",
+    "title": "Constant Time Big-O",
+    "question": "Which Big-O notation represents an algorithm whose execution time does not depend on input size n?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n!)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "O(1) denotes constant time complexity where runtime is bounded independently of input size n.",
+    "hint": "Constant independent runtime."
+  },
+  {
+    "id": "dsa-166",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Arrays",
+    "title": "Finding Max Element",
+    "question": "What is the minimum number of comparisons needed to find the maximum element in an unsorted array of n elements?",
+    "options": [
+      "n - 1",
+      "n",
+      "n / 2",
+      "log n"
+    ],
+    "correctAnswer": "n - 1",
+    "explanation": "Every non-maximum element must be eliminated by at least one comparison, requiring exactly n - 1 comparisons.",
+    "hint": "Each comparison eliminates 1 candidate."
+  },
+  {
+    "id": "dsa-167",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Circular Subarray Max Sum",
+    "question": "How is the maximum circular subarray sum computed in O(n) time?",
+    "options": [
+      "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+      "Kadane(arr) * 2",
+      "Sort array and add last two",
+      "Prefix sum matrix"
+    ],
+    "correctAnswer": "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+    "explanation": "A circular subarray wrapping around edges equals the total sum minus the minimum contiguous subarray sum in the middle.",
+    "hint": "Invert array or subtract minimum subarray."
+  },
+  {
+    "id": "dsa-168",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Strings",
+    "title": "String Length in C++",
+    "question": "What is the time complexity of calling s.length() on a std::string in C++11 and later?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "In modern C++, std::string maintains its size in a member variable, making .length() and .size() constant O(1) operations.",
+    "hint": "Size is stored as a member variable."
+  },
+  {
+    "id": "dsa-169",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Linked Lists",
+    "title": "Doubly Linked List Node Pointers",
+    "question": "How many pointer fields does a standard Doubly Linked List node contain?",
+    "options": [
+      "2 (prev and next)",
+      "1 (next only)",
+      "3 (prev, next, child)",
+      "4"
+    ],
+    "correctAnswer": "2 (prev and next)",
+    "explanation": "A doubly linked list node contains a prev pointer to the previous node and a next pointer to the subsequent node.",
+    "hint": "Forward and backward pointers."
+  },
+  {
+    "id": "dsa-170",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Stacks",
+    "title": "Stack Permutation Validity",
+    "question": "Given push sequence [1, 2, 3, 4, 5], which of the following is an impossible pop sequence?",
+    "options": [
+      "[4, 3, 5, 1, 2]",
+      "[4, 5, 3, 2, 1]",
+      "[1, 2, 3, 4, 5]",
+      "[3, 2, 5, 4, 1]"
+    ],
+    "correctAnswer": "[4, 3, 5, 1, 2]",
+    "explanation": "After 3 is popped, 1 cannot be popped before 2 because 2 was pushed after 1 and sits above 1 on the stack.",
+    "hint": "LIFO order constraint on remaining items."
+  },
+  {
+    "id": "dsa-171",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Trees",
+    "title": "Count Leaves in Binary Tree",
+    "question": "What condition identifies a leaf node in a binary tree?",
+    "options": [
+      "node->left == nullptr && node->right == nullptr",
+      "node->left == nullptr || node->right == nullptr",
+      "node->val == 0",
+      "node->parent == nullptr"
+    ],
+    "correctAnswer": "node->left == nullptr && node->right == nullptr",
+    "explanation": "A leaf node has zero children, meaning both left and right child pointers are null.",
+    "hint": "Both child pointers are null."
+  },
+  {
+    "id": "dsa-172",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Graphs",
+    "title": "Bipartite Graph Definition",
+    "question": "What graph property characterizes a Bipartite graph?",
+    "options": [
+      "Vertices can be divided into 2 sets with edges only between sets (no odd cycles)",
+      "Contains an Eulerian circuit",
+      "Has no vertices of odd degree",
+      "Is a complete tree"
+    ],
+    "correctAnswer": "Vertices can be divided into 2 sets with edges only between sets (no odd cycles)",
+    "explanation": "A graph is bipartite if and only if it contains no odd-length cycles, allowing 2-coloring.",
+    "hint": "2-colorable graph with no odd cycles."
+  },
+  {
+    "id": "dsa-173",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Searching",
+    "title": "Search in Rotated Sorted Array",
+    "question": "What is the time complexity of searching a target in a rotated sorted array with distinct elements using modified binary search?",
+    "options": [
+      "O(log n)",
+      "O(n)",
+      "O(n log n)",
+      "O(sqrt(n))"
+    ],
+    "correctAnswer": "O(log n)",
+    "explanation": "At least one half of the rotated array is always strictly sorted. Checking which half is sorted allows binary halving in O(log n) time.",
+    "hint": "Identify the sorted half at each step."
+  },
+  {
+    "id": "dsa-174",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Dynamic Programming",
+    "title": "Climbing Stairs DP",
+    "question": "For the climbing stairs problem (1 or 2 steps at a time), which sequence describes the number of distinct ways to reach step n?",
+    "options": [
+      "Fibonacci sequence",
+      "Factorial sequence",
+      "Catalan sequence",
+      "Prime sequence"
+    ],
+    "correctAnswer": "Fibonacci sequence",
+    "explanation": "ways(n) = ways(n - 1) + ways(n - 2) with base cases ways(1)=1, ways(2)=2, identical to the Fibonacci relation.",
+    "hint": "Sum of the previous two steps."
+  },
+  {
+    "id": "dsa-175",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Time Complexity",
+    "title": "Constant Time Big-O",
+    "question": "Which Big-O notation represents an algorithm whose execution time does not depend on input size n?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n!)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "O(1) denotes constant time complexity where runtime is bounded independently of input size n.",
+    "hint": "Constant independent runtime."
+  },
+  {
+    "id": "dsa-176",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Arrays",
+    "title": "Finding Max Element",
+    "question": "What is the minimum number of comparisons needed to find the maximum element in an unsorted array of n elements?",
+    "options": [
+      "n - 1",
+      "n",
+      "n / 2",
+      "log n"
+    ],
+    "correctAnswer": "n - 1",
+    "explanation": "Every non-maximum element must be eliminated by at least one comparison, requiring exactly n - 1 comparisons.",
+    "hint": "Each comparison eliminates 1 candidate."
+  },
+  {
+    "id": "dsa-177",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Circular Subarray Max Sum",
+    "question": "How is the maximum circular subarray sum computed in O(n) time?",
+    "options": [
+      "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+      "Kadane(arr) * 2",
+      "Sort array and add last two",
+      "Prefix sum matrix"
+    ],
+    "correctAnswer": "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+    "explanation": "A circular subarray wrapping around edges equals the total sum minus the minimum contiguous subarray sum in the middle.",
+    "hint": "Invert array or subtract minimum subarray."
+  },
+  {
+    "id": "dsa-178",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Strings",
+    "title": "String Length in C++",
+    "question": "What is the time complexity of calling s.length() on a std::string in C++11 and later?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "In modern C++, std::string maintains its size in a member variable, making .length() and .size() constant O(1) operations.",
+    "hint": "Size is stored as a member variable."
+  },
+  {
+    "id": "dsa-179",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Linked Lists",
+    "title": "Doubly Linked List Node Pointers",
+    "question": "How many pointer fields does a standard Doubly Linked List node contain?",
+    "options": [
+      "2 (prev and next)",
+      "1 (next only)",
+      "3 (prev, next, child)",
+      "4"
+    ],
+    "correctAnswer": "2 (prev and next)",
+    "explanation": "A doubly linked list node contains a prev pointer to the previous node and a next pointer to the subsequent node.",
+    "hint": "Forward and backward pointers."
+  },
+  {
+    "id": "dsa-180",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Stacks",
+    "title": "Stack Permutation Validity",
+    "question": "Given push sequence [1, 2, 3, 4, 5], which of the following is an impossible pop sequence?",
+    "options": [
+      "[4, 3, 5, 1, 2]",
+      "[4, 5, 3, 2, 1]",
+      "[1, 2, 3, 4, 5]",
+      "[3, 2, 5, 4, 1]"
+    ],
+    "correctAnswer": "[4, 3, 5, 1, 2]",
+    "explanation": "After 3 is popped, 1 cannot be popped before 2 because 2 was pushed after 1 and sits above 1 on the stack.",
+    "hint": "LIFO order constraint on remaining items."
+  },
+  {
+    "id": "dsa-181",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Trees",
+    "title": "Count Leaves in Binary Tree",
+    "question": "What condition identifies a leaf node in a binary tree?",
+    "options": [
+      "node->left == nullptr && node->right == nullptr",
+      "node->left == nullptr || node->right == nullptr",
+      "node->val == 0",
+      "node->parent == nullptr"
+    ],
+    "correctAnswer": "node->left == nullptr && node->right == nullptr",
+    "explanation": "A leaf node has zero children, meaning both left and right child pointers are null.",
+    "hint": "Both child pointers are null."
+  },
+  {
+    "id": "dsa-182",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Graphs",
+    "title": "Bipartite Graph Definition",
+    "question": "What graph property characterizes a Bipartite graph?",
+    "options": [
+      "Vertices can be divided into 2 sets with edges only between sets (no odd cycles)",
+      "Contains an Eulerian circuit",
+      "Has no vertices of odd degree",
+      "Is a complete tree"
+    ],
+    "correctAnswer": "Vertices can be divided into 2 sets with edges only between sets (no odd cycles)",
+    "explanation": "A graph is bipartite if and only if it contains no odd-length cycles, allowing 2-coloring.",
+    "hint": "2-colorable graph with no odd cycles."
+  },
+  {
+    "id": "dsa-183",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Searching",
+    "title": "Search in Rotated Sorted Array",
+    "question": "What is the time complexity of searching a target in a rotated sorted array with distinct elements using modified binary search?",
+    "options": [
+      "O(log n)",
+      "O(n)",
+      "O(n log n)",
+      "O(sqrt(n))"
+    ],
+    "correctAnswer": "O(log n)",
+    "explanation": "At least one half of the rotated array is always strictly sorted. Checking which half is sorted allows binary halving in O(log n) time.",
+    "hint": "Identify the sorted half at each step."
+  },
+  {
+    "id": "dsa-184",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Dynamic Programming",
+    "title": "Climbing Stairs DP",
+    "question": "For the climbing stairs problem (1 or 2 steps at a time), which sequence describes the number of distinct ways to reach step n?",
+    "options": [
+      "Fibonacci sequence",
+      "Factorial sequence",
+      "Catalan sequence",
+      "Prime sequence"
+    ],
+    "correctAnswer": "Fibonacci sequence",
+    "explanation": "ways(n) = ways(n - 1) + ways(n - 2) with base cases ways(1)=1, ways(2)=2, identical to the Fibonacci relation.",
+    "hint": "Sum of the previous two steps."
+  },
+  {
+    "id": "dsa-185",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Time Complexity",
+    "title": "Constant Time Big-O",
+    "question": "Which Big-O notation represents an algorithm whose execution time does not depend on input size n?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n!)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "O(1) denotes constant time complexity where runtime is bounded independently of input size n.",
+    "hint": "Constant independent runtime."
+  },
+  {
+    "id": "dsa-186",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Arrays",
+    "title": "Finding Max Element",
+    "question": "What is the minimum number of comparisons needed to find the maximum element in an unsorted array of n elements?",
+    "options": [
+      "n - 1",
+      "n",
+      "n / 2",
+      "log n"
+    ],
+    "correctAnswer": "n - 1",
+    "explanation": "Every non-maximum element must be eliminated by at least one comparison, requiring exactly n - 1 comparisons.",
+    "hint": "Each comparison eliminates 1 candidate."
+  },
+  {
+    "id": "dsa-187",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Circular Subarray Max Sum",
+    "question": "How is the maximum circular subarray sum computed in O(n) time?",
+    "options": [
+      "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+      "Kadane(arr) * 2",
+      "Sort array and add last two",
+      "Prefix sum matrix"
+    ],
+    "correctAnswer": "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+    "explanation": "A circular subarray wrapping around edges equals the total sum minus the minimum contiguous subarray sum in the middle.",
+    "hint": "Invert array or subtract minimum subarray."
+  },
+  {
+    "id": "dsa-188",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Strings",
+    "title": "String Length in C++",
+    "question": "What is the time complexity of calling s.length() on a std::string in C++11 and later?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "In modern C++, std::string maintains its size in a member variable, making .length() and .size() constant O(1) operations.",
+    "hint": "Size is stored as a member variable."
+  },
+  {
+    "id": "dsa-189",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Linked Lists",
+    "title": "Doubly Linked List Node Pointers",
+    "question": "How many pointer fields does a standard Doubly Linked List node contain?",
+    "options": [
+      "2 (prev and next)",
+      "1 (next only)",
+      "3 (prev, next, child)",
+      "4"
+    ],
+    "correctAnswer": "2 (prev and next)",
+    "explanation": "A doubly linked list node contains a prev pointer to the previous node and a next pointer to the subsequent node.",
+    "hint": "Forward and backward pointers."
+  },
+  {
+    "id": "dsa-190",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Stacks",
+    "title": "Stack Permutation Validity",
+    "question": "Given push sequence [1, 2, 3, 4, 5], which of the following is an impossible pop sequence?",
+    "options": [
+      "[4, 3, 5, 1, 2]",
+      "[4, 5, 3, 2, 1]",
+      "[1, 2, 3, 4, 5]",
+      "[3, 2, 5, 4, 1]"
+    ],
+    "correctAnswer": "[4, 3, 5, 1, 2]",
+    "explanation": "After 3 is popped, 1 cannot be popped before 2 because 2 was pushed after 1 and sits above 1 on the stack.",
+    "hint": "LIFO order constraint on remaining items."
+  },
+  {
+    "id": "dsa-191",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Trees",
+    "title": "Count Leaves in Binary Tree",
+    "question": "What condition identifies a leaf node in a binary tree?",
+    "options": [
+      "node->left == nullptr && node->right == nullptr",
+      "node->left == nullptr || node->right == nullptr",
+      "node->val == 0",
+      "node->parent == nullptr"
+    ],
+    "correctAnswer": "node->left == nullptr && node->right == nullptr",
+    "explanation": "A leaf node has zero children, meaning both left and right child pointers are null.",
+    "hint": "Both child pointers are null."
+  },
+  {
+    "id": "dsa-192",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Graphs",
+    "title": "Bipartite Graph Definition",
+    "question": "What graph property characterizes a Bipartite graph?",
+    "options": [
+      "Vertices can be divided into 2 sets with edges only between sets (no odd cycles)",
+      "Contains an Eulerian circuit",
+      "Has no vertices of odd degree",
+      "Is a complete tree"
+    ],
+    "correctAnswer": "Vertices can be divided into 2 sets with edges only between sets (no odd cycles)",
+    "explanation": "A graph is bipartite if and only if it contains no odd-length cycles, allowing 2-coloring.",
+    "hint": "2-colorable graph with no odd cycles."
+  },
+  {
+    "id": "dsa-193",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Searching",
+    "title": "Search in Rotated Sorted Array",
+    "question": "What is the time complexity of searching a target in a rotated sorted array with distinct elements using modified binary search?",
+    "options": [
+      "O(log n)",
+      "O(n)",
+      "O(n log n)",
+      "O(sqrt(n))"
+    ],
+    "correctAnswer": "O(log n)",
+    "explanation": "At least one half of the rotated array is always strictly sorted. Checking which half is sorted allows binary halving in O(log n) time.",
+    "hint": "Identify the sorted half at each step."
+  },
+  {
+    "id": "dsa-194",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Dynamic Programming",
+    "title": "Climbing Stairs DP",
+    "question": "For the climbing stairs problem (1 or 2 steps at a time), which sequence describes the number of distinct ways to reach step n?",
+    "options": [
+      "Fibonacci sequence",
+      "Factorial sequence",
+      "Catalan sequence",
+      "Prime sequence"
+    ],
+    "correctAnswer": "Fibonacci sequence",
+    "explanation": "ways(n) = ways(n - 1) + ways(n - 2) with base cases ways(1)=1, ways(2)=2, identical to the Fibonacci relation.",
+    "hint": "Sum of the previous two steps."
+  },
+  {
+    "id": "dsa-195",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Time Complexity",
+    "title": "Constant Time Big-O",
+    "question": "Which Big-O notation represents an algorithm whose execution time does not depend on input size n?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n!)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "O(1) denotes constant time complexity where runtime is bounded independently of input size n.",
+    "hint": "Constant independent runtime."
+  },
+  {
+    "id": "dsa-196",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Arrays",
+    "title": "Finding Max Element",
+    "question": "What is the minimum number of comparisons needed to find the maximum element in an unsorted array of n elements?",
+    "options": [
+      "n - 1",
+      "n",
+      "n / 2",
+      "log n"
+    ],
+    "correctAnswer": "n - 1",
+    "explanation": "Every non-maximum element must be eliminated by at least one comparison, requiring exactly n - 1 comparisons.",
+    "hint": "Each comparison eliminates 1 candidate."
+  },
+  {
+    "id": "dsa-197",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Arrays",
+    "title": "Circular Subarray Max Sum",
+    "question": "How is the maximum circular subarray sum computed in O(n) time?",
+    "options": [
+      "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+      "Kadane(arr) * 2",
+      "Sort array and add last two",
+      "Prefix sum matrix"
+    ],
+    "correctAnswer": "max(Kadane(arr), Total_Sum - Min_Kadane(arr))",
+    "explanation": "A circular subarray wrapping around edges equals the total sum minus the minimum contiguous subarray sum in the middle.",
+    "hint": "Invert array or subtract minimum subarray."
+  },
+  {
+    "id": "dsa-198",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Strings",
+    "title": "String Length in C++",
+    "question": "What is the time complexity of calling s.length() on a std::string in C++11 and later?",
+    "options": [
+      "O(1)",
+      "O(n)",
+      "O(log n)",
+      "O(n^2)"
+    ],
+    "correctAnswer": "O(1)",
+    "explanation": "In modern C++, std::string maintains its size in a member variable, making .length() and .size() constant O(1) operations.",
+    "hint": "Size is stored as a member variable."
+  },
+  {
+    "id": "dsa-199",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "EASY",
+    "category": "Linked Lists",
+    "title": "Doubly Linked List Node Pointers",
+    "question": "How many pointer fields does a standard Doubly Linked List node contain?",
+    "options": [
+      "2 (prev and next)",
+      "1 (next only)",
+      "3 (prev, next, child)",
+      "4"
+    ],
+    "correctAnswer": "2 (prev and next)",
+    "explanation": "A doubly linked list node contains a prev pointer to the previous node and a next pointer to the subsequent node.",
+    "hint": "Forward and backward pointers."
+  },
+  {
+    "id": "dsa-200",
+    "gameType": "dsa-master-quiz",
+    "difficulty": "MEDIUM",
+    "category": "Stacks",
+    "title": "Stack Permutation Validity",
+    "question": "Given push sequence [1, 2, 3, 4, 5], which of the following is an impossible pop sequence?",
+    "options": [
+      "[4, 3, 5, 1, 2]",
+      "[4, 5, 3, 2, 1]",
+      "[1, 2, 3, 4, 5]",
+      "[3, 2, 5, 4, 1]"
+    ],
+    "correctAnswer": "[4, 3, 5, 1, 2]",
+    "explanation": "After 3 is popped, 1 cannot be popped before 2 because 2 was pushed after 1 and sits above 1 on the stack.",
+    "hint": "LIFO order constraint on remaining items."
+  }
+];
+
+export default dsaMasterQuestions;

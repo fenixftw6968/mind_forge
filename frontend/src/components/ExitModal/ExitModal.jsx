@@ -17,7 +17,7 @@ export default function ExitModal({
         position: 'fixed',
         inset: 0,
         zIndex: 99999,
-        background: 'rgba(15, 23, 42, 0.65)',
+        background: 'rgba(10, 10, 10, 0.8)',
         backdropFilter: 'blur(6px)',
         display: 'flex',
         alignItems: 'center',
@@ -30,28 +30,29 @@ export default function ExitModal({
           exit={{ opacity: 0, scale: 0.92, y: 10 }}
           transition={{ duration: 0.2 }}
           style={{
-            background: '#FFFFFF',
+            background: '#242424',
             borderRadius: '1.5rem',
             width: '100%',
             maxWidth: '440px',
-            border: '1px solid #E2E8F0',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            border: '1px solid #2E2E2E',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
             padding: '2rem',
             textAlign: 'center',
             position: 'relative',
+            color: '#F8FAFC'
           }}
         >
           <div style={{
             width: '60px',
             height: '60px',
             borderRadius: '50%',
-            background: '#FFF1F2',
-            border: '2px solid #FECDD3',
+            background: 'rgba(244, 63, 94, 0.12)',
+            border: '2px solid rgba(244, 63, 94, 0.3)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 1.25rem',
-            color: '#E11D48',
+            color: '#FB7185',
           }}>
             <AlertTriangle size={30} />
           </div>
@@ -59,7 +60,7 @@ export default function ExitModal({
           <h2 style={{
             fontSize: '1.35rem',
             fontWeight: 800,
-            color: '#0F172A',
+            color: '#F8FAFC',
             fontFamily: 'var(--font-display)',
             marginBottom: '0.5rem',
           }}>
@@ -67,7 +68,7 @@ export default function ExitModal({
           </h2>
 
           <p style={{
-            color: '#64748B',
+            color: '#94A3B8',
             fontSize: '0.9rem',
             lineHeight: 1.5,
             marginBottom: '1.75rem',
@@ -78,20 +79,12 @@ export default function ExitModal({
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <button
               onClick={onCancel}
+              className="btn-secondary"
               style={{
                 flex: 1,
                 padding: '0.75rem 1rem',
-                borderRadius: '0.75rem',
-                background: '#F1F5F9',
-                color: '#334155',
-                fontWeight: 700,
-                fontSize: '0.875rem',
-                border: '1px solid #E2E8F0',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
+                fontSize: '0.875rem'
               }}
-              onMouseEnter={e => e.currentTarget.style.background = '#E2E8F0'}
-              onMouseLeave={e => e.currentTarget.style.background = '#F1F5F9'}
             >
               Continue Playing
             </button>
@@ -112,7 +105,7 @@ export default function ExitModal({
                 fontSize: '0.875rem',
                 border: 'none',
                 cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(225, 29, 72, 0.3)',
+                boxShadow: '0 4px 12px rgba(225, 29, 72, 0.4)',
                 transition: 'all 0.15s ease',
               }}
               onMouseEnter={e => e.currentTarget.style.background = '#BE123C'}

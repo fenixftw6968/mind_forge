@@ -164,6 +164,41 @@ public class FriendshipService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<FriendDto> getRecommendedUsers(Long userId, int limit) {
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        List<User> allUsers = userRepository.findAllOrderByCompetitiveRatingDesc();
+        List<FriendDto> recommendations = new ArrayList<>();
+
+        int userRating = currentUser.getCompetitiveRating() != null ? currentUser.getCompetitiveRating() : 500;
+
+        for (User other : allUsers) {
+            if (other.getId().equals(userId)) continue;
+
+            // Check if friendship or pending request already exists
+            boolean alreadyConnected = friendshipRepository.findBetweenUsers(currentUser, other).isPresent();
+            if (alreadyConnected) continue;
+
+            int otherRating = other.getCompetitiveRating() != null ? other.getCompetitiveRating() : 500;
+
+            recommendations.add(FriendDto.builder()
+                    .userId(other.getId())
+                    .username(other.getUsername())
+                    .level(other.getLevel())
+                    .competitiveRating(otherRating)
+                    .competitiveRank(RankUtil.getRankName(otherRating))
+                    .status("NONE")
+                    .isOnline(Math.abs(otherRating - userRating) < 250)
+                    .build());
+
+            if (recommendations.size() >= limit) break;
+        }
+
+        return recommendations;
+    }
+
     @Transactional
     public void removeFriend(Long userId, Long friendshipId) {
         Friendship friendship = friendshipRepository.findById(friendshipId)

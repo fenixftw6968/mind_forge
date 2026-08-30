@@ -227,7 +227,6 @@ export default function MatchmakingLobby({
   }, [isOpen, gameSlug, mode, friendTarget, difficulty, initialMatch]);
 
   const handleSimulatedMatch = async () => {
-    // Player opted to play vs AI Bot
     const botOpponent = {
       ...matchData,
       player2Id: 999999,
@@ -245,7 +244,6 @@ export default function MatchmakingLobby({
   const handleContinueWaiting = () => {
     setStatus('QUEUING');
     setQueueTime(0);
-    // Restart polling
     let elapsedPolls = 0;
     const pollInterval = setInterval(async () => {
       elapsedPolls++;
@@ -288,7 +286,7 @@ export default function MatchmakingLobby({
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        background: 'rgba(15, 23, 42, 0.75)',
+        background: 'rgba(10, 10, 10, 0.8)',
         backdropFilter: 'blur(8px)',
         display: 'flex',
         alignItems: 'center',
@@ -300,15 +298,16 @@ export default function MatchmakingLobby({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
           style={{
-            background: '#FFFFFF',
+            background: '#242424',
             borderRadius: '1.75rem',
             width: '100%',
             maxWidth: '520px',
-            border: '1px solid #E2E8F0',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            border: '1px solid #2E2E2E',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
             padding: '2.5rem 2rem',
             textAlign: 'center',
-            position: 'relative'
+            position: 'relative',
+            color: '#F8FAFC'
           }}
         >
           {/* Close / Cancel Button */}
@@ -319,8 +318,8 @@ export default function MatchmakingLobby({
                 position: 'absolute',
                 top: '1.25rem',
                 right: '1.25rem',
-                background: '#F1F5F9',
-                border: 'none',
+                background: '#1C1C1C',
+                border: '1px solid #2E2E2E',
                 borderRadius: '50%',
                 width: '34px',
                 height: '34px',
@@ -328,7 +327,7 @@ export default function MatchmakingLobby({
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                color: '#64748B'
+                color: '#94A3B8'
               }}
             >
               <X size={18} />
@@ -346,26 +345,27 @@ export default function MatchmakingLobby({
                     position: 'absolute',
                     inset: 0,
                     borderRadius: '50%',
-                    border: '3px dashed #6366F1',
+                    border: '3px dashed #22C55E',
                   }}
                 />
                 <div style={{
                   position: 'absolute',
                   inset: '8px',
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #EEF2FF, #E0E7FF)',
+                  background: '#1C1C1C',
+                  border: '1px solid #2E2E2E',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <Swords size={32} color="#4F46E5" />
+                  <Swords size={32} color="#22C55E" />
                 </div>
               </div>
 
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', fontFamily: 'var(--font-display)', marginBottom: '0.4rem' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F8FAFC', fontFamily: 'var(--font-display)', marginBottom: '0.4rem' }}>
                 Finding Ranked Opponent...
               </h2>
-              <p style={{ color: '#64748B', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+              <p style={{ color: '#94A3B8', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
                 Searching for available players near your Elo rating in {gameTitle}
               </p>
 
@@ -373,31 +373,28 @@ export default function MatchmakingLobby({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                background: '#F8FAFC',
-                border: '1px solid #E2E8F0',
+                background: '#1C1C1C',
+                border: '1px solid #2E2E2E',
                 padding: '0.45rem 1.25rem',
                 borderRadius: '999px',
                 fontSize: '0.875rem',
                 fontWeight: 700,
-                color: '#334155',
+                color: '#CBD5E1',
                 marginBottom: '1.5rem'
               }}>
-                <Loader2 size={16} className="animate-spin" color="#6366F1" />
+                <Loader2 size={16} className="animate-spin" color="#22C55E" />
                 Queue Time: {Math.floor(queueTime / 60)}:{(queueTime % 60).toString().padStart(2, '0')}
               </div>
 
               <div>
                 <button
                   onClick={onClose}
+                  className="btn-secondary"
                   style={{
                     padding: '0.65rem 1.5rem',
-                    borderRadius: '0.75rem',
-                    background: '#FFF1F2',
-                    border: '1px solid #FECDD3',
-                    color: '#E11D48',
-                    fontWeight: 700,
-                    fontSize: '0.875rem',
-                    cursor: 'pointer'
+                    color: '#FB7185',
+                    borderColor: 'rgba(244, 63, 94, 0.3)',
+                    background: 'rgba(244, 63, 94, 0.1)'
                   }}
                 >
                   Cancel Matchmaking
@@ -417,58 +414,56 @@ export default function MatchmakingLobby({
                     position: 'absolute',
                     inset: 0,
                     borderRadius: '50%',
-                    border: '3px dashed #10B981',
+                    border: '3px dashed #22C55E',
                   }}
                 />
                 <div style={{
                   position: 'absolute',
                   inset: '8px',
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)',
+                  background: '#1C1C1C',
+                  border: '1px solid #2E2E2E',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <User size={32} color="#059669" />
+                  <User size={32} color="#4ADE80" />
                 </div>
               </div>
 
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', fontFamily: 'var(--font-display)', marginBottom: '0.4rem' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F8FAFC', fontFamily: 'var(--font-display)', marginBottom: '0.4rem' }}>
                 Invitation Sent!
               </h2>
-              <p style={{ color: '#64748B', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-                Waiting for <strong style={{ color: '#0F172A' }}>{friendTarget?.username || 'your friend'}</strong> to accept the challenge...
+              <p style={{ color: '#94A3B8', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                Waiting for <strong style={{ color: '#F8FAFC' }}>{friendTarget?.username || 'your friend'}</strong> to accept the challenge...
               </p>
 
               <div style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                background: '#F8FAFC',
-                border: '1px solid #E2E8F0',
+                background: '#1C1C1C',
+                border: '1px solid #2E2E2E',
                 padding: '0.45rem 1.25rem',
                 borderRadius: '999px',
                 fontSize: '0.875rem',
                 fontWeight: 700,
-                color: '#334155',
+                color: '#CBD5E1',
                 marginBottom: '1.5rem'
               }}>
-                <Loader2 size={16} className="animate-spin" color="#059669" />
+                <Loader2 size={16} className="animate-spin" color="#22C55E" />
                 Waiting: {Math.floor(queueTime / 60)}:{(queueTime % 60).toString().padStart(2, '0')}
               </div>
 
               <div>
                 <button
                   onClick={handleCancelInvitation}
+                  className="btn-secondary"
                   style={{
                     padding: '0.65rem 1.5rem',
-                    borderRadius: '0.75rem',
-                    background: '#FFF1F2',
-                    border: '1px solid #FECDD3',
-                    color: '#E11D48',
-                    fontWeight: 700,
-                    fontSize: '0.875rem',
-                    cursor: 'pointer'
+                    color: '#FB7185',
+                    borderColor: 'rgba(244, 63, 94, 0.3)',
+                    background: 'rgba(244, 63, 94, 0.1)'
                   }}
                 >
                   Cancel Invitation
@@ -477,48 +472,38 @@ export default function MatchmakingLobby({
             </motion.div>
           )}
 
-          {/* TIMEOUT PROMPT: PLAY BOT OR WAIT */}
+          {/* TIMEOUT PROMPT */}
           {status === 'TIMEOUT_PROMPT' && (
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
               <div style={{
                 width: '72px',
                 height: '72px',
                 borderRadius: '50%',
-                background: '#FFFBEB',
-                border: '2px solid #FDE68A',
+                background: 'rgba(245, 158, 11, 0.12)',
+                border: '2px solid rgba(245, 158, 11, 0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 1.25rem',
-                color: '#D97706'
+                color: '#FBBF24'
               }}>
                 <Bot size={36} />
               </div>
 
-              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', fontFamily: 'var(--font-display)', marginBottom: '0.4rem' }}>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#F8FAFC', fontFamily: 'var(--font-display)', marginBottom: '0.4rem' }}>
                 No Ranked Opponent Found Yet
               </h2>
-              <p style={{ color: '#64748B', fontSize: '0.875rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
+              <p style={{ color: '#94A3B8', fontSize: '0.875rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
                 Queue search timed out. Would you like to continue searching for a live player, or challenge an AI Bot?
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <button
                   onClick={handleSimulatedMatch}
+                  className="btn-primary"
                   style={{
                     padding: '0.75rem 1.25rem',
-                    borderRadius: '0.75rem',
-                    background: '#4F46E5',
-                    color: 'white',
-                    fontWeight: 700,
-                    fontSize: '0.9rem',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    boxShadow: '0 4px 12px rgba(79, 70, 229, 0.25)'
+                    fontSize: '0.9rem'
                   }}
                 >
                   <Bot size={18} /> Play vs AI Bot (Unranked)
@@ -526,19 +511,10 @@ export default function MatchmakingLobby({
 
                 <button
                   onClick={handleContinueWaiting}
+                  className="btn-secondary"
                   style={{
                     padding: '0.75rem 1.25rem',
-                    borderRadius: '0.75rem',
-                    background: '#F1F5F9',
-                    color: '#334155',
-                    fontWeight: 700,
-                    fontSize: '0.875rem',
-                    border: '1px solid #E2E8F0',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem'
+                    fontSize: '0.875rem'
                   }}
                 >
                   <RefreshCw size={16} /> Keep Searching for Players
@@ -550,7 +526,7 @@ export default function MatchmakingLobby({
                     padding: '0.6rem 1.25rem',
                     borderRadius: '0.75rem',
                     background: 'transparent',
-                    color: '#94A3B8',
+                    color: '#64748B',
                     fontWeight: 600,
                     fontSize: '0.85rem',
                     border: 'none',
@@ -570,36 +546,28 @@ export default function MatchmakingLobby({
                 width: '72px',
                 height: '72px',
                 borderRadius: '50%',
-                background: '#FFF1F2',
-                border: '2px solid #FECDD3',
+                background: 'rgba(244, 63, 94, 0.12)',
+                border: '2px solid rgba(244, 63, 94, 0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 1.25rem',
-                color: '#E11D48'
+                color: '#FB7185'
               }}>
                 <X size={36} />
               </div>
 
-              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', fontFamily: 'var(--font-display)', marginBottom: '0.4rem' }}>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#F8FAFC', fontFamily: 'var(--font-display)', marginBottom: '0.4rem' }}>
                 Invitation Declined
               </h2>
-              <p style={{ color: '#64748B', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+              <p style={{ color: '#94A3B8', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
                 {friendTarget?.username || 'Your friend'} declined the match invitation.
               </p>
 
               <button
                 onClick={onClose}
-                style={{
-                  padding: '0.65rem 1.5rem',
-                  borderRadius: '0.75rem',
-                  background: '#0F172A',
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: '0.875rem',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
+                className="btn-secondary"
+                style={{ padding: '0.65rem 1.5rem' }}
               >
                 Close
               </button>
@@ -613,18 +581,18 @@ export default function MatchmakingLobby({
                 width: '60px',
                 height: '60px',
                 borderRadius: '50%',
-                background: '#ECFDF5',
-                border: '2px solid #A7F3D0',
+                background: 'rgba(34, 197, 94, 0.12)',
+                border: '2px solid rgba(34, 197, 94, 0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 0.75rem',
-                color: '#059669'
+                color: '#4ADE80'
               }}>
                 <CheckCircle size={32} />
               </div>
 
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', fontFamily: 'var(--font-display)', marginBottom: '0.25rem' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F8FAFC', fontFamily: 'var(--font-display)', marginBottom: '0.25rem' }}>
                 Match Ready!
               </h2>
 
@@ -633,23 +601,23 @@ export default function MatchmakingLobby({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                background: '#F8FAFC',
-                border: '1px solid #E2E8F0',
+                background: '#1C1C1C',
+                border: '1px solid #2E2E2E',
                 borderRadius: '1.25rem',
                 padding: '1rem 1.25rem',
                 margin: '0.85rem 0'
               }}>
                 <div style={{ textAlign: 'left' }}>
                   <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>You</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#F8FAFC' }}>
                     {matchData?.player1Username || 'You'}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: '#2563EB', fontWeight: 600 }}>
+                  <div style={{ fontSize: '0.75rem', color: '#38BDF8', fontWeight: 600 }}>
                     {matchData?.player1Rating || 500} pts
                   </div>
                 </div>
 
-                <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#6366F1' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#22C55E' }}>
                   VS
                 </div>
 
@@ -657,16 +625,16 @@ export default function MatchmakingLobby({
                   <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>
                     {matchData?.isBotMatch ? 'AI Challenger' : 'Opponent'}
                   </div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0F172A' }}>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#F8FAFC' }}>
                     {matchData?.player2Username || 'Challenger'}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: matchData?.isBotMatch ? '#64748B' : '#E11D48', fontWeight: 600 }}>
+                  <div style={{ fontSize: '0.75rem', color: matchData?.isBotMatch ? '#94A3B8' : '#FB7185', fontWeight: 600 }}>
                     {matchData?.isBotMatch ? '🤖 Bot Match' : `${matchData?.player2Rating || 500} pts`}
                   </div>
                 </div>
               </div>
 
-              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#22C55E', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>
                 Game Starting In
               </div>
 
@@ -680,7 +648,7 @@ export default function MatchmakingLobby({
                   fontSize: '3.75rem',
                   fontWeight: 900,
                   fontFamily: 'var(--font-display)',
-                  color: countdown <= 1 ? '#059669' : '#4F46E5',
+                  color: countdown <= 1 ? '#4ADE80' : '#22C55E',
                   lineHeight: 1,
                   margin: '0.4rem 0 0.85rem'
                 }}
@@ -688,7 +656,7 @@ export default function MatchmakingLobby({
                 {countdown > 0 ? countdown : 'GO!'}
               </motion.div>
 
-              <p style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 500 }}>
+              <p style={{ fontSize: '0.8rem', color: '#94A3B8', fontWeight: 500 }}>
                 Synchronizing challenge puzzles...
               </p>
             </motion.div>
@@ -697,21 +665,13 @@ export default function MatchmakingLobby({
           {/* ERROR STATE */}
           {status === 'ERROR' && (
             <div>
-              <ShieldAlert size={42} color="#E11D48" style={{ margin: '0 auto 1rem' }} />
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>Matchmaking Error</h3>
-              <p style={{ color: '#64748B', fontSize: '0.85rem', marginBottom: '1.5rem' }}>{error}</p>
+              <ShieldAlert size={42} color="#FB7185" style={{ margin: '0 auto 1rem' }} />
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#F8FAFC', marginBottom: '0.5rem' }}>Matchmaking Error</h3>
+              <p style={{ color: '#94A3B8', fontSize: '0.85rem', marginBottom: '1.5rem' }}>{error}</p>
               <button
                 onClick={onClose}
-                style={{
-                  padding: '0.6rem 1.5rem',
-                  borderRadius: '0.75rem',
-                  background: '#0F172A',
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: '0.85rem',
-                  cursor: 'pointer',
-                  border: 'none'
-                }}
+                className="btn-secondary"
+                style={{ padding: '0.6rem 1.5rem' }}
               >
                 Close
               </button>

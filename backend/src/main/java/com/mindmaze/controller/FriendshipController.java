@@ -24,6 +24,14 @@ public class FriendshipController {
         return ResponseEntity.ok(friendshipService.getFriends(user.getId()));
     }
 
+    @GetMapping("/recommendations")
+    public ResponseEntity<List<FriendDto>> getRecommendedUsers(
+            @RequestParam(defaultValue = "6") int limit,
+            @AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(friendshipService.getRecommendedUsers(user.getId(), limit));
+    }
+
     @PostMapping("/request")
     public ResponseEntity<FriendDto> sendFriendRequest(
             @RequestBody Map<String, String> body,

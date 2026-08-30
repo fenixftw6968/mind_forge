@@ -111,8 +111,8 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
         position: 'fixed',
         inset: 0,
         zIndex: 9990,
-        background: 'rgba(15, 23, 42, 0.4)',
-        backdropFilter: 'blur(4px)',
+        background: 'rgba(10, 10, 10, 0.75)',
+        backdropFilter: 'blur(6px)',
         display: 'flex',
         justifyContent: 'flex-end',
       }}>
@@ -125,31 +125,33 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
             width: '100%',
             maxWidth: '420px',
             height: '100%',
-            background: '#FFFFFF',
-            boxShadow: '-4px 0 25px rgba(0, 0, 0, 0.1)',
+            background: '#1C1C1C',
+            borderLeft: '1px solid #2E2E2E',
+            boxShadow: '-8px 0 35px rgba(0, 0, 0, 0.5)',
             display: 'flex',
             flexDirection: 'column',
+            color: '#F8FAFC'
           }}
         >
           {/* Drawer Header */}
           <div style={{
             padding: '1.25rem 1.5rem',
-            borderBottom: '1px solid #E2E8F0',
+            borderBottom: '1px solid #2E2E2E',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Users size={20} color="#4F46E5" />
-              <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', fontFamily: 'var(--font-display)', margin: 0 }}>
-                Social & Friends
+              <Users size={20} color="#22C55E" />
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#F8FAFC', fontFamily: 'var(--font-display)', margin: 0 }}>
+                Community & Friends
               </h2>
             </div>
             <button
               onClick={onClose}
               style={{
-                background: '#F1F5F9',
-                border: 'none',
+                background: '#242424',
+                border: '1px solid #2E2E2E',
                 borderRadius: '50%',
                 width: '32px',
                 height: '32px',
@@ -157,7 +159,7 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                color: '#64748B'
+                color: '#94A3B8'
               }}
             >
               <X size={16} />
@@ -165,17 +167,17 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
           </div>
 
           {/* Navigation Tabs */}
-          <div style={{ display: 'flex', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }}>
+          <div style={{ display: 'flex', borderBottom: '1px solid #2E2E2E', background: '#181818' }}>
             <button
               onClick={() => { setActiveTab('FRIENDS'); setSelectedFriend(null); }}
               style={{
                 flex: 1,
                 padding: '0.75rem',
-                background: activeTab === 'FRIENDS' ? '#FFFFFF' : 'transparent',
+                background: activeTab === 'FRIENDS' ? '#1C1C1C' : 'transparent',
                 border: 'none',
-                borderBottom: activeTab === 'FRIENDS' ? '2px solid #4F46E5' : '2px solid transparent',
+                borderBottom: activeTab === 'FRIENDS' ? '2px solid #22C55E' : '2px solid transparent',
                 fontWeight: activeTab === 'FRIENDS' ? 700 : 500,
-                color: activeTab === 'FRIENDS' ? '#4F46E5' : '#64748B',
+                color: activeTab === 'FRIENDS' ? '#4ADE80' : '#94A3B8',
                 fontSize: '0.825rem',
                 cursor: 'pointer'
               }}
@@ -188,11 +190,11 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
               style={{
                 flex: 1,
                 padding: '0.75rem',
-                background: activeTab === 'REQUESTS' ? '#FFFFFF' : 'transparent',
+                background: activeTab === 'REQUESTS' ? '#1C1C1C' : 'transparent',
                 border: 'none',
-                borderBottom: activeTab === 'REQUESTS' ? '2px solid #4F46E5' : '2px solid transparent',
+                borderBottom: activeTab === 'REQUESTS' ? '2px solid #22C55E' : '2px solid transparent',
                 fontWeight: activeTab === 'REQUESTS' ? 700 : 500,
-                color: activeTab === 'REQUESTS' ? '#4F46E5' : '#64748B',
+                color: activeTab === 'REQUESTS' ? '#4ADE80' : '#94A3B8',
                 fontSize: '0.825rem',
                 cursor: 'pointer',
                 position: 'relative'
@@ -207,11 +209,11 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                 style={{
                   flex: 1,
                   padding: '0.75rem',
-                  background: activeTab === 'CHAT' ? '#FFFFFF' : 'transparent',
+                  background: activeTab === 'CHAT' ? '#1C1C1C' : 'transparent',
                   border: 'none',
-                  borderBottom: activeTab === 'CHAT' ? '2px solid #4F46E5' : '2px solid transparent',
+                  borderBottom: activeTab === 'CHAT' ? '2px solid #22C55E' : '2px solid transparent',
                   fontWeight: activeTab === 'CHAT' ? 700 : 500,
-                  color: activeTab === 'CHAT' ? '#4F46E5' : '#64748B',
+                  color: activeTab === 'CHAT' ? '#4ADE80' : '#94A3B8',
                   fontSize: '0.825rem',
                   cursor: 'pointer'
                 }}
@@ -226,7 +228,7 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
             <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem' }}>
               {/* Search friend */}
               <div style={{ position: 'relative', marginBottom: '1.25rem' }}>
-                <Search size={15} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                <Search size={15} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
                 <input
                   type="text"
                   placeholder="Search your friends..."
@@ -234,10 +236,12 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                   onChange={e => setSearchTerm(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '0.5rem 0.75rem 0.5rem 2.25rem',
+                    padding: '0.55rem 0.75rem 0.55rem 2.25rem',
                     borderRadius: '0.625rem',
-                    border: '1px solid #E2E8F0',
+                    background: '#151515',
+                    border: '1px solid #2E2E2E',
                     fontSize: '0.825rem',
+                    color: '#F8FAFC',
                     outline: 'none'
                   }}
                 />
@@ -245,8 +249,8 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
 
               {/* Friends list */}
               {filteredFriends.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#94A3B8' }}>
-                  <Users size={32} style={{ margin: '0 auto 0.5rem', opacity: 0.6 }} />
+                <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#64748B' }}>
+                  <Users size={32} style={{ margin: '0 auto 0.5rem', opacity: 0.5 }} />
                   <p style={{ fontSize: '0.875rem' }}>No friends yet. Add a friend by username in the Requests tab!</p>
                 </div>
               ) : (
@@ -261,10 +265,10 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                           alignItems: 'center',
                           justifyContent: 'space-between',
                           padding: '0.85rem',
-                          background: '#FFFFFF',
-                          border: '1px solid #E2E8F0',
+                          background: '#242424',
+                          border: '1px solid #2E2E2E',
                           borderRadius: '0.875rem',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -273,8 +277,9 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                               width: '40px',
                               height: '40px',
                               borderRadius: '50%',
-                              background: 'linear-gradient(135deg, #6366F1, #4F46E5)',
-                              color: 'white',
+                              background: '#1C1C1C',
+                              border: '1px solid #333333',
+                              color: '#4ADE80',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -290,16 +295,16 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                               width: '10px',
                               height: '10px',
                               borderRadius: '50%',
-                              background: friend.isOnline ? '#10B981' : '#94A3B8',
-                              border: '2px solid white'
+                              background: friend.isOnline ? '#22C55E' : '#64748B',
+                              border: '2px solid #242424'
                             }} />
                           </div>
 
                           <div>
-                            <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0F172A' }}>
+                            <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#F8FAFC' }}>
                               {friend.username}
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: '#64748B' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', color: '#94A3B8' }}>
                               <span>{rank.badge} {rank.name}</span>
                               <span>•</span>
                               <span>{friend.competitiveRating || 500} pts</span>
@@ -318,10 +323,10 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                             style={{
                               padding: '0.45rem',
                               borderRadius: '0.5rem',
-                              background: '#F1F5F9',
-                              border: 'none',
+                              background: '#1C1C1C',
+                              border: '1px solid #2E2E2E',
                               cursor: 'pointer',
-                              color: '#475569'
+                              color: '#CBD5E1'
                             }}
                           >
                             <MessageSquare size={16} />
@@ -334,10 +339,10 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                               style={{
                                 padding: '0.45rem 0.65rem',
                                 borderRadius: '0.5rem',
-                                background: '#EEF2FF',
-                                border: '1px solid #C7D2FE',
+                                background: 'rgba(34, 197, 94, 0.12)',
+                                border: '1px solid rgba(34, 197, 94, 0.25)',
                                 cursor: 'pointer',
-                                color: '#4F46E5',
+                                color: '#4ADE80',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '0.3rem',
@@ -362,7 +367,7 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
             <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem' }}>
               {/* Add friend form */}
               <form onSubmit={handleSendRequest} style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#CBD5E1', marginBottom: '0.35rem' }}>
                   Send Friend Request
                 </label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -375,21 +380,19 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                       flex: 1,
                       padding: '0.55rem 0.75rem',
                       borderRadius: '0.625rem',
-                      border: '1px solid #CBD5E1',
-                      fontSize: '0.85rem'
+                      background: '#151515',
+                      border: '1px solid #2E2E2E',
+                      fontSize: '0.85rem',
+                      color: '#F8FAFC',
+                      outline: 'none'
                     }}
                   />
                   <button
                     type="submit"
+                    className="btn-primary"
                     style={{
                       padding: '0.55rem 1rem',
-                      borderRadius: '0.625rem',
-                      background: '#4F46E5',
-                      color: 'white',
-                      border: 'none',
-                      fontWeight: 700,
-                      fontSize: '0.825rem',
-                      cursor: 'pointer'
+                      fontSize: '0.825rem'
                     }}
                   >
                     Add
@@ -399,7 +402,7 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                   <p style={{
                     fontSize: '0.775rem',
                     marginTop: '0.4rem',
-                    color: addStatus.type === 'error' ? '#E11D48' : '#059669'
+                    color: addStatus.type === 'error' ? '#FB7185' : '#4ADE80'
                   }}>
                     {addStatus.msg}
                   </p>
@@ -412,25 +415,25 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                   Incoming Requests ({incomingRequests.length})
                 </h3>
                 {incomingRequests.length === 0 ? (
-                  <p style={{ fontSize: '0.8rem', color: '#94A3B8' }}>No pending requests.</p>
+                  <p style={{ fontSize: '0.8rem', color: '#64748B' }}>No pending requests.</p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     {incomingRequests.map(req => (
-                      <div key={req.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', background: '#F8FAFC', borderRadius: '0.75rem', border: '1px solid #E2E8F0' }}>
+                      <div key={req.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', background: '#242424', borderRadius: '0.75rem', border: '1px solid #2E2E2E' }}>
                         <div>
-                          <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#0F172A' }}>{req.username}</div>
-                          <div style={{ fontSize: '0.725rem', color: '#64748B' }}>Rating: {req.competitiveRating || 500} pts</div>
+                          <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#F8FAFC' }}>{req.username}</div>
+                          <div style={{ fontSize: '0.725rem', color: '#94A3B8' }}>Rating: {req.competitiveRating || 500} pts</div>
                         </div>
                         <div style={{ display: 'flex', gap: '0.35rem' }}>
                           <button
                             onClick={() => handleRespondRequest(req.id, true)}
-                            style={{ padding: '0.4rem 0.6rem', borderRadius: '0.5rem', background: '#ECFDF5', border: '1px solid #A7F3D0', color: '#059669', cursor: 'pointer' }}
+                            style={{ padding: '0.4rem 0.6rem', borderRadius: '0.5rem', background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.3)', color: '#4ADE80', cursor: 'pointer' }}
                           >
                             <Check size={15} />
                           </button>
                           <button
                             onClick={() => handleRespondRequest(req.id, false)}
-                            style={{ padding: '0.4rem 0.6rem', borderRadius: '0.5rem', background: '#FFF1F2', border: '1px solid #FECDD3', color: '#E11D48', cursor: 'pointer' }}
+                            style={{ padding: '0.4rem 0.6rem', borderRadius: '0.5rem', background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.3)', color: '#FB7185', cursor: 'pointer' }}
                           >
                             <X size={15} />
                           </button>
@@ -447,13 +450,13 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                   Outgoing Requests ({outgoingRequests.length})
                 </h3>
                 {outgoingRequests.length === 0 ? (
-                  <p style={{ fontSize: '0.8rem', color: '#94A3B8' }}>No outgoing requests sent.</p>
+                  <p style={{ fontSize: '0.8rem', color: '#64748B' }}>No outgoing requests sent.</p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     {outgoingRequests.map(req => (
-                      <div key={req.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', background: '#F8FAFC', borderRadius: '0.75rem', border: '1px solid #E2E8F0' }}>
-                        <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#334155' }}>@{req.username}</span>
-                        <span style={{ fontSize: '0.725rem', color: '#64748B', background: '#F1F5F9', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>Pending</span>
+                      <div key={req.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', background: '#242424', borderRadius: '0.75rem', border: '1px solid #2E2E2E' }}>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#CBD5E1' }}>@{req.username}</span>
+                        <span style={{ fontSize: '0.725rem', color: '#94A3B8', background: '#1C1C1C', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>Pending</span>
                       </div>
                     ))}
                   </div>
@@ -467,7 +470,7 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
               <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {chatMessages.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#94A3B8', fontSize: '0.85rem' }}>
+                  <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#64748B', fontSize: '0.85rem' }}>
                     No messages yet with @{selectedFriend.username}. Say hello! 👋
                   </div>
                 ) : (
@@ -479,13 +482,14 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                         style={{
                           alignSelf: isMine ? 'flex-end' : 'flex-start',
                           maxWidth: '78%',
-                          background: isMine ? '#4F46E5' : '#F1F5F9',
-                          color: isMine ? '#FFFFFF' : '#0F172A',
+                          background: isMine ? '#22C55E' : '#242424',
+                          color: isMine ? '#05200C' : '#F8FAFC',
+                          border: isMine ? 'none' : '1px solid #2E2E2E',
                           padding: '0.65rem 0.9rem',
                           borderRadius: isMine ? '1rem 1rem 0.2rem 1rem' : '1rem 1rem 1rem 0.2rem',
                           fontSize: '0.85rem',
                           lineHeight: 1.4,
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
                         }}
                       >
                         {msg.content}
@@ -497,7 +501,7 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
               </div>
 
               {/* Chat input form */}
-              <form onSubmit={handleSendMessage} style={{ padding: '0.75rem 1rem', borderTop: '1px solid #E2E8F0', display: 'flex', gap: '0.5rem', background: '#FFFFFF' }}>
+              <form onSubmit={handleSendMessage} style={{ padding: '0.75rem 1rem', borderTop: '1px solid #2E2E2E', display: 'flex', gap: '0.5rem', background: '#1C1C1C' }}>
                 <input
                   type="text"
                   placeholder={`Message @${selectedFriend.username}...`}
@@ -507,20 +511,19 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                     flex: 1,
                     padding: '0.55rem 0.85rem',
                     borderRadius: '0.75rem',
-                    border: '1px solid #E2E8F0',
+                    background: '#151515',
+                    border: '1px solid #2E2E2E',
                     fontSize: '0.85rem',
+                    color: '#F8FAFC',
                     outline: 'none'
                   }}
                 />
                 <button
                   type="submit"
+                  className="btn-primary"
                   style={{
                     padding: '0.55rem 0.85rem',
-                    borderRadius: '0.75rem',
-                    background: '#4F46E5',
-                    color: 'white',
-                    border: 'none',
-                    cursor: 'pointer'
+                    borderRadius: '0.75rem'
                   }}
                 >
                   <Send size={15} />
