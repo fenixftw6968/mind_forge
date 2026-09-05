@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, Zap } from 'lucide-react';
+import { ArrowLeft, Clock, Zap, Loader2 } from 'lucide-react';
 
 const DEFAULT_DIFFICULTIES = [
   {
@@ -44,7 +44,8 @@ export default function DifficultySelector({
   icon = "🎮",
   onSelectDifficulty,
   onBack,
-  customTiers = null
+  customTiers = null,
+  loadingTier = null
 }) {
   const tiers = customTiers || DEFAULT_DIFFICULTIES;
 
@@ -92,33 +93,42 @@ export default function DifficultySelector({
               const bg = tier.bg || 'rgba(34, 197, 94, 0.12)';
               const border = tier.border || 'rgba(34, 197, 94, 0.25)';
 
+              const isCurrentLoading = loadingTier && String(loadingTier).toUpperCase() === String(tier.id).toUpperCase();
+              const isAnyLoading = !!loadingTier;
+
               return (
                 <motion.button
                   key={tier.id}
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.99 }}
-                  onClick={() => onSelectDifficulty(tier.id)}
+                  whileHover={!isAnyLoading ? { y: -2 } : {}}
+                  whileTap={!isAnyLoading ? { scale: 0.99 } : {}}
+                  disabled={isAnyLoading}
+                  onClick={() => !isAnyLoading && onSelectDifficulty(tier.id)}
                   style={{
                     width: '100%',
                     padding: '1.15rem 1.35rem',
                     borderRadius: '0.875rem',
-                    background: '#242424',
-                    border: `1px solid ${border}`,
-                    cursor: 'pointer',
+                    background: isCurrentLoading ? 'rgba(34, 197, 94, 0.1)' : '#242424',
+                    border: `1px solid ${isCurrentLoading ? color : border}`,
+                    cursor: isAnyLoading ? (isCurrentLoading ? 'wait' : 'not-allowed') : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '1rem',
                     textAlign: 'left',
                     transition: 'all 0.15s ease',
-                    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25)'
+                    boxShadow: isCurrentLoading ? `0 0 12px ${color}33` : '0 2px 6px rgba(0, 0, 0, 0.25)',
+                    opacity: isAnyLoading && !isCurrentLoading ? 0.45 : 1
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.background = '#2A2A2A';
-                    e.currentTarget.style.borderColor = color;
+                    if (!isAnyLoading) {
+                      e.currentTarget.style.background = '#2A2A2A';
+                      e.currentTarget.style.borderColor = color;
+                    }
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.background = '#242424';
-                    e.currentTarget.style.borderColor = border;
+                    if (!isAnyLoading) {
+                      e.currentTarget.style.background = '#242424';
+                      e.currentTarget.style.borderColor = border;
+                    }
                   }}
                 >
                   <div
@@ -135,17 +145,26 @@ export default function DifficultySelector({
                       fontSize: '1.3rem'
                     }}
                   >
-                    {tier.icon}
+                    {isCurrentLoading ? (
+                      <Loader2 size={20} color={color} className="animate-spin" />
+                    ) : (
+                      tier.icon
+                    )}
                   </div>
 
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <span className="font-accent" style={{ fontWeight: 800, color: color, fontSize: '1rem' }}>
                         {tier.label || tier.id}
                       </span>
+                      {isCurrentLoading && (
+                        <span style={{ fontSize: '0.75rem', color: color, fontWeight: 700 }}>
+                          • Loading questions...
+                        </span>
+                      )}
                     </div>
                     <div style={{ fontSize: '0.775rem', color: '#94A3B8', marginTop: '0.15rem', lineHeight: 1.4, fontWeight: 500 }}>
-                      {tier.desc}
+                      {isCurrentLoading ? 'Preparing clean, non-repeating question set...' : tier.desc}
                     </div>
                   </div>
 

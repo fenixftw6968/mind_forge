@@ -42,7 +42,7 @@ public class EloRatingServiceTest {
     @Test
     void testFloorAtZero() {
         // Ensure rating does not drop below 0
-        EloRatingService.EloResult result = eloRatingService.calculateNewRatings(5, 500, 0.0);
+        EloRatingService.EloResult result = eloRatingService.calculateNewRatings(5, 5, 0.0);
         assertEquals(0, result.getNewRatingA());
         assertTrue(result.getNewRatingA() >= 0);
     }

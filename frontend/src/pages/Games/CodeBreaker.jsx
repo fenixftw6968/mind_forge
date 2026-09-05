@@ -16,6 +16,7 @@ import SocialDrawer from '../../components/SocialDrawer/SocialDrawer';
 import ExitModal from '../../components/ExitModal/ExitModal';
 import { getDailyQuestionSet } from '../../services/dailyQuestionService';
 import { getRandomQuestionSet } from '../../services/randomQuestionService';
+import { selectQuestionsForGame } from '../../services/questionHistoryService';
 import { codeBreakerQuestions } from '../../data/codeBreakerQuestions';
 import api from '../../utils/api';
 import { useMatchSocket } from '../../hooks/useMatchSocket';
@@ -42,6 +43,7 @@ export default function CodeBreaker() {
   const [waitingForOpponent, setWaitingForOpponent] = useState(false);
 
   const [difficulty, setDifficulty] = useState(null);
+  const [loadingDifficulty, setLoadingDifficulty] = useState(null);
   const [puzzles, setPuzzles] = useState([]);
   const [index, setIndex] = useState(0);
   const [digits, setDigits] = useState(['', '', '']);
@@ -263,32 +265,48 @@ export default function CodeBreaker() {
     setActiveDigit(0);
   };
 
-  const startGame = (diff) => {
-    const selected = getRandomQuestionSet({
-      gameType: 'code-breaker',
-      difficulty: diff,
-      questionBank: codeBreakerQuestions,
-      count: 6,
-      userShuffle: true
-    });
+  const startGame = async (diff) => {
+    setLoadingDifficulty(diff);
+    try {
+      const selected = await selectQuestionsForGame({
+        gameSlug: 'code-breaker',
+        difficulty: diff,
+        questionBank: codeBreakerQuestions,
+        count: 6,
+        userShuffle: true
+      });
 
-    const activeList = selected.length > 0 ? selected : codeBreakerQuestions.filter(q => q.difficulty === diff);
-    setPuzzles(activeList);
-    setDifficulty(diff);
-    setIndex(0);
-    setScore(0);
-    setMistakes(0);
-    setTotalXP(0);
-    setHintUsed(false);
-    setShowHint(false);
-    setResult(null);
-    setShowResult(false);
-    setShowComplete(false);
-    setCompetitiveResult(null);
+      const activeList = Array.isArray(selected) && selected.length > 0
+        ? selected
+        : codeBreakerQuestions.filter(q => q.difficulty && q.difficulty.toLowerCase() === diff.toLowerCase());
 
-    const count = activeList[0]?.digitCount || (diff === 'HARD' ? 4 : 3);
-    setDigits(new Array(count).fill(''));
-    setActiveDigit(0);
+      setPuzzles(activeList);
+      setDifficulty(diff);
+      setIndex(0);
+      setScore(0);
+      setMistakes(0);
+      setTotalXP(0);
+      setHintUsed(false);
+      setShowHint(false);
+      setResult(null);
+      setShowResult(false);
+      setShowComplete(false);
+      setCompetitiveResult(null);
+
+      const count = activeList[0]?.digitCount || (diff === 'HARD' ? 4 : 3);
+      setDigits(new Array(count).fill(''));
+      setActiveDigit(0);
+    } catch (e) {
+      console.warn("Could not start code breaker via service, using local pool", e);
+      const activeList = codeBreakerQuestions.filter(q => q.difficulty && q.difficulty.toLowerCase() === diff.toLowerCase());
+      setPuzzles(activeList.slice(0, 6));
+      setDifficulty(diff);
+      const count = activeList[0]?.digitCount || (diff === 'HARD' ? 4 : 3);
+      setDigits(new Array(count).fill(''));
+      setActiveDigit(0);
+    } finally {
+      setLoadingDifficulty(null);
+    }
   };
 
   // Guarantee clean input and result state on every question index change
@@ -392,20 +410,7 @@ export default function CodeBreaker() {
       } else if (currentMatch) {
         const totalDuration = Math.round((Date.now() - startTimeRef.current) / 1000);
         try {
-          if (currentMatch.player2Id === 999999) {
-            const botScore = Math.max(0, score + (Math.random() > 0.4 ? (Math.random() > 0.5 ? 0 : -1) : 1));
-            const botDelta = score >= botScore ? -16 : 16;
-            const myDelta = score > botScore ? 24 : (score === botScore ? 0 : -18);
-            const simResult = {
-              ...currentMatch,
-              player1Score: score,
-              player2Score: botScore,
-              player1RatingChange: myDelta,
-              player2RatingChange: botDelta,
-              winnerId: score > botScore ? currentMatch.player1Id : (score < botScore ? 999999 : null)
-            };
-            setCompetitiveResult(simResult);
-          } else {
+          if (currentMatch.id) {
             setWaitingForOpponent(true);
             const res = await api.post(`/api/matches/${currentMatch.id}/submit`, {
               score: score,
@@ -413,15 +418,32 @@ export default function CodeBreaker() {
               mistakes: mistakes,
               detailedAnswers: 'Code Breaker Set Completed'
             });
-             if (res.data?.status === 'FINISHED') {
+            if (res.data?.status === 'FINISHED') {
               setWaitingForOpponent(false);
               setCompetitiveResult(res.data);
               clearMatchStorage(currentMatch.id);
+              refreshUser();
+              return;
             }
           }
         } catch (e) {
-          console.error("Match result submit error", e);
+          console.warn("Code Breaker match submit error, using offline fallback", e);
           setWaitingForOpponent(false);
+        }
+
+        if (currentMatch.player2Id === 999999 || currentMatch.isBotMatch) {
+          const botScore = Math.max(0, score + (Math.random() > 0.4 ? (Math.random() > 0.5 ? 0 : -1) : 1));
+          const botDelta = score >= botScore ? -16 : 16;
+          const myDelta = score > botScore ? 24 : (score === botScore ? 0 : -18);
+          const simResult = {
+            ...currentMatch,
+            player1Score: score,
+            player2Score: botScore,
+            player1RatingChange: myDelta,
+            player2RatingChange: botDelta,
+            winnerId: score > botScore ? currentMatch.player1Id : (score < botScore ? 999999 : null)
+          };
+          setCompetitiveResult(simResult);
         }
       }
     }
@@ -533,6 +555,7 @@ export default function CodeBreaker() {
         title="Code Breaker"
         subtitle="Use deductive reasoning and clues to crack the secret lock combination."
         icon="🔐"
+        loadingTier={loadingDifficulty}
         onSelectDifficulty={(diff) => startGame(diff)}
         onBack={() => setShowModeModal(true)}
       />

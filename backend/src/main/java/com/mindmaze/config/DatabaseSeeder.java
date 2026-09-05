@@ -20,6 +20,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final MysteryCaseRepository mysteryCaseRepository;
     private final DailyChallengeRepository dailyChallengeRepository;
     private final com.mindmaze.service.DailyChallengeService dailyChallengeService;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     public DatabaseSeeder(
             GameRepository gameRepository,
@@ -27,7 +28,8 @@ public class DatabaseSeeder implements CommandLineRunner {
             AchievementRepository achievementRepository,
             MysteryCaseRepository mysteryCaseRepository,
             DailyChallengeRepository dailyChallengeRepository,
-            com.mindmaze.service.DailyChallengeService dailyChallengeService
+            com.mindmaze.service.DailyChallengeService dailyChallengeService,
+            org.springframework.jdbc.core.JdbcTemplate jdbcTemplate
     ) {
         this.gameRepository = gameRepository;
         this.puzzleRepository = puzzleRepository;
@@ -35,14 +37,38 @@ public class DatabaseSeeder implements CommandLineRunner {
         this.mysteryCaseRepository = mysteryCaseRepository;
         this.dailyChallengeRepository = dailyChallengeRepository;
         this.dailyChallengeService = dailyChallengeService;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
     public void run(String... args) throws Exception {
+        initQuestionHistoryTable();
         seedAchievements();
         seedGamesAndPuzzles();
         seedMysteryCases();
         seedDailyChallenge();
+    }
+
+    private void initQuestionHistoryTable() {
+        try {
+            jdbcTemplate.execute(
+                "CREATE TABLE IF NOT EXISTS user_question_history (" +
+                "  id BIGSERIAL PRIMARY KEY, " +
+                "  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE, " +
+                "  game_slug VARCHAR(60) NOT NULL, " +
+                "  difficulty VARCHAR(20) NOT NULL, " +
+                "  question_id VARCHAR(100) NOT NULL, " +
+                "  played_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+                "  CONSTRAINT uq_user_game_diff_q UNIQUE (user_id, game_slug, difficulty, question_id)" +
+                ");"
+            );
+            jdbcTemplate.execute(
+                "CREATE INDEX IF NOT EXISTS idx_uqh_user_game_diff ON user_question_history(user_id, game_slug, difficulty);"
+            );
+            log.info("user_question_history table verified.");
+        } catch (Exception e) {
+            log.warn("Could not verify/create user_question_history table: {}", e.getMessage());
+        }
     }
 
     private void seedAchievements() {

@@ -16,6 +16,7 @@ import SocialDrawer from '../../components/SocialDrawer/SocialDrawer';
 import ExitModal from '../../components/ExitModal/ExitModal';
 import { getDailyQuestionSet } from '../../services/dailyQuestionService';
 import { getRandomQuestionSet } from '../../services/randomQuestionService';
+import { selectQuestionsForGame } from '../../services/questionHistoryService';
 import api from '../../utils/api';
 import { useMatchSocket } from '../../hooks/useMatchSocket';
 
@@ -50,6 +51,7 @@ export default function MCQGameEngine({
 
   // Gameplay states
   const [difficulty, setDifficulty] = useState(null); // null = selecting difficulty
+  const [loadingDifficulty, setLoadingDifficulty] = useState(null);
   const [puzzles, setPuzzles] = useState([]);
   const [index, setIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState('');
@@ -123,31 +125,46 @@ export default function MCQGameEngine({
   const puzzle = puzzles[index];
 
   // Initialize practice game session
-  const initGameSession = useCallback((selectedDiff) => {
-    setDifficulty(selectedDiff);
-    setIndex(0);
-    setScore(0);
-    setMistakes(0);
-    setSelectedOption(null);
-    setShowResult(false);
-    setHintUsed(false);
-    setShowHint(false);
-    setShowComplete(false);
-    scoreRef.current = 0;
-    mistakesRef.current = 0;
-    startTimeRef.current = Date.now();
+  const initGameSession = useCallback(async (selectedDiff) => {
+    setLoadingDifficulty(selectedDiff);
+    try {
+      const questions = await selectQuestionsForGame({
+        gameSlug: gameSlug,
+        difficulty: selectedDiff,
+        questionBank: questionBank,
+        count: 10,
+        userShuffle: true
+      });
 
-    const questions = getRandomQuestionSet({
-      gameType: gameSlug,
-      difficulty: selectedDiff,
-      questionBank: questionBank,
-      count: 10,
-      userShuffle: true
-    });
+      const activeList = Array.isArray(questions) && questions.length > 0
+        ? questions
+        : questionBank.filter(q => q.difficulty && q.difficulty.toLowerCase() === selectedDiff.toLowerCase());
 
-    setPuzzles(questions);
-    reset(TIMER_SECONDS[selectedDiff?.toUpperCase()] || 60);
-    start();
+      setPuzzles(activeList);
+      setDifficulty(selectedDiff);
+      setIndex(0);
+      setScore(0);
+      setMistakes(0);
+      setSelectedOption(null);
+      setShowResult(false);
+      setHintUsed(false);
+      setShowHint(false);
+      setShowComplete(false);
+      scoreRef.current = 0;
+      mistakesRef.current = 0;
+      startTimeRef.current = Date.now();
+      reset(TIMER_SECONDS[selectedDiff?.toUpperCase()] || 60);
+      start();
+    } catch (err) {
+      console.warn("Failed to load questions, using fallback set:", err);
+      const fallback = questionBank.filter(q => q.difficulty && q.difficulty.toLowerCase() === selectedDiff.toLowerCase());
+      setPuzzles(fallback.slice(0, 10));
+      setDifficulty(selectedDiff);
+      reset(TIMER_SECONDS[selectedDiff?.toUpperCase()] || 60);
+      start();
+    } finally {
+      setLoadingDifficulty(null);
+    }
   }, [gameSlug, questionBank, reset, start]);
 
   // Handle timeout on a question
@@ -183,7 +200,7 @@ export default function MCQGameEngine({
             puzzleId: typeof puzzle.id === 'number' ? puzzle.id : null,
             userAnswer: selectedOption,
             hintUsed: hintUsed,
-            timeTakenSeconds: (TIMER_SECONDS[currentDiff] || 60) - seconds
+            timeTakenSeconds: (TIMER_SECONDS[currentDiff] || 60) - (timeLeft !== undefined ? timeLeft : 0)
           });
           if (res.data?.user) {
             setLatestUser(res.data.user);
@@ -222,6 +239,7 @@ export default function MCQGameEngine({
             setWaitingForOpponent(false);
             setCompetitiveResult(res.data);
             clearMatchStorage(currentMatch.id);
+            refreshUser();
           }
         } catch (e) {
           console.error('Failed to submit competitive score:', e);
@@ -327,34 +345,42 @@ export default function MCQGameEngine({
   // 1. Play Mode Selector Modal
   if (showModeModal) {
     return (
-      <>
-        <PlayModeModal
-          isOpen={showModeModal}
-          onClose={() => navigate('/games')}
-          gameTitle={gameTitle}
-          gameIcon={gameIcon}
-          onSelectMode={(mode) => {
-            setPlayMode(mode);
-            setShowModeModal(false);
-            if (mode === 'PRACTICE') {
-              setDifficulty(null);
-            } else if (mode === 'RANKED') {
-              setShowMatchmaking(true);
-            } else if (mode === 'FRIEND') {
-              setShowSocialDrawer(true);
-            }
-          }}
-        />
-        <SocialDrawer
-          isOpen={showSocialDrawer}
-          onClose={() => setShowSocialDrawer(false)}
-          onInviteFriendToGame={(friend) => {
-            setInvitedFriend(friend);
-            setShowSocialDrawer(false);
+      <PlayModeModal
+        isOpen={showModeModal}
+        onClose={() => navigate('/games')}
+        gameTitle={gameTitle}
+        gameIcon={gameIcon}
+        onSelectMode={(mode) => {
+          setPlayMode(mode);
+          setShowModeModal(false);
+          if (mode === 'PRACTICE') {
+            setDifficulty(null);
+          } else if (mode === 'RANKED') {
             setShowMatchmaking(true);
-          }}
-        />
-      </>
+          } else if (mode === 'FRIEND') {
+            setShowSocialDrawer(true);
+          }
+        }}
+      />
+    );
+  }
+
+  // 2. Social Drawer (Play with Friend)
+  if (showSocialDrawer) {
+    return (
+      <SocialDrawer
+        isOpen={showSocialDrawer}
+        onClose={() => {
+          setShowSocialDrawer(false);
+          setShowModeModal(true);
+        }}
+        onInviteFriendToGame={(friend) => {
+          setShowSocialDrawer(false);
+          setInvitedFriend(friend);
+          setPlayMode('FRIEND');
+          setShowMatchmaking(true);
+        }}
+      />
     );
   }
 
@@ -415,6 +441,7 @@ export default function MCQGameEngine({
         subtitle={`Select challenge level to begin your ${category} training session.`}
         icon={gameIcon}
         customTiers={customDifficulties}
+        loadingTier={loadingDifficulty}
         onSelectDifficulty={(diff) => initGameSession(diff)}
         onBack={() => setShowModeModal(true)}
       />

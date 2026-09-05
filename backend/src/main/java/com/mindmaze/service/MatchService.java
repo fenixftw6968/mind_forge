@@ -172,6 +172,43 @@ public class MatchService {
     }
 
     @Transactional
+    public MatchDto connectBotMatch(String matchId, Long userId) {
+        Match match = matchRepository.findByIdWithLock(matchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Match not found"));
+
+        if (!match.getPlayer1().getId().equals(userId)) {
+            throw new BadRequestException("User is not the host of this match");
+        }
+
+        if (match.getStatus() != Match.MatchStatus.WAITING && match.getStatus() != Match.MatchStatus.READY) {
+            throw new BadRequestException("Match is not in a connectable state");
+        }
+
+        // Remove user from in-memory queue
+        List<Long> queue = matchmakingQueues.get(match.getGameSlug());
+        if (queue != null) {
+            queue.remove(userId);
+        }
+
+        int userRating = match.getPlayer1RatingBefore() != null ? match.getPlayer1RatingBefore() : 500;
+        // Bot rating dynamically close to user's rating (± 20 points)
+        int botRating = Math.max(100, userRating + (new Random().nextInt(41) - 20));
+
+        match.setIsBotMatch(true);
+        match.setMode(Match.MatchMode.RANKED);
+        match.setStatus(Match.MatchStatus.READY);
+        match.setPlayer1Ready(true);
+        match.setPlayer2Ready(true);
+        match.setPlayer2RatingBefore(botRating);
+        match.setStartedAt(LocalDateTime.now().plusSeconds(4));
+
+        match = matchRepository.save(match);
+        MatchDto dto = convertToDto(match);
+        broadcastMatchEvent(match.getId(), "MATCH_READY", dto);
+        return dto;
+    }
+
+    @Transactional
     public MatchDto createFriendMatch(Long hostUserId, Long friendUserId, String gameSlug, String difficulty) {
         User host = userRepository.findById(hostUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Host user not found"));
@@ -373,6 +410,24 @@ public class MatchService {
             match.setPlayer1TimeSeconds(request.getTimeTakenSeconds() != null ? request.getTimeTakenSeconds() : 0);
             match.setPlayer1Mistakes(request.getMistakes() != null ? request.getMistakes() : 0);
             match.setPlayer1Finished(true);
+
+            // If this is a bot match, simulate bot opponent's performance right now
+            if (Boolean.TRUE.equals(match.getIsBotMatch())) {
+                int userScore = request.getScore() != null ? request.getScore() : 0;
+                int userTime = request.getTimeTakenSeconds() != null ? request.getTimeTakenSeconds() : 60;
+                Random rnd = new Random();
+                // 45% equal score, 35% bot gets 1 less, 20% bot gets 1 more
+                double r = rnd.nextDouble();
+                int scoreOffset = r < 0.45 ? 0 : (r < 0.80 ? -1 : 1);
+                int botScore = Math.max(0, Math.min(10, userScore + scoreOffset));
+                int botTime = Math.max(15, userTime + (rnd.nextInt(15) - 7));
+                int botMistakes = Math.max(0, 10 - botScore);
+
+                match.setPlayer2Score(botScore);
+                match.setPlayer2TimeSeconds(botTime);
+                match.setPlayer2Mistakes(botMistakes);
+                match.setPlayer2Finished(true);
+            }
         } else {
             match.setPlayer2Score(request.getScore() != null ? request.getScore() : 0);
             match.setPlayer2TimeSeconds(request.getTimeTakenSeconds() != null ? request.getTimeTakenSeconds() : 0);
@@ -383,7 +438,7 @@ public class MatchService {
         // If both finished (or if solo queue completed vs AI / async bot fallback if player2 was auto-simulated)
         if (Boolean.TRUE.equals(match.getPlayer1Finished()) && Boolean.TRUE.equals(match.getPlayer2Finished())) {
             finalizeMatch(match);
-        } else if (match.getPlayer2() == null) {
+        } else if (match.getPlayer2() == null && !Boolean.TRUE.equals(match.getIsBotMatch())) {
             // Solo test finish
             match.setStatus(Match.MatchStatus.FINISHED);
             match.setFinishedAt(LocalDateTime.now());
@@ -438,7 +493,8 @@ public class MatchService {
         User p2 = match.getPlayer2();
 
         int r1 = p1.getCompetitiveRating() != null ? p1.getCompetitiveRating() : 500;
-        int r2 = p2 != null && p2.getCompetitiveRating() != null ? p2.getCompetitiveRating() : 500;
+        int r2 = p2 != null && p2.getCompetitiveRating() != null ? p2.getCompetitiveRating() : 
+                 (match.getPlayer2RatingBefore() != null ? match.getPlayer2RatingBefore() : 500);
 
         match.setPlayer1RatingBefore(r1);
         match.setPlayer2RatingBefore(r2);
@@ -446,9 +502,13 @@ public class MatchService {
         if (actualScore1 == 1.0) {
             match.setWinnerId(p1.getId());
             p1.setMatchesWon((p1.getMatchesWon() != null ? p1.getMatchesWon() : 0) + 1);
-        } else if (actualScore1 == 0.0 && p2 != null) {
-            match.setWinnerId(p2.getId());
-            p2.setMatchesWon((p2.getMatchesWon() != null ? p2.getMatchesWon() : 0) + 1);
+        } else if (actualScore1 == 0.0) {
+            if (p2 != null) {
+                match.setWinnerId(p2.getId());
+                p2.setMatchesWon((p2.getMatchesWon() != null ? p2.getMatchesWon() : 0) + 1);
+            } else if (Boolean.TRUE.equals(match.getIsBotMatch())) {
+                match.setWinnerId(999999L);
+            }
         }
 
         p1.setMatchesPlayed((p1.getMatchesPlayed() != null ? p1.getMatchesPlayed() : 0) + 1);
@@ -456,15 +516,17 @@ public class MatchService {
             p2.setMatchesPlayed((p2.getMatchesPlayed() != null ? p2.getMatchesPlayed() : 0) + 1);
         }
 
-        // Apply Elo rating changes only for real human ranked matches (not bots)
-        if (!Boolean.TRUE.equals(match.getIsBotMatch()) && p2 != null) {
+        // Apply Elo rating changes for Ranked matches (including Ranked Bot matches!)
+        if (match.getMode() == Match.MatchMode.RANKED) {
             EloRatingService.EloResult eloResult = eloRatingService.calculateNewRatings(r1, r2, actualScore1);
             match.setPlayer1RatingChange(eloResult.getDeltaA());
             match.setPlayer2RatingChange(eloResult.getDeltaB());
 
             p1.setCompetitiveRating(eloResult.getNewRatingA());
-            p2.setCompetitiveRating(eloResult.getNewRatingB());
-            userRepository.save(p2);
+            if (p2 != null) {
+                p2.setCompetitiveRating(eloResult.getNewRatingB());
+                userRepository.save(p2);
+            }
         } else {
             match.setPlayer1RatingChange(0);
             match.setPlayer2RatingChange(0);
@@ -735,12 +797,23 @@ public class MatchService {
         if (match.getWinnerId() != null) {
             if (p1.getId().equals(match.getWinnerId())) winnerName = p1.getUsername();
             else if (p2 != null && p2.getId().equals(match.getWinnerId())) winnerName = p2.getUsername();
+            else if (Boolean.TRUE.equals(match.getIsBotMatch())) winnerName = "CortexAI_Bot";
         }
 
         Long startedAtMillis = null;
         if (match.getStartedAt() != null) {
             startedAtMillis = match.getStartedAt().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
         }
+
+        Long p2Id = p2 != null ? p2.getId() : (Boolean.TRUE.equals(match.getIsBotMatch()) ? 999999L : null);
+        String p2Username = p2 != null ? p2.getUsername() : (Boolean.TRUE.equals(match.getIsBotMatch()) ? "CortexAI_Bot" : null);
+        Boolean p2Ready = Boolean.TRUE.equals(match.getIsBotMatch()) ? Boolean.TRUE
+                : (match.getPlayer2Ready() != null ? match.getPlayer2Ready() : Boolean.FALSE);
+
+        // Null-safe boolean reads (defensive for legacy DB rows with null values)
+        Boolean p1ReadySafe = match.getPlayer1Ready() != null ? match.getPlayer1Ready() : Boolean.FALSE;
+        Boolean p1FinishedSafe = match.getPlayer1Finished() != null ? match.getPlayer1Finished() : Boolean.FALSE;
+        Boolean p2FinishedSafe = match.getPlayer2Finished() != null ? match.getPlayer2Finished() : Boolean.FALSE;
 
         return MatchDto.builder()
                 .id(match.getId())
@@ -755,17 +828,17 @@ public class MatchService {
                 .player1Score(match.getPlayer1Score())
                 .player1TimeSeconds(match.getPlayer1TimeSeconds())
                 .player1RatingChange(match.getPlayer1RatingChange())
-                .player1Ready(match.getPlayer1Ready())
-                .player1Finished(match.getPlayer1Finished())
-                .player2Id(p2 != null ? p2.getId() : null)
-                .player2Username(p2 != null ? p2.getUsername() : null)
+                .player1Ready(p1ReadySafe)
+                .player1Finished(p1FinishedSafe)
+                .player2Id(p2Id)
+                .player2Username(p2Username)
                 .player2Rating(p2Rating)
                 .player2Rank(RankUtil.getRankName(p2Rating))
                 .player2Score(match.getPlayer2Score())
                 .player2TimeSeconds(match.getPlayer2TimeSeconds())
                 .player2RatingChange(match.getPlayer2RatingChange())
-                .player2Ready(match.getPlayer2Ready())
-                .player2Finished(match.getPlayer2Finished())
+                .player2Ready(p2Ready)
+                .player2Finished(p2FinishedSafe)
                 .winnerId(match.getWinnerId())
                 .winnerUsername(winnerName)
                 .challengeData(match.getChallengeData())

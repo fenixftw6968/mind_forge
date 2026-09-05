@@ -30,7 +30,10 @@ export default function Games() {
 
   const filtered = games.filter(g => {
     const matchCat  = category   === 'All' || g.category   === category;
-    const matchDiff = difficulty === 'All' || g.difficulty === difficulty;
+    const matchDiff = difficulty === 'All' 
+      || g.difficulty === difficulty 
+      || (g.xpReward && g.xpReward[difficulty.toLowerCase()] !== undefined)
+      || (Array.isArray(g.difficulties) && g.difficulties.includes(difficulty));
     const matchSrc  = !search || g.title.toLowerCase().includes(search.toLowerCase()) || g.description.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchDiff && matchSrc;
   });
@@ -157,7 +160,7 @@ export default function Games() {
         {filtered.length > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
             {filtered.map((game, i) => (
-              <GameCard key={game.id} game={game} index={i} />
+              <GameCard key={game.id} game={game} index={i} activeDifficulty={difficulty} />
             ))}
           </div>
         ) : (

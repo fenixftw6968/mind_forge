@@ -18,18 +18,18 @@ public class DailyChallengeController {
     private final DailyChallengeService dailyChallengeService;
 
     @GetMapping
-    public ResponseEntity<DailyChallengeDto> getDailyChallenge(@AuthenticationPrincipal User user) {
+    public ResponseEntity<java.util.Map<String, Object>> getDailyChallenge(@AuthenticationPrincipal User user) {
         Long userId = user != null ? user.getId() : null;
-        return ResponseEntity.ok(dailyChallengeService.getDailyChallenge(userId));
+        return ResponseEntity.ok(dailyChallengeService.getTodayChallenge(userId));
     }
 
     @PostMapping("/attempts")
-    public ResponseEntity<AttemptResponse> submitDailyChallengeAttempt(
+    public ResponseEntity<java.util.Map<String, Object>> submitDailyChallengeAttempt(
             @RequestBody AttemptRequest request,
             @AuthenticationPrincipal User user) {
         if (user == null) {
             return ResponseEntity.status(401).build();
         }
-        return ResponseEntity.ok(dailyChallengeService.submitAttempt(user.getId(), request));
+        return ResponseEntity.ok(dailyChallengeService.submitAnswer(user.getId(), request.getUserAnswer()));
     }
 }

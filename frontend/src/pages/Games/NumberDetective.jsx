@@ -16,6 +16,7 @@ import SocialDrawer from '../../components/SocialDrawer/SocialDrawer';
 import ExitModal from '../../components/ExitModal/ExitModal';
 import { getDailyQuestionSet } from '../../services/dailyQuestionService';
 import { getRandomQuestionSet } from '../../services/randomQuestionService';
+import { selectQuestionsForGame } from '../../services/questionHistoryService';
 import { numberDetectiveQuestions } from '../../data/numberDetectiveQuestions';
 import api from '../../utils/api';
 import { useMatchSocket } from '../../hooks/useMatchSocket';
@@ -42,6 +43,7 @@ export default function NumberDetective() {
   const [waitingForOpponent, setWaitingForOpponent] = useState(false);
 
   const [difficulty, setDifficulty]   = useState(null); // null = selecting
+  const [loadingDifficulty, setLoadingDifficulty] = useState(null);
   const [puzzles, setPuzzles]         = useState([]);
   const [index, setIndex]             = useState(0);
   const [answer, setAnswer]           = useState('');
@@ -282,28 +284,42 @@ export default function NumberDetective() {
     setCompetitiveResult(null);
   };
 
-  const startGame = (diff) => {
-    const selected = getRandomQuestionSet({
-      gameType: 'number-detective',
-      difficulty: diff,
-      questionBank: numberDetectiveQuestions,
-      count: 10,
-      userShuffle: true
-    });
+  const startGame = async (diff) => {
+    setLoadingDifficulty(diff);
+    try {
+      const selected = await selectQuestionsForGame({
+        gameSlug: 'number-detective',
+        difficulty: diff,
+        questionBank: numberDetectiveQuestions,
+        count: 10,
+        userShuffle: true
+      });
 
-    setPuzzles(selected);
-    setDifficulty(diff);
-    setIndex(0);
-    setScore(0);
-    setMistakes(0);
-    setTotalXP(0);
-    setAnswer('');
-    setHintUsed(false);
-    setResult(null);
-    setShowResult(false);
-    setShowComplete(false);
-    setLatestUser(null);
-    setCompetitiveResult(null);
+      const activeList = Array.isArray(selected) && selected.length > 0
+        ? selected
+        : numberDetectiveQuestions.filter(q => q.difficulty && q.difficulty.toLowerCase() === diff.toLowerCase());
+
+      setPuzzles(activeList);
+      setDifficulty(diff);
+      setIndex(0);
+      setScore(0);
+      setMistakes(0);
+      setTotalXP(0);
+      setAnswer('');
+      setHintUsed(false);
+      setResult(null);
+      setShowResult(false);
+      setShowComplete(false);
+      setLatestUser(null);
+      setCompetitiveResult(null);
+    } catch (e) {
+      console.warn("Could not start game via service, falling back to local pool", e);
+      const activeList = numberDetectiveQuestions.filter(q => q.difficulty && q.difficulty.toLowerCase() === diff.toLowerCase());
+      setPuzzles(activeList.slice(0, 10));
+      setDifficulty(diff);
+    } finally {
+      setLoadingDifficulty(null);
+    }
   };
 
   // Guarantee clean answer state and fresh timer on every question index change
@@ -383,22 +399,7 @@ export default function NumberDetective() {
         const totalDuration = Math.round((Date.now() - startTimeRef.current) / 1000);
         durationRef.current = totalDuration;
         try {
-          // If solo bot match
-          if (currentMatch.player2Id === 999999) {
-            const botScore = Math.max(0, scoreRef.current + (Math.random() > 0.4 ? (Math.random() > 0.5 ? 0 : -1) : 1));
-            const botDelta = scoreRef.current >= botScore ? -16 : 16;
-            const myDelta = scoreRef.current > botScore ? 24 : (scoreRef.current === botScore ? 0 : -18);
-            const simResult = {
-              ...currentMatch,
-              player1Score: scoreRef.current,
-              player2Score: botScore,
-              player1RatingChange: myDelta,
-              player2RatingChange: botDelta,
-              winnerId: scoreRef.current > botScore ? currentMatch.player1Id : (scoreRef.current < botScore ? 999999 : null)
-            };
-            setCompetitiveResult(simResult);
-          } else {
-            // Show waiting screen immediately
+          if (currentMatch.id) {
             setWaitingForOpponent(true);
             const res = await api.post(`/api/matches/${currentMatch.id}/submit`, {
               score: scoreRef.current,
@@ -406,17 +407,33 @@ export default function NumberDetective() {
               mistakes: mistakesRef.current,
               detailedAnswers: 'Number Detective Set Completed'
             });
-            // If server already has both scores (e.g. opponent submitted first), show immediately
             if (res.data?.status === 'FINISHED') {
               setWaitingForOpponent(false);
               setCompetitiveResult(res.data);
               clearMatchStorage(currentMatch.id);
+              refreshUser();
+              return;
             }
-            // Otherwise wait for MATCH_FINISHED WebSocket event (handled by useMatchSocket above)
           }
         } catch (e) {
-          console.error("Match result submit error", e);
+          console.warn("Match result submit error, using offline simulation fallback", e);
           setWaitingForOpponent(false);
+        }
+
+        // Offline / fallback simulation if server was unreachable
+        if (currentMatch.player2Id === 999999 || currentMatch.isBotMatch) {
+          const botScore = Math.max(0, scoreRef.current + (Math.random() > 0.4 ? (Math.random() > 0.5 ? 0 : -1) : 1));
+          const botDelta = scoreRef.current >= botScore ? -16 : 16;
+          const myDelta = scoreRef.current > botScore ? 24 : (scoreRef.current === botScore ? 0 : -18);
+          const simResult = {
+            ...currentMatch,
+            player1Score: scoreRef.current,
+            player2Score: botScore,
+            player1RatingChange: myDelta,
+            player2RatingChange: botDelta,
+            winnerId: scoreRef.current > botScore ? currentMatch.player1Id : (scoreRef.current < botScore ? 999999 : null)
+          };
+          setCompetitiveResult(simResult);
         }
       }
     } else {
@@ -532,6 +549,7 @@ export default function NumberDetective() {
         title="Number Detective"
         subtitle="Spot the hidden mathematical rule in the sequence. Choose your difficulty level."
         icon="🔢"
+        loadingTier={loadingDifficulty}
         onSelectDifficulty={(diff) => startGame(diff)}
         onBack={() => setShowModeModal(true)}
       />

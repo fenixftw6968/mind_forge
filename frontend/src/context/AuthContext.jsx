@@ -112,11 +112,22 @@ export function AuthProvider({ children }) {
     }
   }, [enrichUser]);
 
-  const refreshUser = useCallback((updatedUser) => {
+  const refreshUser = useCallback(async (updatedUser) => {
     if (updatedUser) {
       const enriched = enrichUser(updatedUser);
       setUser(enriched);
       localStorage.setItem('mm_user', JSON.stringify(enriched));
+    } else {
+      try {
+        const res = await api.get('/api/users/me');
+        if (res.data) {
+          const enriched = enrichUser(res.data);
+          setUser(enriched);
+          localStorage.setItem('mm_user', JSON.stringify(enriched));
+        }
+      } catch (e) {
+        console.warn("Failed to refresh user profile from backend:", e);
+      }
     }
   }, [enrichUser]);
 

@@ -107,7 +107,7 @@ export default function CompetitiveResults({
       </div>
 
       {/* Rating Delta Box */}
-      {matchResult.isBotMatch ? (
+      {matchResult.mode !== 'RANKED' && matchResult.isBotMatch ? (
         <div style={{
           background: '#1C1C1C',
           border: '1px solid #2E2E2E',
@@ -122,7 +122,7 @@ export default function CompetitiveResults({
           fontSize: '0.875rem',
           fontWeight: 600
         }}>
-          🤖 <span>Practice AI Bot Match — Competitive Elo rating was not modified.</span>
+          🤖 <span>Custom Bot Match — Competitive Elo rating was not modified.</span>
         </div>
       ) : (
         <div style={{

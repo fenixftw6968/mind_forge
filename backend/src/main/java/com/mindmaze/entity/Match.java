@@ -79,11 +79,17 @@ public class Match {
     private Integer player1Mistakes;
     private Integer player2Mistakes;
 
-    private Boolean player1Finished;
-    private Boolean player2Finished;
+    @Builder.Default
+    private Boolean player1Finished = false;
 
-    private Boolean player1Ready;
-    private Boolean player2Ready;
+    @Builder.Default
+    private Boolean player2Finished = false;
+
+    @Builder.Default
+    private Boolean player1Ready = false;
+
+    @Builder.Default
+    private Boolean player2Ready = false;
 
     // Rating changes
     private Integer player1RatingBefore;

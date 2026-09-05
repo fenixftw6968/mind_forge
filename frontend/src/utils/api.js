@@ -1,15 +1,18 @@
 import axios from 'axios';
 
 const getBaseUrl = () => {
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-  const host = typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost';
+  try {
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) {
+      return import.meta.env.VITE_API_URL;
+    }
+  } catch (e) {}
+  const host = typeof window !== 'undefined' && window.location && window.location.hostname ? window.location.hostname : 'localhost';
   return `http://${host}:8080`;
 };
 
 const api = axios.create({
   baseURL: getBaseUrl(),
+  timeout: 10000,
 });
 
 api.interceptors.request.use((config) => {

@@ -1,6 +1,7 @@
 import { shuffleArray } from './shuffleQuestions.js';
 import { balanceAndRandomizeQuestionOptions } from './optionRandomizer.js';
 import { getDailyQuestionSet, getDailyCountdown } from '../services/dailyQuestionService.js';
+import { selectQuestionsForGame } from '../services/questionHistoryService.js';
 
 const STORAGE_PREFIX = 'mindmaze_recent_questions_';
 
@@ -143,6 +144,18 @@ export function selectDailyQuestions(questionBank, {
   });
 }
 
+export async function selectQuestionsAsync(questionBank, options = {}) {
+  return selectQuestionsForGame({
+    gameSlug: options.gameType,
+    difficulty: options.difficulty,
+    questionBank: questionBank,
+    count: options.count,
+    userShuffle: true
+  });
+}
+
+export { selectQuestionsForGame };
 export { getDailyQuestionSet, getDailyCountdown };
 export { validateAnswerDistribution } from './optionRandomizer.js';
 export default selectQuestions;
+

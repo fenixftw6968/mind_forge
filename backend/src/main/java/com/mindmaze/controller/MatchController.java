@@ -87,6 +87,14 @@ public class MatchController {
         return ResponseEntity.ok(matchService.abandonMatch(matchId, user.getId()));
     }
 
+    @PostMapping("/{matchId}/connect-bot")
+    public ResponseEntity<MatchDto> connectBotMatch(
+            @PathVariable String matchId,
+            @AuthenticationPrincipal User user) {
+        if (user == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(matchService.connectBotMatch(matchId, user.getId()));
+    }
+
     @GetMapping("/{matchId}")
     public ResponseEntity<MatchDto> getMatchStatus(
             @PathVariable String matchId,

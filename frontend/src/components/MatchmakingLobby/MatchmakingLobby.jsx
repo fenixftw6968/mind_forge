@@ -129,7 +129,7 @@ export default function MatchmakingLobby({
           if (match.status === 'READY' || (match.player1Id && match.player2Id)) {
             handleMatchFound(match);
           } else {
-            // Poll for opponent every 1.5s
+            // Poll for opponent every 1.5s (up to 60 seconds / 40 polls)
             let elapsedPolls = 0;
             pollInterval = setInterval(async () => {
               elapsedPolls++;
@@ -145,9 +145,9 @@ export default function MatchmakingLobby({
                 if (currentMatch.status === 'READY' || (currentMatch.player1Id && currentMatch.player2Id)) {
                   clearInterval(pollInterval);
                   handleMatchFound(currentMatch);
-                } else if (elapsedPolls >= 16) { // ~24 seconds timeout
+                } else if (elapsedPolls >= 40) { // 60 seconds queue timeout
                   clearInterval(pollInterval);
-                  setStatus('TIMEOUT_PROMPT');
+                  await connectRankedBot(match.id);
                 }
               } catch (e) {
                 console.warn("Match status poll error", e);
@@ -226,19 +226,39 @@ export default function MatchmakingLobby({
     };
   }, [isOpen, gameSlug, mode, friendTarget, difficulty, initialMatch]);
 
-  const handleSimulatedMatch = async () => {
+  const connectRankedBot = async (matchId) => {
+    if (matchStartedRef.current) return;
+    try {
+      const targetId = matchId || matchData?.id;
+      if (targetId) {
+        const res = await api.post(`/api/matches/${targetId}/connect-bot`);
+        if (res.data) {
+          setMatchData(res.data);
+          handleMatchFound(res.data);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("API connect-bot error, using fallback bot match", e);
+    }
+
     const botOpponent = {
-      ...matchData,
+      ...(matchData || {}),
       player2Id: 999999,
-      player2Username: 'ChallengerBot_99',
-      player2Rating: Math.max(100, (matchData?.player1Rating || 500) + Math.floor(Math.random() * 40 - 20)),
+      player2Username: 'CortexAI_Bot',
+      player2Rating: Math.max(100, (matchData?.player1Rating || 500) + Math.floor(Math.random() * 30 - 15)),
       player2Rank: 'Knight',
       player2Ready: true,
       isBotMatch: true,
+      mode: 'RANKED',
       status: 'READY'
     };
     setMatchData(botOpponent);
     handleMatchFound(botOpponent);
+  };
+
+  const handleSimulatedMatch = async () => {
+    await connectRankedBot(matchData?.id);
   };
 
   const handleContinueWaiting = () => {
@@ -259,9 +279,9 @@ export default function MatchmakingLobby({
         if (currentMatch.status === 'READY' || (currentMatch.player1Id && currentMatch.player2Id)) {
           clearInterval(pollInterval);
           handleMatchFound(currentMatch);
-        } else if (elapsedPolls >= 16) {
+        } else if (elapsedPolls >= 40) {
           clearInterval(pollInterval);
-          setStatus('TIMEOUT_PROMPT');
+          await connectRankedBot(matchData.id);
         }
       } catch (e) {
         console.warn("Match status poll error", e);
@@ -380,10 +400,14 @@ export default function MatchmakingLobby({
                 fontSize: '0.875rem',
                 fontWeight: 700,
                 color: '#CBD5E1',
-                marginBottom: '1.5rem'
+                marginBottom: '0.65rem'
               }}>
                 <Loader2 size={16} className="animate-spin" color="#22C55E" />
                 Queue Time: {Math.floor(queueTime / 60)}:{(queueTime % 60).toString().padStart(2, '0')}
+              </div>
+
+              <div style={{ fontSize: '0.78rem', color: '#64748B', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
+                <Sparkles size={13} color="#FBBF24" /> Auto-matching with Ranked AI bot after 60s
               </div>
 
               <div>
@@ -506,7 +530,7 @@ export default function MatchmakingLobby({
                     fontSize: '0.9rem'
                   }}
                 >
-                  <Bot size={18} /> Play vs AI Bot (Unranked)
+                  <Bot size={18} /> Play vs AI Bot (Ranked Match)
                 </button>
 
                 <button
@@ -628,14 +652,14 @@ export default function MatchmakingLobby({
                   <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#F8FAFC' }}>
                     {matchData?.player2Username || 'Challenger'}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: matchData?.isBotMatch ? '#94A3B8' : '#FB7185', fontWeight: 600 }}>
-                    {matchData?.isBotMatch ? '🤖 Bot Match' : `${matchData?.player2Rating || 500} pts`}
+                  <div style={{ fontSize: '0.75rem', color: matchData?.isBotMatch ? '#38BDF8' : '#FB7185', fontWeight: 600 }}>
+                    {matchData?.isBotMatch ? `⚡ Ranked Bot (${matchData?.player2Rating || 500} pts)` : `${matchData?.player2Rating || 500} pts`}
                   </div>
                 </div>
               </div>
 
               <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#22C55E', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>
-                Game Starting In
+                {matchData?.isBotMatch ? '⚡ Ranked AI Match — Starting In' : 'Ranked Match Starting In'}
               </div>
 
               <motion.div

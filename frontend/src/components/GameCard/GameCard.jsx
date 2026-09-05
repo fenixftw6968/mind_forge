@@ -25,8 +25,9 @@ const SLUG_ICONS = {
   'code-breaker': KeyRound,
 };
 
-export default function GameCard({ game, index = 0, isDashboardFeatured = false }) {
-  const diff = DIFFICULTY_STYLES[game.difficulty] || DIFFICULTY_STYLES.MEDIUM;
+export default function GameCard({ game, index = 0, isDashboardFeatured = false, activeDifficulty = 'All' }) {
+  const diffKey = (activeDifficulty && activeDifficulty !== 'All') ? activeDifficulty.toUpperCase() : game.difficulty;
+  const diff = DIFFICULTY_STYLES[diffKey] || DIFFICULTY_STYLES[game.difficulty] || DIFFICULTY_STYLES.MEDIUM;
   const IconComponent = SLUG_ICONS[game.slug] || HelpCircle;
   const categoryLabel = CATEGORY_TAGS[game.category] || game.category?.toUpperCase() || 'GAME';
 

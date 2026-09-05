@@ -1,5 +1,8 @@
 import { shuffleArray } from '../utils/shuffleQuestions.js';
 import { balanceAndRandomizeQuestionOptions } from '../utils/optionRandomizer.js';
+import { selectQuestionsForGame, fetchUserQuestionHistory, recordUserQuestions, resetUserQuestionHistory } from './questionHistoryService.js';
+
+export { selectQuestionsForGame, fetchUserQuestionHistory, recordUserQuestions, resetUserQuestionHistory };
 
 const STORAGE_KEY_PREFIX = 'mindmaze-recent-played';
 const RECENT_MEMORY_SIZE = 50; // Remember last 50 questions per game/difficulty
@@ -83,3 +86,14 @@ export function getRandomQuestionSet({
   const orderedQuestions = userShuffle ? shuffleArray([...uniqueChosen]) : [...uniqueChosen];
   return balanceAndRandomizeQuestionOptions(orderedQuestions);
 }
+
+export async function getRandomQuestionSetAsync(options = {}) {
+  return selectQuestionsForGame({
+    gameSlug: options.gameType,
+    difficulty: options.difficulty,
+    questionBank: options.questionBank,
+    count: options.count,
+    userShuffle: options.userShuffle !== false
+  });
+}
+

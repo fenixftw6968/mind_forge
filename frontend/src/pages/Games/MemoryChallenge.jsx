@@ -15,6 +15,7 @@ import SocialDrawer from '../../components/SocialDrawer/SocialDrawer';
 import ExitModal from '../../components/ExitModal/ExitModal';
 import { getDailyQuestionSet } from '../../services/dailyQuestionService';
 import { getRandomQuestionSet } from '../../services/randomQuestionService';
+import { selectQuestionsForGame } from '../../services/questionHistoryService';
 import { memoryChallengeQuestions } from '../../data/memoryChallengeQuestions';
 import api from '../../utils/api';
 import { useMatchSocket } from '../../hooks/useMatchSocket';
@@ -40,6 +41,7 @@ export default function MemoryChallenge() {
   const [waitingForOpponent, setWaitingForOpponent] = useState(false);
 
   const [difficulty, setDifficulty]     = useState(null); // null = selecting
+  const [loadingDifficulty, setLoadingDifficulty] = useState(null);
   const [scenes, setScenes]             = useState([]);
   const [sceneIndex, setSceneIndex]     = useState(0);
   const [phase, setPhase]               = useState('reveal'); // reveal | recall | result
@@ -278,28 +280,44 @@ export default function MemoryChallenge() {
     setCompetitiveResult(null);
   };
 
-  const startGame = (diff) => {
-    const selectedList = getDailyQuestionSet({
-      gameType: 'memory-challenge',
-      difficulty: diff,
-      questionBank: memoryChallengeQuestions,
-      count: 10,
-      userShuffle: true
-    });
+  const startGame = async (diff) => {
+    setLoadingDifficulty(diff);
+    try {
+      const selectedList = await selectQuestionsForGame({
+        gameSlug: 'memory-challenge',
+        difficulty: diff,
+        questionBank: memoryChallengeQuestions,
+        count: 10,
+        userShuffle: true
+      });
 
-    setScenes(selectedList);
-    setDifficulty(diff);
-    setSceneIndex(0);
-    setScore(0);
-    setMistakes(0);
-    setTotalXP(0);
-    setSelected(null);
-    setShowResult(false);
-    setShowComplete(false);
-    setLatestUser(null);
-    setPhase('reveal');
-    setTimeLeft(selectedList[0]?.revealTime || 8);
-    setCompetitiveResult(null);
+      const activeList = Array.isArray(selectedList) && selectedList.length > 0
+        ? selectedList
+        : memoryChallengeQuestions.filter(q => q.difficulty && q.difficulty.toLowerCase() === diff.toLowerCase());
+
+      setScenes(activeList);
+      setDifficulty(diff);
+      setSceneIndex(0);
+      setScore(0);
+      setMistakes(0);
+      setTotalXP(0);
+      setSelected(null);
+      setShowResult(false);
+      setShowComplete(false);
+      setLatestUser(null);
+      setPhase('reveal');
+      setTimeLeft(activeList[0]?.revealTime || 8);
+      setCompetitiveResult(null);
+    } catch (e) {
+      console.warn("Could not start memory challenge via service, using local pool", e);
+      const activeList = memoryChallengeQuestions.filter(q => q.difficulty && q.difficulty.toLowerCase() === diff.toLowerCase());
+      setScenes(activeList.slice(0, 10));
+      setDifficulty(diff);
+      setPhase('reveal');
+      setTimeLeft(activeList[0]?.revealTime || 8);
+    } finally {
+      setLoadingDifficulty(null);
+    }
   };
 
   useEffect(() => {
@@ -376,20 +394,7 @@ export default function MemoryChallenge() {
       } else if (currentMatch) {
         const totalDuration = Math.round((Date.now() - startTimeRef.current) / 1000);
         try {
-          if (currentMatch.player2Id === 999999) {
-            const botScore = Math.max(0, score + (Math.random() > 0.4 ? (Math.random() > 0.5 ? 0 : -1) : 1));
-            const botDelta = score >= botScore ? -16 : 16;
-            const myDelta = score > botScore ? 24 : (score === botScore ? 0 : -18);
-            const simResult = {
-              ...currentMatch,
-              player1Score: score,
-              player2Score: botScore,
-              player1RatingChange: myDelta,
-              player2RatingChange: botDelta,
-              winnerId: score > botScore ? currentMatch.player1Id : (score < botScore ? 999999 : null)
-            };
-            setCompetitiveResult(simResult);
-          } else {
+          if (currentMatch.id) {
             setWaitingForOpponent(true);
             const res = await api.post(`/api/matches/${currentMatch.id}/submit`, {
               score: scoreRef.current,
@@ -401,11 +406,28 @@ export default function MemoryChallenge() {
               setWaitingForOpponent(false);
               setCompetitiveResult(res.data);
               clearMatchStorage(currentMatch.id);
+              refreshUser();
+              return;
             }
           }
         } catch (e) {
-          console.error("Memory match submit error", e);
+          console.warn("Memory match submit error, using offline fallback", e);
           setWaitingForOpponent(false);
+        }
+
+        if (currentMatch.player2Id === 999999 || currentMatch.isBotMatch) {
+          const botScore = Math.max(0, score + (Math.random() > 0.4 ? (Math.random() > 0.5 ? 0 : -1) : 1));
+          const botDelta = score >= botScore ? -16 : 16;
+          const myDelta = score > botScore ? 24 : (score === botScore ? 0 : -18);
+          const simResult = {
+            ...currentMatch,
+            player1Score: score,
+            player2Score: botScore,
+            player1RatingChange: myDelta,
+            player2RatingChange: botDelta,
+            winnerId: score > botScore ? currentMatch.player1Id : (score < botScore ? 999999 : null)
+          };
+          setCompetitiveResult(simResult);
         }
       }
     } else {
@@ -520,6 +542,7 @@ export default function MemoryChallenge() {
         title="Memory Challenge"
         subtitle="Study the complex scene carefully before it disappears. Then answer from memory."
         icon="🧠"
+        loadingTier={loadingDifficulty}
         onSelectDifficulty={(diff) => startGame(diff)}
         onBack={() => setShowModeModal(true)}
       />
