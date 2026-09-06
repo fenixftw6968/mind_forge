@@ -62,13 +62,16 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
     e.preventDefault();
     if (!addUsername.trim()) return;
     try {
-      setAddStatus({ type: 'loading', msg: 'Transmitting request...' });
+      setAddStatus({ type: 'loading', msg: 'Sending friend request...' });
       await api.post('/api/friends/request', { username: addUsername.trim() });
-      setAddStatus({ type: 'success', msg: `Node link request dispatched to @${addUsername}` });
+      setAddStatus({ type: 'success', msg: `Friend request sent to @${addUsername}` });
       setAddUsername('');
       fetchFriends();
+      setTimeout(() => {
+        setAddStatus(null);
+      }, 4000);
     } catch (e) {
-      const msg = e.response?.data?.message || 'User not found or connection already established';
+      const msg = e.response?.data?.message || 'User not found or friend request already sent';
       setAddStatus({ type: 'error', msg });
     }
   };
@@ -147,7 +150,7 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                 <Users size={16} color="#60a5fa" />
               </div>
               <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFFFFF', fontFamily: 'var(--font-display)', letterSpacing: '-0.02em', margin: 0 }}>
-                NEURAL NETWORK
+                FRIENDS
               </h2>
             </div>
             <button
@@ -240,7 +243,7 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                 <Search size={14} style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255, 255, 255, 0.4)' }} />
                 <input
                   type="text"
-                  placeholder="Filter nodes..."
+                  placeholder="Search friends..."
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   style={{
@@ -261,7 +264,7 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
               {filteredFriends.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'rgba(255, 255, 255, 0.4)' }}>
                   <Users size={32} style={{ margin: '0 auto 0.75rem', opacity: 0.3 }} />
-                  <p style={{ fontSize: '0.825rem', fontFamily: 'var(--font-mono)' }}>No connected peers found. Send requests in the Requests tab!</p>
+                  <p style={{ fontSize: '0.825rem', fontFamily: 'var(--font-mono)' }}>No friends found. Send requests in the Requests tab!</p>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
@@ -382,12 +385,12 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
               {/* Add friend form */}
               <form onSubmit={handleSendRequest} style={{ marginBottom: '1.75rem' }}>
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '0.45rem' }}>
-                  DISPATCH PEER INVITATION
+                  SEND FRIEND REQUEST
                 </label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <input
                     type="text"
-                    placeholder="Enter peer handle..."
+                    placeholder="Enter username..."
                     value={addUsername}
                     onChange={e => setAddUsername(e.target.value)}
                     style={{
@@ -404,6 +407,7 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                   />
                   <button
                     type="submit"
+                    disabled={addStatus?.type === 'loading'}
                     style={{
                       padding: '0.6rem 1.1rem',
                       borderRadius: '0.75rem',
@@ -414,10 +418,11 @@ export default function SocialDrawer({ isOpen, onClose, onInviteFriendToGame }) 
                       fontFamily: 'var(--font-mono)',
                       fontSize: '0.75rem',
                       cursor: 'pointer',
-                      boxShadow: '0 0 10px rgba(59, 130, 246, 0.4)'
+                      boxShadow: '0 0 10px rgba(59, 130, 246, 0.4)',
+                      opacity: addStatus?.type === 'loading' ? 0.7 : 1
                     }}
                   >
-                    LINK
+                    {addStatus?.type === 'loading' ? 'SENDING...' : addStatus?.type === 'success' ? 'SENT' : 'SEND'}
                   </button>
                 </div>
                 {addStatus && (

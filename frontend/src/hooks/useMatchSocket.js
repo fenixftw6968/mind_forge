@@ -15,7 +15,8 @@ export function useMatchSocket(matchId, onEvent) {
     try {
       const host = window.location.hostname || 'localhost';
       const defaultWs = `http://${host}:8080/ws`;
-      const wsUrl = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/ws` : defaultWs;
+      const cleanApi = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/+$/, '') : '';
+      const wsUrl = cleanApi ? `${cleanApi}/ws` : defaultWs;
 
       client = new Client({
         webSocketFactory: () => new SockJS(wsUrl),

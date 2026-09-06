@@ -225,15 +225,16 @@ export default function MemoryChallenge() {
     setShowModeModal(false);
 
     let parsedQuestions = [];
-    if (matchData.puzzleSet) {
+    const rawChallenge = matchData.challengeData || matchData.puzzleSet;
+    if (rawChallenge) {
       try {
-        parsedQuestions = JSON.parse(matchData.puzzleSet);
+        parsedQuestions = typeof rawChallenge === 'string' ? JSON.parse(rawChallenge) : rawChallenge;
       } catch (e) {
-        console.warn("Could not parse match puzzleSet JSON", e);
+        console.warn("Could not parse match challengeData/puzzleSet JSON", e);
       }
     }
 
-    if (!parsedQuestions || parsedQuestions.length === 0) {
+    if (!parsedQuestions || !Array.isArray(parsedQuestions) || parsedQuestions.length === 0) {
       const matchDiff = matchData.difficulty ? matchData.difficulty.toLowerCase() : 'medium';
       parsedQuestions = memoryChallengeQuestions.filter(q => q.difficulty.toLowerCase() === matchDiff).slice(0, 5);
     }

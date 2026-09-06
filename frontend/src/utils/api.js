@@ -3,7 +3,7 @@ import axios from 'axios';
 const getBaseUrl = () => {
   try {
     if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) {
-      return import.meta.env.VITE_API_URL;
+      return import.meta.env.VITE_API_URL.replace(/\/+$/, '');
     }
   } catch (e) {}
   const host = typeof window !== 'undefined' && window.location && window.location.hostname ? window.location.hostname : 'localhost';
@@ -12,7 +12,7 @@ const getBaseUrl = () => {
 
 const api = axios.create({
   baseURL: getBaseUrl(),
-  timeout: 10000,
+  timeout: 30000,
 });
 
 api.interceptors.request.use((config) => {

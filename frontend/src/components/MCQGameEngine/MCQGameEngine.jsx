@@ -270,19 +270,20 @@ export default function MCQGameEngine({
     setShowModeModal(false);
 
     let parsedQuestions = [];
-    if (matchData.puzzleSet) {
+    const rawChallenge = matchData.challengeData || matchData.puzzleSet;
+    if (rawChallenge) {
       try {
-        parsedQuestions = JSON.parse(matchData.puzzleSet);
+        parsedQuestions = typeof rawChallenge === 'string' ? JSON.parse(rawChallenge) : rawChallenge;
       } catch (err) {
-        console.warn("Could not parse match puzzleSet JSON", err);
+        console.warn("Could not parse match challengeData/puzzleSet JSON", err);
       }
     }
 
-    if (!parsedQuestions || parsedQuestions.length === 0) {
-      parsedQuestions = questionBank.filter(q => q.difficulty?.toUpperCase() === (matchData.difficulty || 'MEDIUM').toUpperCase()).slice(0, 10);
-      if (parsedQuestions.length === 0) {
-        parsedQuestions = questionBank.slice(0, 10);
-      }
+    if (!parsedQuestions || !Array.isArray(parsedQuestions) || parsedQuestions.length === 0) {
+      const matchDiff = (matchData.difficulty || 'MEDIUM').toUpperCase();
+      const filtered = questionBank.filter(q => (q.difficulty || 'MEDIUM').toUpperCase() === matchDiff);
+      const pool = filtered.length > 0 ? filtered : questionBank;
+      parsedQuestions = pool.slice(0, 10);
     }
 
     setPuzzles(parsedQuestions);
@@ -395,6 +396,7 @@ export default function MCQGameEngine({
         onClose={() => {
           setShowMatchmaking(false);
           setShowModeModal(true);
+          setPlayMode('PRACTICE');
         }}
         gameSlug={gameSlug}
         gameTitle={gameTitle}
@@ -402,6 +404,7 @@ export default function MCQGameEngine({
         friendTarget={invitedFriend}
         difficulty={difficulty || 'MEDIUM'}
         onMatchReady={handleMatchReady}
+        initialMatch={currentMatch}
       />
     );
   }
@@ -421,6 +424,93 @@ export default function MCQGameEngine({
           }}
           onDashboard={() => navigate('/dashboard')}
         />
+      </div>
+    );
+  }
+
+  // 4. Waiting for Opponent in Competitive 1v1
+  if (waitingForOpponent) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: '#020617',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem 1.5rem',
+        color: '#FFFFFF',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div className="star-field" />
+        <div className="binary-texture" />
+        <div className="mesh-glow" style={{ top: '50%', opacity: 0.5 }} />
+
+        <div style={{
+          position: 'relative',
+          zIndex: 10,
+          background: 'rgba(8, 14, 33, 0.9)',
+          border: '1px solid rgba(59, 130, 246, 0.3)',
+          borderRadius: '1.5rem',
+          padding: '2.5rem 2rem',
+          maxWidth: '460px',
+          width: '100%',
+          textAlign: 'center',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)'
+        }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            background: 'rgba(59, 130, 246, 0.1)',
+            border: '2px solid rgba(59, 130, 246, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 1.5rem'
+          }}>
+            <Loader2 size={32} className="animate-spin" color="#60a5fa" />
+          </div>
+
+          <h2 style={{
+            fontSize: '1.4rem',
+            fontWeight: 800,
+            fontFamily: 'var(--font-display)',
+            marginBottom: '0.5rem',
+            letterSpacing: '-0.02em'
+          }}>
+            CALCULATING RESULTS
+          </h2>
+
+          <p style={{
+            fontSize: '0.875rem',
+            color: 'rgba(255, 255, 255, 0.6)',
+            fontFamily: 'var(--font-mono)',
+            marginBottom: '1.5rem'
+          }}>
+            Your submission has been recorded. Waiting for your opponent to complete their challenge...
+          </p>
+
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.04)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '0.75rem',
+            padding: '0.85rem 1rem',
+            display: 'flex',
+            justifyContent: 'space-around',
+            fontSize: '0.825rem',
+            fontFamily: 'var(--font-mono)'
+          }}>
+            <div>
+              <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Your Score: </span>
+              <span style={{ color: '#22c55e', fontWeight: 700 }}>{score}</span>
+            </div>
+            <div>
+              <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Mistakes: </span>
+              <span style={{ color: '#ef4444', fontWeight: 700 }}>{mistakes}</span>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
