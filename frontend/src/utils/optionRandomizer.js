@@ -1,19 +1,47 @@
 import { shuffleArray } from './shuffleQuestions.js';
 
 /**
+ * Creates a pseudo-random number generator function deterministic to a seed string.
+ * Ensures cross-player synchronization during multiplayer matches.
+ * 
+ * @param {string|number} seedStr 
+ * @returns {() => number}
+ */
+export function createSeededRandom(seedStr) {
+  if (!seedStr) return Math.random;
+  const str = String(seedStr);
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return function() {
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    return ((h ^= h >>> 16) >>> 0) / 4294967296;
+  };
+}
+
+function resolveRandomFn(randomFnOrSeed) {
+  if (typeof randomFnOrSeed === 'function') return randomFnOrSeed;
+  if (typeof randomFnOrSeed === 'string' || typeof randomFnOrSeed === 'number') {
+    return createSeededRandom(String(randomFnOrSeed));
+  }
+  return Math.random;
+}
+
+/**
  * Creates a balanced array of target option indices (e.g. 0 for A, 1 for B, 2 for C, 3 for D)
  * distributed as evenly as possible across the total question count.
  * 
- * For example:
- * - 10 questions, 4 options -> [0, 0, 0, 1, 1, 1, 2, 2, 3, 3] (3 of A, 3 of B, 2 of C, 2 of D)
- * - Shuffled with Fisher-Yates to produce a fresh, non-deterministic yet balanced sequence.
- * 
  * @param {number} questionCount - Total number of questions in session (e.g. 10)
  * @param {number} [optionCount=4] - Total choices per question (e.g. 4)
+ * @param {Function|string|number} [randomFnOrSeed=Math.random]
  * @returns {number[]} Array of target 0-based indices for each question
  */
-export function createBalancedAnswerPositions(questionCount, optionCount = 4) {
+export function createBalancedAnswerPositions(questionCount, optionCount = 4, randomFnOrSeed = Math.random) {
   if (questionCount <= 0 || optionCount <= 0) return [];
+  const rng = resolveRandomFn(randomFnOrSeed);
   
   const baseCount = Math.floor(questionCount / optionCount);
   const remainder = questionCount % optionCount;
@@ -26,24 +54,22 @@ export function createBalancedAnswerPositions(questionCount, optionCount = 4) {
     }
   }
   
-  return shuffleArray(positions);
+  return shuffleArray(positions, rng);
 }
 
 /**
  * Generates and validates an array of unique choices with the correct answer
  * placed exactly at the assigned target index.
  * 
- * Supports both string/primitive options and object choices (e.g. { id, label } or { id, name }).
- * 
  * @template T
  * @param {T} correctAnswer - The correct answer value or object
  * @param {T[]} incorrectAnswers - Array of distinct incorrect answer options
  * @param {number} targetPosition - 0-indexed position where the correct answer MUST be placed
+ * @param {Function|string|number} [randomFnOrSeed=Math.random]
  * @returns {T[]} Array of options with the correct answer at targetPosition
  */
-export function generateQuestionOptions(correctAnswer, incorrectAnswers, targetPosition = 0) {
-  // Normalize incorrect answers to ensure uniqueness and exclude correct answer
-  const isObject = typeof correctAnswer === 'object' && correctAnswer !== null;
+export function generateQuestionOptions(correctAnswer, incorrectAnswers, targetPosition = 0, randomFnOrSeed = Math.random) {
+  const rng = resolveRandomFn(randomFnOrSeed);
   
   const getIdentifier = (item) => {
     if (!item) return '';
@@ -68,7 +94,7 @@ export function generateQuestionOptions(correctAnswer, incorrectAnswers, targetP
   }
   
   // Shuffle the incorrect options among themselves
-  const shuffledIncorrect = shuffleArray(uniqueIncorrect);
+  const shuffledIncorrect = shuffleArray(uniqueIncorrect, rng);
   
   // Total choices needed
   const totalOptions = 1 + shuffledIncorrect.length;
@@ -95,17 +121,13 @@ export function generateQuestionOptions(correctAnswer, incorrectAnswers, targetP
  * 
  * Works immutably without mutating the source objects.
  * 
- * Handles:
- * - Questions with `options: string[]` (Memory Challenge, Number Detective, Spot the Fallacy)
- * - Questions with `choices: string[]` (Pattern Detective)
- * - Questions with `choices: { id, label }[]` (Who Is Lying)
- * - Questions with `culpritChoices: { id, label }[]` (Solve the Crime)
- * 
  * @param {Array} questions - Array of question objects
+ * @param {Function|string|number} [randomFnOrSeed=Math.random] - Optional custom random function or seed for multiplayer sync
  * @returns {Array} New array of question objects with balanced randomized option positions
  */
-export function balanceAndRandomizeQuestionOptions(questions) {
+export function balanceAndRandomizeQuestionOptions(questions, randomFnOrSeed = Math.random) {
   if (!Array.isArray(questions) || questions.length === 0) return [];
+  const rng = resolveRandomFn(randomFnOrSeed);
   
   // Group questions by their individual option count so each group is independently balanced
   const groupsByOptionCount = new Map();
@@ -122,7 +144,7 @@ export function balanceAndRandomizeQuestionOptions(questions) {
   const balancedQuestionsByIndex = new Array(questions.length);
 
   for (const [optionCount, items] of groupsByOptionCount.entries()) {
-    const balancedPositions = createBalancedAnswerPositions(items.length, optionCount);
+    const balancedPositions = createBalancedAnswerPositions(items.length, optionCount, rng);
     
     items.forEach((item, itemIdx) => {
       const q = item.question;
@@ -133,7 +155,7 @@ export function balanceAndRandomizeQuestionOptions(questions) {
       if (Array.isArray(q.culpritChoices) && q.culpritChoices.length > 0) {
         const correctChoice = q.culpritChoices.find(c => c.id === q.correctAnswer || c.id === q.answer) || q.culpritChoices[0];
         const incorrectChoices = q.culpritChoices.filter(c => c !== correctChoice);
-        cloned.culpritChoices = generateQuestionOptions(correctChoice, incorrectChoices, targetPos % q.culpritChoices.length);
+        cloned.culpritChoices = generateQuestionOptions(correctChoice, incorrectChoices, targetPos % q.culpritChoices.length, rng);
       }
       // 2. Check if question has `choices` array
       else if (Array.isArray(q.choices) && q.choices.length > 0) {
@@ -142,19 +164,19 @@ export function balanceAndRandomizeQuestionOptions(questions) {
           // Object choices like { id, label }
           const correctChoice = q.choices.find(c => c.id === q.correctAnswer || c.id === q.answer) || q.choices[0];
           const incorrectChoices = q.choices.filter(c => c !== correctChoice);
-          cloned.choices = generateQuestionOptions(correctChoice, incorrectChoices, targetPos % q.choices.length);
+          cloned.choices = generateQuestionOptions(correctChoice, incorrectChoices, targetPos % q.choices.length, rng);
         } else {
           // String choices
           const correct = q.correctAnswer || q.answer;
           const incorrect = q.choices.filter(c => String(c).trim().toLowerCase() !== String(correct).trim().toLowerCase());
-          cloned.choices = generateQuestionOptions(correct, incorrect, targetPos % q.choices.length);
+          cloned.choices = generateQuestionOptions(correct, incorrect, targetPos % q.choices.length, rng);
         }
       }
       // 3. Check if question has `options` array (strings)
       else if (Array.isArray(q.options) && q.options.length > 0) {
         const correct = q.correctAnswer || q.answer;
         const incorrect = q.options.filter(opt => String(opt).trim().toLowerCase() !== String(correct).trim().toLowerCase());
-        cloned.options = generateQuestionOptions(correct, incorrect, targetPos % q.options.length);
+        cloned.options = generateQuestionOptions(correct, incorrect, targetPos % q.options.length, rng);
       }
 
       // 4. Nested sub-questions (e.g. Memory Challenge `questions: [{ id, question, choices, answer }]`)
@@ -165,7 +187,7 @@ export function balanceAndRandomizeQuestionOptions(questions) {
             const sqIncorrect = sq.choices.filter(c => String(c).trim().toLowerCase() !== String(sqCorrect).trim().toLowerCase());
             return {
               ...sq,
-              choices: generateQuestionOptions(sqCorrect, sqIncorrect, targetPos % sq.choices.length)
+              choices: generateQuestionOptions(sqCorrect, sqIncorrect, targetPos % sq.choices.length, rng)
             };
           }
           return sq;

@@ -17,6 +17,8 @@ import ExitModal from '../../components/ExitModal/ExitModal';
 import { getDailyQuestionSet } from '../../services/dailyQuestionService';
 import { getRandomQuestionSet } from '../../services/randomQuestionService';
 import { selectQuestionsForGame } from '../../services/questionHistoryService';
+import { balanceAndRandomizeQuestionOptions, createSeededRandom } from '../../utils/optionRandomizer';
+import { shuffleArray } from '../../utils/shuffleQuestions';
 import api from '../../utils/api';
 import { useMatchSocket } from '../../hooks/useMatchSocket';
 
@@ -279,12 +281,19 @@ export default function MCQGameEngine({
       }
     }
 
+    const matchSeed = matchData.id || matchData.createdAt || 'match-seed';
+    const seededRandom = createSeededRandom(matchSeed);
+
     if (!parsedQuestions || !Array.isArray(parsedQuestions) || parsedQuestions.length === 0) {
       const matchDiff = (matchData.difficulty || 'MEDIUM').toUpperCase();
       const filtered = questionBank.filter(q => (q.difficulty || 'MEDIUM').toUpperCase() === matchDiff);
       const pool = filtered.length > 0 ? filtered : questionBank;
-      parsedQuestions = pool.slice(0, 10);
+      const shuffledPool = shuffleArray(pool, seededRandom);
+      parsedQuestions = shuffledPool.slice(0, 10);
     }
+
+    // Balance and randomize option positions deterministically with match seed so correct answer isn't always A
+    parsedQuestions = balanceAndRandomizeQuestionOptions(parsedQuestions, seededRandom);
 
     setPuzzles(parsedQuestions);
     setDifficulty(matchData.difficulty || 'MEDIUM');

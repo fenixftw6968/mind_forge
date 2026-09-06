@@ -17,6 +17,8 @@ import { getDailyQuestionSet } from '../../services/dailyQuestionService';
 import { getRandomQuestionSet } from '../../services/randomQuestionService';
 import { selectQuestionsForGame } from '../../services/questionHistoryService';
 import { memoryChallengeQuestions } from '../../data/memoryChallengeQuestions';
+import { balanceAndRandomizeQuestionOptions, createSeededRandom } from '../../utils/optionRandomizer';
+import { shuffleArray } from '../../utils/shuffleQuestions';
 import api from '../../utils/api';
 import { useMatchSocket } from '../../hooks/useMatchSocket';
 
@@ -234,10 +236,18 @@ export default function MemoryChallenge() {
       }
     }
 
+    const matchSeed = matchData.id || matchData.createdAt || 'match-seed';
+    const seededRandom = createSeededRandom(matchSeed);
+
     if (!parsedQuestions || !Array.isArray(parsedQuestions) || parsedQuestions.length === 0) {
       const matchDiff = matchData.difficulty ? matchData.difficulty.toLowerCase() : 'medium';
-      parsedQuestions = memoryChallengeQuestions.filter(q => q.difficulty.toLowerCase() === matchDiff).slice(0, 5);
+      const filtered = memoryChallengeQuestions.filter(q => q.difficulty.toLowerCase() === matchDiff);
+      const pool = filtered.length > 0 ? filtered : memoryChallengeQuestions;
+      const shuffledPool = shuffleArray(pool, seededRandom);
+      parsedQuestions = shuffledPool.slice(0, 5);
     }
+
+    parsedQuestions = balanceAndRandomizeQuestionOptions(parsedQuestions, seededRandom);
 
     setScenes(parsedQuestions);
     setDifficulty((matchData.difficulty || 'MEDIUM').toUpperCase());
