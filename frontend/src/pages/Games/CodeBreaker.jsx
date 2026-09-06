@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { KeyRound, Lightbulb, CheckCircle2, XCircle, Sparkles, Delete, Swords, Users, Clock, Shield } from 'lucide-react';
+import { KeyRound, Lightbulb, CheckCircle2, XCircle, Sparkles, Delete, Swords, Users, Clock, Shield, Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useGame } from '../../context/GameContext';
 import { useTimer } from '../../hooks/useTimer';
@@ -59,6 +59,7 @@ export default function CodeBreaker() {
   const startTimeRef = useRef(Date.now());
   const scoreRef = useRef(0);
   const mistakesRef = useRef(0);
+  const isSubmittingRef = useRef(false);
 
   const clearMatchStorage = useCallback((matchId) => {
     localStorage.removeItem('activeMatchId_code-breaker');
@@ -139,7 +140,6 @@ export default function CodeBreaker() {
             if (finished) {
               setWaitingForOpponent(true);
             } else {
-              // Restore questions and progress
               handleMatchReady(match);
               
               const savedIndex = localStorage.getItem('activeMatchIndex_' + match.id);
@@ -179,7 +179,7 @@ export default function CodeBreaker() {
     }
   }, [index, score, mistakes, currentMatch, puzzles]);
 
-  // Auto-start match if accepted from invite (go through countdown lobby first)
+  // Auto-start match if accepted from invite
   useEffect(() => {
     if (location.state?.acceptedMatch) {
       const match = location.state.acceptedMatch;
@@ -350,7 +350,8 @@ export default function CodeBreaker() {
   };
 
   const handleSubmit = useCallback(async (timedOut = false) => {
-    if (!puzzle || result) return;
+    if (isSubmittingRef.current || !puzzle || result) return;
+    isSubmittingRef.current = true;
     pause();
 
     const userGuess = digits.join('');
@@ -395,6 +396,7 @@ export default function CodeBreaker() {
   }, [puzzle, result, digits, hintUsed, currentDiff, timerLimit, timeLeft, pause, showXPPopup, refreshUser, playMode]);
 
   const handleNext = async () => {
+    isSubmittingRef.current = false;
     const nextCount = puzzles[index + 1]?.digitCount || 3;
     setDigits(new Array(nextCount).fill(''));
     setActiveDigit(0);
@@ -504,17 +506,31 @@ export default function CodeBreaker() {
   // === WAITING FOR OPPONENT TO FINISH ===
   if (waitingForOpponent) {
     return (
-      <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>You finished!</h2>
-          <p style={{ color: '#64748B', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Waiting for your opponent to finish...</p>
-          <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center', gap: '0.4rem' }}>
-            {[0,1,2].map(i => (
-              <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#6366F1', animation: `bounce 1.2s ${i * 0.2}s infinite` }} />
+      <div style={{ minHeight: '100vh', background: '#020617', paddingTop: '6.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div className="star-field" />
+        <div className="binary-texture" />
+        <div className="mesh-glow" style={{ top: '30%', left: '50%', transform: 'translate(-50%, -50%)', opacity: 0.15 }} />
+        
+        <div style={{ textAlign: 'center', padding: '3rem 2rem', background: 'rgba(8, 14, 33, 0.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '1.75rem', maxWidth: '420px', width: '90%', position: 'relative', zIndex: 10 }}>
+          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: '#60a5fa' }}>
+            <Clock size={32} />
+          </div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', marginBottom: '0.5rem' }}>
+            SET COMPLETED
+          </h2>
+          <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+            Synchronizing neural stream. Awaiting opponent submission...
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
+            {[0, 1, 2].map(i => (
+              <motion.div
+                key={i}
+                animate={{ scale: [0.6, 1.2, 0.6], opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+                style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6' }}
+              />
             ))}
           </div>
-          <style>{`@keyframes bounce { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }`}</style>
         </div>
       </div>
     );
@@ -523,7 +539,9 @@ export default function CodeBreaker() {
   // === COMPETITIVE MATCH RESULTS SCREEN ===
   if (competitiveResult) {
     return (
-      <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px', paddingBottom: '3rem' }}>
+      <div style={{ minHeight: '100vh', background: '#020617', paddingTop: '6.5rem', paddingBottom: '3rem', position: 'relative' }}>
+        <div className="star-field" />
+        <div className="binary-texture" />
         <CompetitiveResults
           matchResult={competitiveResult}
           currentUserId={user?.id || currentMatch?.player1Id}
@@ -553,7 +571,7 @@ export default function CodeBreaker() {
     return (
       <DifficultySelector
         title="Code Breaker"
-        subtitle="Use deductive reasoning and clues to crack the secret lock combination."
+        subtitle="Deduce the multi-digit classified access code using cryptographic feedback clues."
         icon="🔐"
         loadingTier={loadingDifficulty}
         onSelectDifficulty={(diff) => startGame(diff)}
@@ -575,8 +593,12 @@ export default function CodeBreaker() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', color: '#F8FAFC' }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+    <div style={{ minHeight: '100vh', background: '#020617', paddingTop: '6.5rem', color: '#FFFFFF', position: 'relative', overflow: 'hidden' }}>
+      <div className="star-field" />
+      <div className="binary-texture" />
+      <div className="mesh-glow" style={{ top: '25%', left: '50%', transform: 'translate(-50%, -50%)', opacity: 0.15 }} />
+
+      <div style={{ maxWidth: '820px', margin: '0 auto', padding: '1rem 1.5rem 4rem', position: 'relative', zIndex: 10 }}>
         <GameProgress
           current={index + 1}
           total={puzzles.length}
@@ -602,26 +624,27 @@ export default function CodeBreaker() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
               style={{
-                background: '#242424',
-                border: '1px solid #2E2E2E',
-                borderRadius: '1.25rem',
-                padding: '2rem',
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+                background: 'rgba(8, 14, 33, 0.85)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '1.75rem',
+                padding: '2rem 2.25rem',
+                boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
                 position: 'relative'
               }}
             >
               {/* Header Title */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#1A1A1A', border: '1px solid #333333', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <KeyRound size={22} color="#4ADE80" />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <KeyRound size={22} color="#60a5fa" />
                   </div>
                   <div>
-                    <h2 className="font-display" style={{ fontSize: '1.25rem', fontWeight: 800, color: '#F8FAFC' }}>
-                      {puzzle.title || "Crack the Code"}
+                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', margin: 0 }}>
+                      {puzzle.title || "DECRYPT CIPHER"}
                     </h2>
-                    <p style={{ fontSize: '0.775rem', color: '#94A3B8', fontWeight: 500 }}>
-                      Deduce the {digitCount}-digit secret code using the clues below
+                    <p style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.55)', margin: '0.2rem 0 0', fontFamily: 'var(--font-mono)' }}>
+                      Crack the {digitCount}-digit secret sequence using the constraints
                     </p>
                   </div>
                 </div>
@@ -629,15 +652,19 @@ export default function CodeBreaker() {
                 <button
                   onClick={() => { setShowHint(true); setHintUsed(true); }}
                   disabled={showHint || showResult}
-                  className="btn-secondary"
                   style={{
-                    display: 'flex', alignItems: 'center', gap: '0.4rem',
-                    padding: '0.4rem 0.85rem', borderRadius: '8px',
-                    fontSize: '0.8rem', fontWeight: 700,
-                    cursor: showHint || showResult ? 'default' : 'pointer'
+                    display: 'flex', alignItems: 'center', gap: '0.45rem',
+                    padding: '0.45rem 1rem', borderRadius: '999px',
+                    background: showHint ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    fontSize: '0.75rem', fontWeight: 700,
+                    color: showHint ? 'rgba(255, 255, 255, 0.3)' : '#ffffff',
+                    fontFamily: 'var(--font-mono)',
+                    cursor: showHint || showResult ? 'default' : 'pointer',
+                    transition: 'all 0.2s ease'
                   }}
                 >
-                  <Lightbulb size={14} /> Hint
+                  <Lightbulb size={13} color={showHint ? '#64748B' : '#FBBF24'} /> {showHint ? 'HINT ACTIVE' : 'REQUEST HINT'}
                 </button>
               </div>
 
@@ -649,11 +676,12 @@ export default function CodeBreaker() {
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '1rem',
-                      background: '#1C1C1C',
-                      border: '1px solid #2E2E2E',
-                      borderRadius: '0.75rem',
-                      padding: '0.75rem 1rem'
+                      gap: '1.25rem',
+                      background: 'rgba(10, 18, 42, 0.65)',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                      borderRadius: '1rem',
+                      padding: '0.85rem 1.25rem',
+                      transition: 'border-color 0.2s ease'
                     }}
                   >
                     {/* Clue Guess Code */}
@@ -662,18 +690,18 @@ export default function CodeBreaker() {
                         <div
                           key={cIdx}
                           style={{
-                            width: '32px',
-                            height: '36px',
-                            borderRadius: '6px',
-                            background: '#242424',
-                            border: '1px solid #333333',
+                            width: '34px',
+                            height: '38px',
+                            borderRadius: '8px',
+                            background: '#060b1e',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontFamily: 'var(--font-display)',
+                            fontFamily: 'var(--font-mono)',
                             fontWeight: 800,
-                            fontSize: '1.1rem',
-                            color: '#4ADE80'
+                            fontSize: '1.15rem',
+                            color: '#38bdf8'
                           }}
                         >
                           {char}
@@ -682,7 +710,7 @@ export default function CodeBreaker() {
                     </div>
 
                     {/* Clue Text */}
-                    <div style={{ fontSize: '0.875rem', color: '#F8FAFC', fontWeight: 600, flex: 1 }}>
+                    <div style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.85)', fontWeight: 500, flex: 1, lineHeight: 1.4 }}>
                       {clue.text}
                     </div>
                   </div>
@@ -695,29 +723,29 @@ export default function CodeBreaker() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   style={{
-                    background: 'rgba(34, 197, 94, 0.08)',
-                    border: '1px solid rgba(34, 197, 94, 0.25)',
-                    borderRadius: '0.75rem',
-                    padding: '0.85rem 1rem',
-                    marginBottom: '1.5rem',
-                    fontSize: '0.85rem',
-                    color: '#4ADE80',
+                    background: 'rgba(59, 130, 246, 0.08)',
+                    border: '1px solid rgba(59, 130, 246, 0.25)',
+                    borderRadius: '1rem',
+                    padding: '0.9rem 1.25rem',
+                    marginBottom: '2rem',
+                    fontSize: '0.825rem',
+                    color: '#93c5fd',
                     display: 'flex',
-                    gap: '0.5rem',
+                    gap: '0.65rem',
                     alignItems: 'center'
                   }}
                 >
-                  <Lightbulb size={16} style={{ flexShrink: 0 }} />
-                  <span><strong>Hint:</strong> {puzzle.hint}</span>
+                  <Lightbulb size={16} color="#60a5fa" style={{ flexShrink: 0 }} />
+                  <span><strong>DECRYPT HINT:</strong> {puzzle.hint}</span>
                 </motion.div>
               )}
 
               {/* Player Code Input Slots */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                <div style={{ fontSize: '0.8rem', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
-                  Enter Your Secret Code
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.85rem', marginBottom: '2rem' }}>
+                <div style={{ fontSize: '0.725rem', color: 'rgba(255, 255, 255, 0.45)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700 }}>
+                  [ ENTER SECRET CODE ]
                 </div>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', gap: '0.85rem' }}>
                   {digits.map((digit, dIdx) => {
                     const isSelected = activeDigit === dIdx;
                     return (
@@ -725,24 +753,24 @@ export default function CodeBreaker() {
                         key={dIdx}
                         onClick={() => !showResult && setActiveDigit(dIdx)}
                         style={{
-                          width: '56px',
-                          height: '64px',
-                          borderRadius: '12px',
-                          background: digit !== '' ? 'rgba(34, 197, 94, 0.15)' : '#1C1C1C',
-                          border: isSelected ? '2px solid #22C55E' : '1px solid #2E2E2E',
+                          width: '64px',
+                          height: '72px',
+                          borderRadius: '1rem',
+                          background: digit !== '' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(10, 18, 42, 0.7)',
+                          border: isSelected ? '2px solid #3b82f6' : (digit !== '' ? '1px solid rgba(59, 130, 246, 0.45)' : '1px solid rgba(255, 255, 255, 0.1)'),
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: '1.85rem',
-                          fontWeight: 800,
-                          color: '#F8FAFC',
-                          fontFamily: 'var(--font-display)',
+                          fontSize: '2rem',
+                          fontWeight: 900,
+                          color: '#ffffff',
+                          fontFamily: 'var(--font-mono)',
                           cursor: showResult ? 'default' : 'pointer',
-                          boxShadow: isSelected ? '0 0 0 3px rgba(34, 197, 94, 0.2)' : '0 2px 6px rgba(0,0,0,0.2)',
+                          boxShadow: isSelected ? '0 0 20px rgba(59, 130, 246, 0.4)' : 'none',
                           transition: 'all 0.15s ease'
                         }}
                       >
-                        {digit || (isSelected ? <span style={{ opacity: 0.3 }}>_</span> : '')}
+                        {digit || (isSelected ? <span style={{ opacity: 0.5, color: '#38bdf8' }}>_</span> : '')}
                       </button>
                     );
                   })}
@@ -751,44 +779,86 @@ export default function CodeBreaker() {
 
               {/* Interactive Keypad */}
               {!showResult && (
-                <div style={{ maxWidth: '320px', margin: '0 auto 1.5rem', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                <div style={{ maxWidth: '340px', margin: '0 auto 1rem', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.65rem' }}>
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
                     <button
                       key={n}
                       onClick={() => handleDigitInput(n)}
-                      className="btn-secondary"
-                      style={{ height: '48px', fontSize: '1.25rem', fontWeight: 700, borderRadius: '8px' }}
+                      style={{
+                        height: '52px',
+                        fontSize: '1.25rem',
+                        fontWeight: 700,
+                        fontFamily: 'var(--font-mono)',
+                        borderRadius: '0.85rem',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        color: '#ffffff',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)'; e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.35)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'; }}
                     >
                       {n}
                     </button>
                   ))}
                   <button
                     onClick={handleBackspace}
-                    className="btn-secondary"
-                    style={{ height: '48px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    style={{
+                      height: '52px',
+                      borderRadius: '0.85rem',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; e.currentTarget.style.color = '#ffffff'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)'; }}
                   >
                     <Delete size={18} />
                   </button>
                   <button
                     onClick={() => handleDigitInput(0)}
-                    className="btn-secondary"
-                    style={{ height: '48px', fontSize: '1.25rem', fontWeight: 700, borderRadius: '8px' }}
+                    style={{
+                      height: '52px',
+                      fontSize: '1.25rem',
+                      fontWeight: 700,
+                      fontFamily: 'var(--font-mono)',
+                      borderRadius: '0.85rem',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      color: '#ffffff',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)'; e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.35)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)'; }}
                   >
                     0
                   </button>
                   <button
                     onClick={() => handleSubmit(false)}
                     disabled={digits.some(d => d === '')}
-                    className="btn-primary"
                     style={{
-                      height: '48px',
-                      borderRadius: '8px',
+                      height: '52px',
+                      borderRadius: '0.85rem',
+                      fontFamily: 'var(--font-display)',
                       fontWeight: 700,
+                      fontSize: '0.85rem',
+                      background: digits.some(d => d === '') ? 'rgba(255, 255, 255, 0.08)' : 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)',
+                      color: digits.some(d => d === '') ? 'rgba(255, 255, 255, 0.3)' : '#ffffff',
+                      border: 'none',
                       opacity: digits.some(d => d === '') ? 0.4 : 1,
-                      cursor: digits.some(d => d === '') ? 'not-allowed' : 'pointer'
+                      cursor: digits.some(d => d === '') ? 'not-allowed' : 'pointer',
+                      boxShadow: digits.some(d => d === '') ? 'none' : '0 0 15px rgba(59, 130, 246, 0.4)',
+                      transition: 'all 0.15s ease'
                     }}
                   >
-                    Unlock
+                    UNLOCK
                   </button>
                 </div>
               )}
@@ -799,31 +869,42 @@ export default function CodeBreaker() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   style={{
-                    background: result === 'correct' ? 'rgba(34, 197, 94, 0.12)' : 'rgba(244, 63, 94, 0.12)',
-                    border: `1px solid ${result === 'correct' ? 'rgba(34, 197, 94, 0.25)' : 'rgba(244, 63, 94, 0.25)'}`,
-                    borderRadius: '1rem',
-                    padding: '1.25rem',
+                    background: result === 'correct' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(244, 63, 94, 0.1)',
+                    border: `1px solid ${result === 'correct' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`,
+                    borderRadius: '1.25rem',
+                    padding: '1.5rem',
                     marginTop: '1.5rem',
                     textAlign: 'center'
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    {result === 'correct' ? <CheckCircle2 size={24} color="#4ADE80" /> : <XCircle size={24} color="#FB7185" />}
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: result === 'correct' ? '#4ADE80' : '#FB7185' }}>
-                      {result === 'correct' ? 'Vault Unlocked! 🎉' : 'Incorrect Code'}
+                    {result === 'correct' ? <CheckCircle2 size={24} color="#22c55e" /> : <XCircle size={24} color="#f43f5e" />}
+                    <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 800, color: result === 'correct' ? '#22c55e' : '#f43f5e', margin: 0 }}>
+                      {result === 'correct' ? 'VAULT UNLOCKED' : 'ACCESS DENIED'}
                     </h3>
                   </div>
 
-                  <p style={{ color: '#CBD5E1', fontSize: '0.9rem', marginBottom: '1rem', lineHeight: 1.5, fontWeight: 500 }}>
+                  <p style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.875rem', marginBottom: '1.25rem', lineHeight: 1.5, fontWeight: 500 }}>
                     {puzzle.explanation}
                   </p>
 
                   <button
                     onClick={handleNext}
-                    className="btn-primary"
-                    style={{ padding: '0.75rem 2rem', fontSize: '0.95rem' }}
+                    style={{
+                      padding: '0.75rem 2.25rem',
+                      borderRadius: '999px',
+                      background: 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontWeight: 700,
+                      fontFamily: 'var(--font-display)',
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      letterSpacing: '0.02em',
+                      boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)'
+                    }}
                   >
-                    {index + 1 < puzzles.length ? 'Next Puzzle →' : 'View Results'}
+                    {index + 1 < puzzles.length ? 'NEXT CIPHER →' : 'VIEW CLASSIFICATION'}
                   </button>
                 </motion.div>
               )}

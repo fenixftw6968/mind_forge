@@ -4,9 +4,9 @@ import { ArrowLeft, Star, Clock, Flame } from 'lucide-react';
 import { getDailyCountdown, subscribeToMidnightIST } from '../../services/dailyQuestionService';
 
 const DIFF_STYLES = {
-  EASY:   { color: '#4ADE80', bg: 'rgba(34, 197, 94, 0.12)', border: 'rgba(34, 197, 94, 0.25)' },
-  MEDIUM: { color: '#FBBF24', bg: 'rgba(245, 158, 11, 0.12)', border: 'rgba(245, 158, 11, 0.25)' },
-  HARD:   { color: '#FB7185', bg: 'rgba(244, 63, 94, 0.12)', border: 'rgba(244, 63, 94, 0.25)' }
+  EASY:   { color: '#22c55e', bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.25)', label: 'NOVICE' },
+  MEDIUM: { color: '#38bdf8', bg: 'rgba(56, 189, 248, 0.1)', border: 'rgba(56, 189, 248, 0.25)', label: 'MID' },
+  HARD:   { color: '#f43f5e', bg: 'rgba(244, 63, 94, 0.1)', border: 'rgba(244, 63, 94, 0.25)', label: 'EXPERT' }
 };
 
 export default function GameProgress({
@@ -54,24 +54,24 @@ export default function GameProgress({
           <button
             onClick={onExit}
             style={{
-              background: '#242424',
-              border: '1px solid #2E2E2E',
-              borderRadius: '0.5rem',
-              color: '#94A3B8',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '999px',
+              color: 'rgba(255, 255, 255, 0.7)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              padding: '0.4rem 0.75rem',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-              transition: 'all 0.15s ease'
+              gap: '0.45rem',
+              fontSize: '0.75rem',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 700,
+              padding: '0.45rem 1rem',
+              transition: 'all 0.2s ease'
             }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#F8FAFC'; e.currentTarget.style.borderColor = '#3D3D3D'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = '#94A3B8'; e.currentTarget.style.borderColor = '#2E2E2E'; }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.4)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; }}
           >
-            <ArrowLeft size={15} /> Exit
+            <ArrowLeft size={14} /> EXIT ARENA
           </button>
         )}
 
@@ -83,46 +83,48 @@ export default function GameProgress({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.35rem',
-                background: 'rgba(244, 63, 94, 0.1)',
-                border: '1px solid rgba(244, 63, 94, 0.25)',
-                padding: '0.25rem 0.65rem',
-                borderRadius: '999px'
+                background: 'rgba(59, 130, 246, 0.12)',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                padding: '0.35rem 0.85rem',
+                borderRadius: '999px',
+                fontFamily: 'var(--font-mono)'
               }}
               title="Questions refresh every night at 12:00 AM Indian Standard Time (Asia/Kolkata)"
             >
-              <Flame size={13} color="#FB7185" fill="#FB7185" />
-              <span style={{ fontSize: '0.75rem', color: '#FB7185', fontWeight: 700 }}>
-                Reset in {dailyCountdown}
+              <Flame size={13} color="#38bdf8" fill="#38bdf8" />
+              <span style={{ fontSize: '0.725rem', color: '#60a5fa', fontWeight: 700 }}>
+                RESET {dailyCountdown}
               </span>
             </div>
           )}
 
           {/* Question index counter */}
-          <div style={{ fontSize: '0.85rem', color: '#94A3B8', fontWeight: 600 }}>
-            Question <span style={{ color: '#F8FAFC', fontWeight: 800 }}>{current}</span> / {total}
+          <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)', fontFamily: 'var(--font-mono)', fontWeight: 700, padding: '0.35rem 0.75rem', background: 'rgba(255, 255, 255, 0.04)', borderRadius: '999px', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+            SEQ <span style={{ color: '#ffffff', fontWeight: 800 }}>{current}</span> / {total}
           </div>
 
           {/* Difficulty pill */}
           <span
             style={{
-              padding: '0.2rem 0.65rem',
+              padding: '0.35rem 0.85rem',
               borderRadius: '999px',
               background: ds.bg,
               color: ds.color,
               border: `1px solid ${ds.border}`,
-              fontSize: '0.75rem',
+              fontSize: '0.725rem',
+              fontFamily: 'var(--font-mono)',
               fontWeight: 800,
-              letterSpacing: '0.04em'
+              letterSpacing: '0.05em'
             }}
           >
-            {normDiff}
+            {ds.label || normDiff}
           </span>
 
           {/* Live Score */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', padding: '0.2rem 0.65rem', borderRadius: '999px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.25)', padding: '0.35rem 0.85rem', borderRadius: '999px', fontFamily: 'var(--font-mono)' }}>
             <Star size={13} color="#FBBF24" fill="#FBBF24" />
-            <span style={{ fontSize: '0.75rem', color: '#FBBF24', fontWeight: 700 }}>
-              {scoreLabel}: {score}
+            <span style={{ fontSize: '0.725rem', color: '#FBBF24', fontWeight: 700 }}>
+              {scoreLabel.toUpperCase()}: {score}
             </span>
           </div>
 
@@ -133,15 +135,16 @@ export default function GameProgress({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.4rem',
-                padding: '0.25rem 0.75rem',
+                padding: '0.35rem 0.85rem',
                 borderRadius: '999px',
-                background: urgency === 'critical' ? 'rgba(244, 63, 94, 0.15)' : urgency === 'warning' ? 'rgba(245, 158, 11, 0.15)' : '#242424',
-                border: `1px solid ${urgency === 'critical' ? 'rgba(244, 63, 94, 0.35)' : urgency === 'warning' ? 'rgba(245, 158, 11, 0.35)' : '#2E2E2E'}`,
-                transition: 'all 0.3s'
+                background: urgency === 'critical' ? 'rgba(244, 63, 94, 0.15)' : urgency === 'warning' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255, 255, 255, 0.06)',
+                border: `1px solid ${urgency === 'critical' ? 'rgba(244, 63, 94, 0.4)' : urgency === 'warning' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(255, 255, 255, 0.1)'}`,
+                transition: 'all 0.3s',
+                fontFamily: 'var(--font-mono)'
               }}
             >
-              <Clock size={13} color={urgency === 'critical' ? '#FB7185' : urgency === 'warning' ? '#FBBF24' : '#94A3B8'} />
-              <span className="font-display" style={{ fontSize: '0.825rem', fontWeight: 800, color: urgency === 'critical' ? '#FB7185' : urgency === 'warning' ? '#FBBF24' : '#F8FAFC' }}>
+              <Clock size={13} color={urgency === 'critical' ? '#f43f5e' : urgency === 'warning' ? '#FBBF24' : 'rgba(255, 255, 255, 0.6)'} />
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: urgency === 'critical' ? '#f43f5e' : urgency === 'warning' ? '#FBBF24' : '#ffffff' }}>
                 {formattedTime}
               </span>
             </div>
@@ -149,12 +152,13 @@ export default function GameProgress({
         </div>
       </div>
 
-      {/* Smooth animated progress line */}
-      <div style={{ height: '5px', background: '#1C1C1C', borderRadius: '999px', overflow: 'hidden', border: '1px solid #2E2E2E' }}>
+      {/* Progress Track */}
+      <div style={{ width: '100%', height: '4px', background: 'rgba(255, 255, 255, 0.06)', borderRadius: '999px', overflow: 'hidden' }}>
         <motion.div
-          style={{ height: '100%', background: 'linear-gradient(90deg, #10B981, #22C55E)', borderRadius: '999px', boxShadow: '0 0 8px rgba(34, 197, 94, 0.4)' }}
+          style={{ height: '100%', background: 'linear-gradient(90deg, #3b82f6, #38bdf8)', boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)', borderRadius: '999px' }}
+          initial={{ width: 0 }}
           animate={{ width: `${progressPercent}%` }}
-          transition={{ duration: 0.35, ease: 'easeOut' }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
         />
       </div>
     </div>

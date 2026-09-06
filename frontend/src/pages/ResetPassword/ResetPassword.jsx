@@ -33,7 +33,7 @@ export default function ResetPassword() {
     return s;
   })();
 
-  const strengthColors = ['#FB7185', '#FBBF24', '#4ADE80', '#22C55E'];
+  const strengthColors = ['#f87171', '#FBBF24', '#60A5FA', '#34D399'];
   const strengthLabels = ['Weak', 'Fair', 'Good', 'Strong'];
 
   const handleSubmit = async (e) => {
@@ -73,7 +73,7 @@ export default function ResetPassword() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#151515',
+      background: '#020617',
       position: 'relative',
       overflowX: 'hidden',
       display: 'flex',
@@ -81,13 +81,18 @@ export default function ResetPassword() {
       justifyContent: 'space-between',
       color: '#F8FAFC'
     }}>
+      {/* Background Starfield & Mesh Glow */}
+      <div className="star-field" />
+      <div className="binary-texture" />
+      <div className="mesh-glow" style={{ top: '50%', opacity: 0.6 }} />
+
       {/* Top Header Navbar */}
       <header style={{
-        padding: '1.25rem 2rem',
+        padding: '1.5rem 2rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        maxWidth: '1280px',
+        maxWidth: '1200px',
         margin: '0 auto',
         width: '100%',
         boxSizing: 'border-box',
@@ -95,24 +100,24 @@ export default function ResetPassword() {
       }}>
         <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
           <div style={{
-            width: '36px', height: '36px', borderRadius: '10px',
-            background: '#242424',
-            border: '1px solid #383838',
+            width: '32px', height: '32px', borderRadius: '8px',
+            background: 'rgba(59, 130, 246, 0.12)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 0 10px rgba(34, 197, 94, 0.15)',
+            boxShadow: '0 0 15px rgba(59, 130, 246, 0.35)',
           }}>
-            <Brain size={20} color="#22C55E" />
+            <Brain size={18} color="#60A5FA" />
           </div>
-          <span className="font-display" style={{ fontSize: '1.2rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.02em' }}>
-            Mind<span style={{ color: '#22C55E' }}>Forge</span>
+          <span className="font-display" style={{ fontSize: '1.1rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '-0.02em' }}>
+            Algo<span style={{ color: '#60A5FA' }}>Arena</span>
           </span>
         </Link>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           <Link
             to="/login"
-            className="btn-secondary"
-            style={{ padding: '0.45rem 1.15rem', fontSize: '0.85rem' }}
+            className="pill-btn-ghost"
+            style={{ padding: '0.4rem 1.15rem', fontSize: '0.825rem' }}
           >
             Sign In
           </Link>
@@ -121,9 +126,9 @@ export default function ResetPassword() {
 
       {/* Main Container */}
       <main style={{
-        maxWidth: '460px',
+        maxWidth: '440px',
         margin: '0 auto',
-        padding: '2rem 1.5rem 4rem',
+        padding: '1.5rem 1.5rem 4rem',
         width: '100%',
         boxSizing: 'border-box',
         position: 'relative',
@@ -137,224 +142,184 @@ export default function ResetPassword() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
           style={{
-            background: '#242424',
-            border: '1px solid #2E2E2E',
+            background: 'rgba(8, 14, 33, 0.85)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '1.25rem',
-            padding: '2.25rem 2rem',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
+            padding: '2.5rem 2rem',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(59, 130, 246, 0.12)',
             width: '100%',
             boxSizing: 'border-box'
           }}
         >
-          <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-            <div style={{
-              width: '48px', height: '48px', borderRadius: '12px',
-              background: 'rgba(34, 197, 94, 0.12)', color: '#4ADE80',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 1rem',
-              border: '1px solid rgba(34, 197, 94, 0.25)'
-            }}>
-              <KeyRound size={24} />
-            </div>
-            <h1 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 800, color: '#F8FAFC', marginBottom: '0.35rem', letterSpacing: '-0.02em' }}>
-              Set new password
-            </h1>
-            <p style={{ color: '#94A3B8', fontSize: '0.875rem', fontWeight: 500 }}>
-              Must be at least 6 characters with good complexity
-            </p>
-          </div>
-
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                background: 'rgba(244, 63, 94, 0.12)',
-                border: '1px solid rgba(244, 63, 94, 0.3)',
-                borderRadius: '0.625rem',
-                padding: '0.65rem 0.85rem',
-                marginBottom: '1.25rem'
-              }}
-            >
-              <AlertCircle size={16} color="#FB7185" style={{ flexShrink: 0 }} />
-              <span style={{ color: '#FB7185', fontSize: '0.825rem', fontWeight: 500 }}>{error}</span>
-            </motion.div>
-          )}
-
           {success ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              style={{
-                background: 'rgba(34, 197, 94, 0.12)',
-                border: '1px solid rgba(34, 197, 94, 0.25)',
-                borderRadius: '0.75rem',
-                padding: '1.5rem 1.25rem',
-                textAlign: 'center'
-              }}
-            >
+            <div style={{ textAlign: 'center' }}>
               <div style={{
-                width: '44px', height: '44px', borderRadius: '50%',
-                background: 'rgba(34, 197, 94, 0.2)', color: '#4ADE80',
+                width: '48px', height: '48px', borderRadius: '50%',
+                background: 'rgba(16, 185, 129, 0.15)',
+                border: '1px solid rgba(16, 185, 129, 0.35)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 0.75rem'
+                margin: '0 auto 1.25rem'
               }}>
-                <CheckCircle2 size={24} />
+                <CheckCircle2 size={24} color="#34D399" />
               </div>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#4ADE80', marginBottom: '0.4rem' }}>
-                Password Updated!
-              </h3>
-              <p style={{ color: '#CBD5E1', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '1.5rem' }}>
-                Your password has been successfully reset. You can now sign in with your new credentials.
+              <h2 className="font-display" style={{ fontSize: '1.45rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '0.75rem' }}>
+                Password Updated
+              </h2>
+              <p style={{ color: '#94A3B8', fontSize: '0.875rem', lineHeight: 1.6, marginBottom: '2rem' }}>
+                Your credentials have been securely refreshed. You can now log into your account.
               </p>
               <Link
                 to="/login"
-                className="btn-primary"
-                style={{ width: '100%', fontSize: '0.9rem', padding: '0.75rem' }}
+                className="pill-btn-blue"
+                style={{ width: '100%', textDecoration: 'none' }}
               >
-                Continue to Sign In →
+                Proceed to Login
               </Link>
-            </motion.div>
+            </div>
           ) : (
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
-              {/* If token wasn't in URL, allow user to input token */}
-              {!tokenFromUrl && (
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#CBD5E1', marginBottom: '0.4rem' }}>
-                    Reset Token
-                  </label>
-                  <input
-                    type="text"
-                    value={token}
-                    onChange={e => setToken(e.target.value)}
-                    placeholder="Enter reset token from email"
-                    required
-                    className="input-dark"
-                    style={{ background: '#1C1C1C', border: '1px solid #2E2E2E' }}
-                  />
-                </div>
-              )}
-
-              {/* New Password */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#CBD5E1', marginBottom: '0.4rem' }}>
-                  New Password
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <Lock size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
-                  <input
-                    type={showPass ? 'text' : 'password'}
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="Enter new password"
-                    required
-                    className="input-dark"
-                    style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem', background: '#1C1C1C', border: '1px solid #2E2E2E' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPass(!showPass)}
-                    style={{
-                      position: 'absolute',
-                      right: '0.9rem',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: '#64748B',
-                      display: 'flex'
-                    }}
-                  >
-                    {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-
-                {password && (
-                  <div style={{ marginTop: '0.45rem' }}>
-                    <div style={{ display: 'flex', gap: '3px', marginBottom: '0.2rem' }}>
-                      {[1, 2, 3, 4].map(i => (
-                        <div
-                          key={i}
-                          style={{
-                            flex: 1,
-                            height: '3px',
-                            borderRadius: '999px',
-                            background: i <= strength ? strengthColors[strength - 1] : '#333333',
-                            transition: 'background 0.2s'
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <span style={{ fontSize: '0.7rem', fontWeight: 600, color: strengthColors[strength - 1] || '#64748B' }}>
-                      {strength > 0 ? strengthLabels[strength - 1] : ''}
-                    </span>
-                  </div>
-                )}
+            <>
+              <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
+                <span style={{ fontSize: '0.75rem', color: '#60A5FA', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  // SECURITY OVERRIDE
+                </span>
+                <h1 className="font-display" style={{ fontSize: '1.65rem', fontWeight: 700, color: '#FFFFFF', marginTop: '0.35rem', marginBottom: '0.35rem' }}>
+                  Create New Password
+                </h1>
+                <p style={{ color: '#94A3B8', fontSize: '0.85rem', fontWeight: 400 }}>
+                  Enter and confirm your new secure password credentials
+                </p>
               </div>
 
-              {/* Confirm New Password */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#CBD5E1', marginBottom: '0.4rem' }}>
-                  Confirm New Password
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <Lock size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={e => setConfirm(e.target.value)}
-                    placeholder="Confirm new password"
-                    required
-                    className="input-dark"
-                    style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem', background: '#1C1C1C', border: '1px solid #2E2E2E' }}
-                  />
-                  {confirmPassword && (
-                    <div style={{ position: 'absolute', right: '0.9rem', top: '50%', transform: 'translateY(-50%)' }}>
-                      {confirmPassword === password ? (
-                        <CheckCircle2 size={16} color="#4ADE80" />
-                      ) : (
-                        <AlertCircle size={16} color="#FB7185" />
-                      )}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    background: 'rgba(239, 68, 68, 0.12)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: '0.5rem',
+                    padding: '0.65rem 0.85rem',
+                    marginBottom: '1.25rem'
+                  }}
+                >
+                  <AlertCircle size={15} color="#f87171" />
+                  <span style={{ color: '#f87171', fontSize: '0.825rem', fontWeight: 500 }}>{error}</span>
+                </motion.div>
+              )}
+
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+                {/* Reset Token */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: '#CBD5E1', marginBottom: '0.4rem' }}>
+                    Reset Security Token
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <KeyRound size={16} color="#64748B" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Paste your reset token..."
+                      value={token}
+                      onChange={(e) => setToken(e.target.value)}
+                      className="input-dark"
+                      style={{ paddingLeft: '2.5rem' }}
+                    />
+                  </div>
+                </div>
+
+                {/* New Password */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: '#CBD5E1', marginBottom: '0.4rem' }}>
+                    New Password
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <Lock size={16} color="#64748B" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+                    <input
+                      type={showPass ? 'text' : 'password'}
+                      required
+                      placeholder="••••••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="input-dark"
+                      style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPass(!showPass)}
+                      style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748B', cursor: 'pointer' }}
+                    >
+                      {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+
+                  {/* Password Strength Indicator */}
+                  {password && (
+                    <div style={{ marginTop: '0.45rem' }}>
+                      <div style={{ display: 'flex', gap: '4px', marginBottom: '0.25rem' }}>
+                        {[1, 2, 3, 4].map(idx => (
+                          <div
+                            key={idx}
+                            style={{
+                              height: '3px',
+                              flex: 1,
+                              borderRadius: '999px',
+                              background: idx <= strength ? strengthColors[strength - 1] : 'rgba(255, 255, 255, 0.1)',
+                              transition: 'all 0.2s ease'
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <span style={{ fontSize: '0.7rem', color: strengthColors[strength - 1] || '#94A3B8', fontWeight: 600 }}>
+                        {strengthLabels[strength - 1] || 'Too short'}
+                      </span>
                     </div>
                   )}
                 </div>
-              </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-primary"
-                style={{
-                  width: '100%',
-                  marginTop: '0.5rem',
-                  padding: '0.8rem 1.25rem',
-                  fontSize: '0.9rem',
-                  opacity: loading ? 0.75 : 1
-                }}
-              >
-                {loading ? 'Updating password...' : 'Reset Password →'}
-              </button>
-            </form>
-          )}
+                {/* Confirm Password */}
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: '#CBD5E1', marginBottom: '0.4rem' }}>
+                    Confirm New Password
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <Lock size={16} color="#64748B" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+                    <input
+                      type={showPass ? 'text' : 'password'}
+                      required
+                      placeholder="••••••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirm(e.target.value)}
+                      className="input-dark"
+                      style={{ paddingLeft: '2.5rem' }}
+                    />
+                  </div>
+                </div>
 
-          {!success && (
-            <p style={{ textAlign: 'center', fontSize: '0.85rem', color: '#94A3B8', marginTop: '1.5rem', fontWeight: 500 }}>
-              Remember your password?{' '}
-              <Link to="/login" style={{ color: '#4ADE80', textDecoration: 'none', fontWeight: 700 }}>
-                Sign in
-              </Link>
-            </p>
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="pill-btn-blue"
+                  style={{ width: '100%', marginTop: '0.5rem', opacity: loading ? 0.7 : 1 }}
+                >
+                  {loading ? 'Updating Password...' : 'Save New Password'}
+                </button>
+              </form>
+            </>
           )}
         </motion.div>
       </main>
 
       {/* Footer */}
-      <footer style={{ padding: '1.5rem', textAlign: 'center', borderTop: '1px solid #242424', background: '#1A1A1A' }}>
-        <p style={{ fontSize: '0.775rem', color: '#64748B' }}>© 2026 MindForge. All rights reserved.</p>
+      <footer style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', padding: '1.25rem 2rem', textAlign: 'center', zIndex: 10 }}>
+        <p style={{ fontSize: '0.75rem', color: '#64748B' }}>
+          &copy; {new Date().getFullYear()} AlgoArena. Algorithmic Arena Platform.
+        </p>
       </footer>
     </div>
   );

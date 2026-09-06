@@ -113,52 +113,79 @@ export default function Navbar() {
 
   return (
     <>
-      <nav style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        background: 'rgba(21, 21, 21, 0.92)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid #282828',
-        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.4)',
+      {/* Floating Frosted Pill Nav Header */}
+      <header style={{
+        position: 'fixed',
+        top: '1rem',
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        display: 'flex',
+        justifyContent: 'center',
+        padding: '0 1rem',
+        pointerEvents: 'none'
       }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1.5rem', display: 'flex', alignItems: 'center', height: '64px', justifyContent: 'space-between' }}>
+        <div style={{
+          width: '100%',
+          maxWidth: '1200px',
+          background: 'rgba(13, 13, 20, 0.78)',
+          backdropFilter: 'blur(28px)',
+          WebkitBackdropFilter: 'blur(28px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '9999px',
+          height: '58px',
+          padding: '0 1.25rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          boxShadow: '0 8px 32px -4px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12)',
+          pointerEvents: 'auto'
+        }}>
           
           {/* Left: Brand Logo + Desktop Nav */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
             <Link to={isAuthenticated ? '/dashboard' : '/'} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
               <div style={{
-                width: '36px', height: '36px', borderRadius: '10px',
-                background: '#242424',
-                border: '1px solid #383838',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 0 10px rgba(34, 197, 94, 0.15)',
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                background: 'rgba(59, 130, 246, 0.12)',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 15px rgba(59, 130, 246, 0.35)'
               }}>
-                <Brain size={20} color="#22C55E" />
+                <Brain size={18} color="#60A5FA" />
               </div>
-              <span className="font-display" style={{ fontSize: '1.2rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.02em' }}>
-                Mind<span style={{ color: '#22C55E' }}>Forge</span>
+              <span className="font-display" style={{ fontSize: '1.05rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '-0.02em' }}>
+                Algo<span style={{ color: '#60A5FA' }}>Arena</span>
               </span>
             </Link>
 
             {/* Desktop Nav Links */}
             {isAuthenticated && (
-              <div className="hidden md:flex" style={{ display: 'flex', gap: '0.35rem' }}>
+              <div className="hidden md:flex" style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
                 {navLinks.map(link => {
                   const active = isActive(link.to);
                   return (
-                    <Link key={link.to} to={link.to} style={{
-                      padding: '0.45rem 0.85rem',
-                      borderRadius: '0.5rem',
-                      textDecoration: 'none',
-                      fontSize: '0.875rem',
-                      fontWeight: active ? 700 : 500,
-                      color: active ? '#4ADE80' : '#94A3B8',
-                      background: active ? '#242424' : 'transparent',
-                      border: active ? '1px solid #2E2E2E' : '1px solid transparent',
-                      transition: 'all 0.15s ease',
-                    }}
-                    onMouseEnter={e => { if (!active) { e.target.style.color = '#F8FAFC'; e.target.style.background = '#1E1E1E'; }}}
-                    onMouseLeave={e => { if (!active) { e.target.style.color = '#94A3B8'; e.target.style.background = 'transparent'; }}}
+                    <Link
+                      key={link.to}
+                      to={link.to}
+                      style={{
+                        padding: '0.35rem 0.85rem',
+                        borderRadius: '9999px',
+                        textDecoration: 'none',
+                        fontSize: '0.825rem',
+                        fontFamily: 'var(--font-body)',
+                        fontWeight: active ? 600 : 500,
+                        color: active ? '#FFFFFF' : '#94A3B8',
+                        background: active ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
+                        border: active ? '1px solid rgba(59, 130, 246, 0.35)' : '1px solid transparent',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={e => { if (!active) { e.target.style.color = '#F8FAFC'; e.target.style.background = 'rgba(255, 255, 255, 0.05)'; }}}
+                      onMouseLeave={e => { if (!active) { e.target.style.color = '#94A3B8'; e.target.style.background = 'transparent'; }}}
                     >
                       {link.label}
                     </Link>
@@ -169,33 +196,57 @@ export default function Navbar() {
           </div>
 
           {/* Right: User Stats & Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             {isAuthenticated && user ? (
               <>
                 {/* Stats pills */}
-                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
                   {/* Competitive Rank Pill */}
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.35rem',
-                    padding: '0.3rem 0.65rem',
+                    padding: '0.25rem 0.65rem',
                     borderRadius: '999px',
-                    background: currentRank.bg,
-                    border: `1px solid ${currentRank.border}`
+                    background: 'rgba(59, 130, 246, 0.12)',
+                    border: '1px solid rgba(59, 130, 246, 0.3)'
                   }}>
-                    <span style={{ fontSize: '0.85rem' }}>{currentRank.badge}</span>
-                    <span style={{ fontSize: '0.775rem', fontWeight: 800, color: currentRank.color }}>{user.competitiveRating || 500} pts</span>
+                    <span style={{ fontSize: '0.8rem' }}>{currentRank.badge}</span>
+                    <span className="font-mono" style={{ fontSize: '0.75rem', fontWeight: 700, color: '#60A5FA' }}>
+                      {user.competitiveRating || 500}
+                    </span>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.3rem 0.65rem', borderRadius: '999px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
-                    <Coins size={13} style={{ color: '#FBBF24' }} />
-                    <span style={{ fontSize: '0.775rem', fontWeight: 700, color: '#FBBF24' }}>{user.coins}</span>
+                  {/* Coins Pill */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.3rem',
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: '999px',
+                    background: 'rgba(245, 158, 11, 0.08)',
+                    border: '1px solid rgba(245, 158, 11, 0.25)'
+                  }}>
+                    <Coins size={12} style={{ color: '#FBBF24' }} />
+                    <span className="font-mono" style={{ fontSize: '0.75rem', fontWeight: 700, color: '#FBBF24' }}>
+                      {user.coins}
+                    </span>
                   </div>
                   
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', padding: '0.3rem 0.65rem', borderRadius: '999px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.25)' }}>
-                    <Flame size={13} style={{ color: '#FB7185' }} />
-                    <span style={{ fontSize: '0.775rem', fontWeight: 700, color: '#FB7185' }}>{user.currentStreak}</span>
+                  {/* Streak Pill */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.3rem',
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: '999px',
+                    background: 'rgba(59, 130, 246, 0.08)',
+                    border: '1px solid rgba(59, 130, 246, 0.2)'
+                  }}>
+                    <Flame size={12} style={{ color: '#38BDF8' }} />
+                    <span className="font-mono" style={{ fontSize: '0.75rem', fontWeight: 700, color: '#F8FAFC' }}>
+                      {user.currentStreak}
+                    </span>
                   </div>
                 </div>
 
@@ -207,19 +258,19 @@ export default function Navbar() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: '36px',
-                    height: '36px',
+                    width: '32px',
+                    height: '32px',
                     borderRadius: '50%',
-                    background: '#242424',
-                    border: '1px solid #2E2E2E',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
                     cursor: 'pointer',
-                    color: '#4ADE80',
+                    color: '#F8FAFC',
                     transition: 'all 0.15s ease'
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#2A2A2A'; e.currentTarget.style.borderColor = '#22C55E'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = '#242424'; e.currentTarget.style.borderColor = '#2E2E2E'; }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)'; }}
                 >
-                  <Users size={16} />
+                  <Users size={14} />
                 </button>
 
                 {/* User menu dropdown */}
@@ -227,19 +278,36 @@ export default function Navbar() {
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: '0.45rem',
-                      background: '#242424', border: '1px solid #2E2E2E',
-                      borderRadius: '999px', padding: '0.25rem 0.65rem 0.25rem 0.35rem',
-                      cursor: 'pointer', color: '#F8FAFC', transition: 'all 0.15s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      borderRadius: '999px',
+                      padding: '0.2rem 0.6rem 0.2rem 0.25rem',
+                      cursor: 'pointer',
+                      color: '#F8FAFC',
+                      transition: 'all 0.15s ease',
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#3D3D3D'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#2E2E2E'; }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)'; }}
                   >
-                    <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#22C55E', color: '#05200C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 800 }}>
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: '#FFFFFF',
+                      color: '#050507',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.725rem',
+                      fontWeight: 800
+                    }}>
                       {user.username?.[0]?.toUpperCase()}
                     </div>
-                    <span style={{ fontSize: '0.825rem', fontWeight: 700 }}>{user.username}</span>
-                    <ChevronDown size={13} style={{ color: '#94A3B8', transform: userMenuOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                    <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{user.username}</span>
+                    <ChevronDown size={12} style={{ color: '#94A3B8', transform: userMenuOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
                   </button>
 
                   <AnimatePresence>
@@ -250,25 +318,60 @@ export default function Navbar() {
                         exit={{ opacity: 0, y: -8, scale: 0.95 }}
                         transition={{ duration: 0.12 }}
                         style={{
-                          position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-                          background: '#222222', border: '1px solid #2E2E2E',
-                          borderRadius: '0.75rem', padding: '0.4rem',
-                          minWidth: '170px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+                          position: 'absolute',
+                          top: 'calc(100% + 10px)',
+                          right: 0,
+                          background: 'rgba(13, 13, 20, 0.95)',
+                          backdropFilter: 'blur(20px)',
+                          border: '1px solid rgba(255, 255, 255, 0.12)',
+                          borderRadius: '0.75rem',
+                          padding: '0.4rem',
+                          minWidth: '160px',
+                          boxShadow: '0 12px 30px rgba(0, 0, 0, 0.6)',
                           zIndex: 200,
                         }}
                       >
-                        <Link to="/profile" onClick={() => setUserMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 0.75rem', borderRadius: '0.5rem', color: '#CBD5E1', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.15s' }}
-                          onMouseEnter={e => { e.target.style.background = '#2A2A2A'; e.target.style.color = '#4ADE80'; }}
-                          onMouseLeave={e => { e.target.style.background = 'transparent'; e.target.style.color = '#CBD5E1'; }}>
-                          <User size={14} /> Profile
+                        <Link
+                          to="/profile"
+                          onClick={() => setUserMenuOpen(false)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: '0.5rem',
+                            color: '#CBD5E1',
+                            textDecoration: 'none',
+                            fontSize: '0.825rem',
+                            fontWeight: 500,
+                            transition: 'all 0.15s'
+                          }}
+                          onMouseEnter={e => { e.target.style.background = 'rgba(255, 255, 255, 0.08)'; e.target.style.color = '#FFFFFF'; }}
+                          onMouseLeave={e => { e.target.style.background = 'transparent'; e.target.style.color = '#CBD5E1'; }}
+                        >
+                          <User size={13} /> Profile
                         </Link>
                         <button
                           onClick={() => { setUserMenuOpen(false); handleLogout(); }}
-                          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%', padding: '0.55rem 0.75rem', borderRadius: '0.5rem', color: '#F43F5E', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.15s' }}
-                          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(244, 63, 94, 0.1)'; }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            width: '100%',
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: '0.5rem',
+                            color: '#f87171',
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '0.825rem',
+                            fontWeight: 500,
+                            transition: 'all 0.15s'
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)'; }}
                           onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                         >
-                          <LogOut size={14} /> Log Out
+                          <LogOut size={13} /> Log Out
                         </button>
                       </motion.div>
                     )}
@@ -276,14 +379,40 @@ export default function Navbar() {
                 </div>
               </>
             ) : (
-              <div style={{ display: 'flex', gap: '0.65rem' }}>
-                <Link to="/login" className="btn-secondary" style={{ padding: '0.45rem 1.15rem', fontSize: '0.85rem' }}>Log In</Link>
-                <Link to="/signup" className="btn-primary" style={{ padding: '0.45rem 1.15rem', fontSize: '0.85rem' }}>Sign Up</Link>
+              <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
+                <Link
+                  to="/login"
+                  style={{
+                    padding: '0.4rem 1.05rem',
+                    borderRadius: '9999px',
+                    fontSize: '0.825rem',
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                    color: '#F8FAFC',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    transition: 'all 0.15s ease'
+                  }}
+                  onMouseEnter={e => { e.target.style.background = 'rgba(59, 130, 246, 0.12)'; e.target.style.borderColor = 'rgba(59, 130, 246, 0.35)'; }}
+                  onMouseLeave={e => { e.target.style.background = 'rgba(255, 255, 255, 0.05)'; e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'; }}
+                >
+                  Log In
+                </Link>
+                <Link
+                  to="/signup"
+                  className="pill-btn-blue"
+                  style={{
+                    padding: '0.4rem 1.25rem',
+                    fontSize: '0.825rem'
+                  }}
+                >
+                  Explore AlgoArena
+                </Link>
               </div>
             )}
           </div>
         </div>
-      </nav>
+      </header>
 
       {/* Incoming Friend Match Invitation Popup */}
       <IncomingInviteModal

@@ -12,19 +12,24 @@ export default function XPPopup({ popups }) {
             exit={{ opacity: 0, y: -90, scale: 0.8 }}
             transition={{ duration: 1.4, ease: 'easeOut' }}
             style={{
-              background: 'linear-gradient(135deg, rgba(139,92,246,0.9), rgba(6,182,212,0.9))',
-              color: 'white',
-              fontWeight: 700,
-              fontSize: '1rem',
-              padding: '0.6rem 1.1rem',
+              background: 'rgba(8, 14, 33, 0.95)',
+              border: '1px solid rgba(59, 130, 246, 0.45)',
+              color: '#ffffff',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              padding: '0.6rem 1.25rem',
               borderRadius: '999px',
-              boxShadow: '0 8px 25px rgba(139,92,246,0.4)',
-              fontFamily: 'var(--font-accent)',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(59, 130, 246, 0.4)',
+              fontFamily: 'var(--font-mono)',
               letterSpacing: '0.04em',
               whiteSpace: 'nowrap',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem'
             }}
           >
-            +{p.amount} XP ✨
+            <span style={{ color: '#38bdf8' }}>+{p.amount} XP</span>
+            <span style={{ fontSize: '0.9rem' }}>⚡</span>
           </motion.div>
         ))}
       </AnimatePresence>

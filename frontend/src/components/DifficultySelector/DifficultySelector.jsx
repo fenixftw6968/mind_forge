@@ -5,42 +5,42 @@ import { ArrowLeft, Clock, Zap, Loader2 } from 'lucide-react';
 const DEFAULT_DIFFICULTIES = [
   {
     id: 'EASY',
-    label: 'Easy',
+    label: 'NOVICE',
     icon: '🌱',
-    color: '#4ADE80',
-    bg: 'rgba(34, 197, 94, 0.12)',
-    border: 'rgba(34, 197, 94, 0.25)',
+    color: '#22c55e',
+    bg: 'rgba(34, 197, 94, 0.08)',
+    border: 'rgba(34, 197, 94, 0.2)',
     xp: '+10 XP',
     time: 'Standard',
-    desc: 'Great for warming up and mastering core fundamentals.'
+    desc: 'Foundational drills for conditioning reflexes and core memory recall.'
   },
   {
     id: 'MEDIUM',
-    label: 'Medium',
+    label: 'INTERMEDIATE',
     icon: '⚡',
-    color: '#FBBF24',
-    bg: 'rgba(245, 158, 11, 0.12)',
-    border: 'rgba(245, 158, 11, 0.25)',
+    color: '#38bdf8',
+    bg: 'rgba(56, 189, 248, 0.08)',
+    border: 'rgba(56, 189, 248, 0.2)',
     xp: '+25 XP',
     time: 'Moderate',
-    desc: 'Balanced challenge requiring careful analytical thinking.'
+    desc: 'Multi-layer analytical scenarios demanding quick pattern identification.'
   },
   {
     id: 'HARD',
-    label: 'Hard',
+    label: 'EXPERT',
     icon: '🔥',
-    color: '#FB7185',
-    bg: 'rgba(244, 63, 94, 0.12)',
+    color: '#f43f5e',
+    bg: 'rgba(244, 63, 94, 0.08)',
     border: 'rgba(244, 63, 94, 0.25)',
     xp: '+50 XP',
-    time: 'Fast',
-    desc: 'Complex multi-step problems designed for masterminds.'
+    time: 'Fast Pace',
+    desc: 'Ultra high-pressure combinatorial complexity under strict time decay.'
   }
 ];
 
 export default function DifficultySelector({
-  title = "Select Difficulty",
-  subtitle = "Choose your challenge level to start the game session.",
+  title = "Select Protocol Tier",
+  subtitle = "Choose your operational complexity to initialize the neural challenge.",
   icon = "🎮",
   onSelectDifficulty,
   onBack,
@@ -50,25 +50,35 @@ export default function DifficultySelector({
   const tiers = customTiers || DEFAULT_DIFFICULTIES;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F8FAFC' }}>
-      <div style={{ maxWidth: '540px', width: '100%', padding: '2rem 1.5rem' }}>
+    <div style={{ minHeight: '100vh', background: '#020617', paddingTop: '6.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', position: 'relative', overflow: 'hidden' }}>
+      <div className="star-field" />
+      <div className="binary-texture" />
+      <div className="mesh-glow" style={{ top: '35%', left: '50%', transform: 'translate(-50%, -50%)', opacity: 0.15 }} />
+
+      <div style={{ maxWidth: '560px', width: '100%', padding: '2rem 1.5rem 4rem', position: 'relative', zIndex: 10 }}>
         {onBack && (
           <button
             onClick={onBack}
             style={{
-              background: 'none',
-              border: 'none',
-              color: '#94A3B8',
+              background: 'rgba(255, 255, 255, 0.06)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '999px',
+              color: 'rgba(255, 255, 255, 0.7)',
               cursor: 'pointer',
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.4rem',
-              marginBottom: '1.75rem',
-              fontSize: '0.85rem',
-              fontWeight: 600,
+              gap: '0.45rem',
+              marginBottom: '2rem',
+              padding: '0.45rem 1rem',
+              fontSize: '0.75rem',
+              fontFamily: 'var(--font-mono)',
+              fontWeight: 700,
+              transition: 'all 0.2s ease'
             }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.4)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; }}
           >
-            <ArrowLeft size={16} /> Back to Games
+            <ArrowLeft size={14} /> BACK TO ARENA
           </button>
         )}
 
@@ -77,21 +87,21 @@ export default function DifficultySelector({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
         >
-          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>{icon}</div>
-            <h1 className="font-display" style={{ fontSize: '1.75rem', fontWeight: 800, color: '#F8FAFC', marginBottom: '0.35rem', letterSpacing: '-0.02em' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>{icon}</div>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.85rem', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.4rem', letterSpacing: '-0.02em' }}>
               {title}
             </h1>
-            <p style={{ color: '#94A3B8', fontSize: '0.9rem', lineHeight: 1.5 }}>
+            <p style={{ color: 'rgba(255, 255, 255, 0.55)', fontSize: '0.875rem', lineHeight: 1.5, maxWidth: '420px', margin: '0 auto' }}>
               {subtitle}
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
             {tiers.map((tier) => {
-              const color = tier.color || '#22C55E';
-              const bg = tier.bg || 'rgba(34, 197, 94, 0.12)';
-              const border = tier.border || 'rgba(34, 197, 94, 0.25)';
+              const color = tier.color || '#22c55e';
+              const bg = tier.bg || 'rgba(34, 197, 94, 0.08)';
+              const border = tier.border || 'rgba(34, 197, 94, 0.2)';
 
               const isCurrentLoading = loadingTier && String(loadingTier).toUpperCase() === String(tier.id).toUpperCase();
               const isAnyLoading = !!loadingTier;
@@ -105,44 +115,47 @@ export default function DifficultySelector({
                   onClick={() => !isAnyLoading && onSelectDifficulty(tier.id)}
                   style={{
                     width: '100%',
-                    padding: '1.15rem 1.35rem',
-                    borderRadius: '0.875rem',
-                    background: isCurrentLoading ? 'rgba(34, 197, 94, 0.1)' : '#242424',
-                    border: `1px solid ${isCurrentLoading ? color : border}`,
+                    padding: '1.25rem 1.4rem',
+                    borderRadius: '1.25rem',
+                    background: isCurrentLoading ? 'rgba(59, 130, 246, 0.12)' : 'rgba(8, 14, 33, 0.75)',
+                    backdropFilter: 'blur(16px)',
+                    border: `1px solid ${isCurrentLoading ? '#3b82f6' : 'rgba(255, 255, 255, 0.08)'}`,
                     cursor: isAnyLoading ? (isCurrentLoading ? 'wait' : 'not-allowed') : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '1rem',
+                    gap: '1.25rem',
                     textAlign: 'left',
-                    transition: 'all 0.15s ease',
-                    boxShadow: isCurrentLoading ? `0 0 12px ${color}33` : '0 2px 6px rgba(0, 0, 0, 0.25)',
+                    transition: 'all 0.2s ease',
+                    boxShadow: isCurrentLoading ? '0 0 25px rgba(59, 130, 246, 0.35)' : '0 10px 30px rgba(0, 0, 0, 0.4)',
                     opacity: isAnyLoading && !isCurrentLoading ? 0.45 : 1
                   }}
                   onMouseEnter={e => {
                     if (!isAnyLoading) {
-                      e.currentTarget.style.background = '#2A2A2A';
+                      e.currentTarget.style.background = 'rgba(13, 23, 56, 0.88)';
                       e.currentTarget.style.borderColor = color;
+                      e.currentTarget.style.boxShadow = `0 0 20px ${color}22`;
                     }
                   }}
                   onMouseLeave={e => {
                     if (!isAnyLoading) {
-                      e.currentTarget.style.background = '#242424';
-                      e.currentTarget.style.borderColor = border;
+                      e.currentTarget.style.background = 'rgba(8, 14, 33, 0.75)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                      e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.4)';
                     }
                   }}
                 >
                   <div
                     style={{
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: '10px',
+                      width: '46px',
+                      height: '46px',
+                      borderRadius: '12px',
                       background: bg,
                       border: `1px solid ${border}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexShrink: 0,
-                      fontSize: '1.3rem'
+                      fontSize: '1.35rem'
                     }}
                   >
                     {isCurrentLoading ? (
@@ -153,28 +166,28 @@ export default function DifficultySelector({
                   </div>
 
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span className="font-accent" style={{ fontWeight: 800, color: color, fontSize: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: color, fontSize: '0.95rem', letterSpacing: '0.05em' }}>
                         {tier.label || tier.id}
                       </span>
                       {isCurrentLoading && (
-                        <span style={{ fontSize: '0.75rem', color: color, fontWeight: 700 }}>
-                          • Loading questions...
+                        <span style={{ fontSize: '0.75rem', color: color, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                          • INITIALIZING...
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: '0.775rem', color: '#94A3B8', marginTop: '0.15rem', lineHeight: 1.4, fontWeight: 500 }}>
-                      {isCurrentLoading ? 'Preparing clean, non-repeating question set...' : tier.desc}
+                    <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.55)', marginTop: '0.2rem', lineHeight: 1.4 }}>
+                      {isCurrentLoading ? 'Synthesizing verified non-repeating problem stream...' : tier.desc}
                     </div>
                   </div>
 
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ fontSize: '0.825rem', fontWeight: 800, color: '#FBBF24', display: 'flex', alignItems: 'center', gap: '0.2rem', justifyContent: 'flex-end' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#FBBF24', fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: '0.25rem', justifyContent: 'flex-end' }}>
                       <Zap size={13} fill="#FBBF24" />
                       {tier.xp}
                     </div>
                     {tier.time && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#64748B', fontSize: '0.7rem', marginTop: '0.2rem', justifyContent: 'flex-end', fontWeight: 600 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'rgba(255, 255, 255, 0.4)', fontSize: '0.7rem', fontFamily: 'var(--font-mono)', marginTop: '0.25rem', justifyContent: 'flex-end' }}>
                         <Clock size={11} /> {tier.time}
                       </div>
                     )}

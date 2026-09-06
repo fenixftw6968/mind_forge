@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Brain, Mail, Lock, User, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import { Brain, Mail, Lock, User, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Signup() {
@@ -23,7 +23,7 @@ export default function Signup() {
     return s;
   })();
 
-  const strengthColors = ['#FB7185', '#FBBF24', '#4ADE80', '#22C55E'];
+  const strengthColors = ['#f87171', '#FBBF24', '#60A5FA', '#34D399'];
   const strengthLabels = ['Weak', 'Fair', 'Good', 'Strong'];
 
   const handleSubmit = async (e) => {
@@ -41,138 +41,255 @@ export default function Signup() {
   const update = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
 
   return (
-    <div style={{ minHeight: '100vh', background: '#151515', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: '#F8FAFC' }}>
-      
+    <div style={{
+      minHeight: '100vh',
+      background: '#020617',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      color: '#F8FAFC',
+      position: 'relative',
+      overflowX: 'hidden'
+    }}>
+      {/* Background Starfield & Mesh Glow */}
+      <div className="star-field" />
+      <div className="binary-texture" />
+      <div className="mesh-glow" style={{ top: '50%', opacity: 0.6 }} />
+
       {/* Top Header Navbar */}
       <header style={{
-        padding: '1.25rem 2rem',
+        padding: '1.5rem 2rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        maxWidth: '1280px',
+        maxWidth: '1200px',
         margin: '0 auto',
         width: '100%',
         boxSizing: 'border-box',
         zIndex: 10
       }}>
         <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#242424', border: '1px solid #383838', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 10px rgba(34, 197, 94, 0.15)' }}>
-            <Brain size={20} color="#22C55E" />
+          <div style={{
+            width: '32px', height: '32px', borderRadius: '8px',
+            background: 'rgba(59, 130, 246, 0.12)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 0 15px rgba(59, 130, 246, 0.35)'
+          }}>
+            <Brain size={18} color="#60A5FA" />
           </div>
-          <span className="font-display" style={{ fontSize: '1.2rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.02em' }}>
-            Mind<span style={{ color: '#22C55E' }}>Forge</span>
+          <span className="font-display" style={{ fontSize: '1.1rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '-0.02em' }}>
+            Algo<span style={{ color: '#60A5FA' }}>Arena</span>
           </span>
         </Link>
 
-        <Link to="/login" className="btn-secondary" style={{ padding: '0.45rem 1.15rem', fontSize: '0.85rem' }}>
-          Log In
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          <Link
+            to="/login"
+            className="pill-btn-ghost"
+            style={{ padding: '0.4rem 1.15rem', fontSize: '0.825rem' }}
+          >
+            Sign In
+          </Link>
+        </div>
       </header>
 
-      {/* Main Container */}
-      <main style={{ maxWidth: '460px', margin: '0 auto', padding: '1.5rem 1.5rem 3rem', width: '100%', boxSizing: 'border-box' }}>
+      {/* Main Signup Viewport */}
+      <main style={{
+        maxWidth: '460px',
+        margin: '0 auto',
+        padding: '1.5rem 1.5rem 4rem',
+        width: '100%',
+        boxSizing: 'border-box',
+        position: 'relative',
+        zIndex: 5,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center'
+      }}>
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
           style={{
-            background: '#242424',
-            border: '1px solid #2E2E2E',
+            background: 'rgba(8, 14, 33, 0.85)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '1.25rem',
-            padding: '2.25rem 2rem',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)'
+            padding: '2.5rem 2rem',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(59, 130, 246, 0.12)',
+            width: '100%',
+            boxSizing: 'border-box'
           }}
         >
           <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-            <h1 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 800, color: '#F8FAFC', marginBottom: '0.35rem', letterSpacing: '-0.02em' }}>
-              Create an account
+            <span style={{ fontSize: '0.75rem', color: '#60A5FA', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              // REGISTRATION PROTOCOL
+            </span>
+            <h1 className="font-display" style={{ fontSize: '1.65rem', fontWeight: 700, color: '#FFFFFF', marginTop: '0.35rem', marginBottom: '0.35rem' }}>
+              Create Account
             </h1>
-            <p style={{ color: '#94A3B8', fontSize: '0.875rem' }}>Free forever · No credit card required</p>
+            <p style={{ color: '#94A3B8', fontSize: '0.85rem', fontWeight: 400 }}>
+              Join the elite mental training community
+            </p>
           </div>
 
           {error && (
             <motion.div
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(244, 63, 94, 0.12)', border: '1px solid rgba(244, 63, 94, 0.3)', borderRadius: '0.625rem', padding: '0.65rem 0.85rem', marginBottom: '1.25rem' }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '0.5rem',
+                padding: '0.65rem 0.85rem',
+                marginBottom: '1.25rem'
+              }}
             >
-              <AlertCircle size={15} color="#FB7185" />
-              <span style={{ color: '#FB7185', fontSize: '0.825rem', fontWeight: 500 }}>{error}</span>
+              <AlertCircle size={15} color="#f87171" />
+              <span style={{ color: '#f87171', fontSize: '0.825rem', fontWeight: 500 }}>{error}</span>
             </motion.div>
           )}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Username */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#CBD5E1', marginBottom: '0.4rem' }}>Username</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: '#CBD5E1', marginBottom: '0.35rem' }}>
+                Username
+              </label>
               <div style={{ position: 'relative' }}>
-                <User size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
-                <input type="text" value={form.username} onChange={update('username')} placeholder="Your username" required className="input-dark" style={{ paddingLeft: '2.5rem', background: '#1C1C1C', border: '1px solid #2E2E2E' }} />
+                <User size={16} color="#64748B" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+                <input
+                  type="text"
+                  required
+                  placeholder="Mastermind_01"
+                  value={form.username}
+                  onChange={update('username')}
+                  className="input-dark"
+                  style={{ paddingLeft: '2.5rem' }}
+                />
               </div>
             </div>
 
-            {/* Email */}
+            {/* Email Address */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#CBD5E1', marginBottom: '0.4rem' }}>Email Address</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: '#CBD5E1', marginBottom: '0.35rem' }}>
+                Email Address
+              </label>
               <div style={{ position: 'relative' }}>
-                <Mail size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
-                <input type="email" value={form.email} onChange={update('email')} placeholder="you@example.com" required className="input-dark" style={{ paddingLeft: '2.5rem', background: '#1C1C1C', border: '1px solid #2E2E2E' }} />
+                <Mail size={16} color="#64748B" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+                <input
+                  type="email"
+                  required
+                  placeholder="solver@algoarena.ai"
+                  value={form.email}
+                  onChange={update('email')}
+                  className="input-dark"
+                  style={{ paddingLeft: '2.5rem' }}
+                />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#CBD5E1', marginBottom: '0.4rem' }}>Password</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: '#CBD5E1', marginBottom: '0.35rem' }}>
+                Password
+              </label>
               <div style={{ position: 'relative' }}>
-                <Lock size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
-                <input type={showPass ? 'text' : 'password'} value={form.password} onChange={update('password')} placeholder="Create a password" required className="input-dark" style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem', background: '#1C1C1C', border: '1px solid #2E2E2E' }} />
-                <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: 'absolute', right: '0.9rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748B', display: 'flex' }}>
+                <Lock size={16} color="#64748B" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  required
+                  placeholder="••••••••••••"
+                  value={form.password}
+                  onChange={update('password')}
+                  className="input-dark"
+                  style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(!showPass)}
+                  style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748B', cursor: 'pointer' }}
+                >
                   {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+
+              {/* Password Strength Indicator */}
               {form.password && (
-                <div style={{ marginTop: '0.4rem' }}>
-                  <div style={{ display: 'flex', gap: '3px', marginBottom: '0.2rem' }}>
-                    {[1,2,3,4].map(i => (
-                      <div key={i} style={{ flex: 1, height: '3px', borderRadius: '999px', background: i <= strength ? strengthColors[strength - 1] : '#333333', transition: 'background 0.2s' }} />
+                <div style={{ marginTop: '0.45rem' }}>
+                  <div style={{ display: 'flex', gap: '4px', marginBottom: '0.25rem' }}>
+                    {[1, 2, 3, 4].map(idx => (
+                      <div
+                        key={idx}
+                        style={{
+                          height: '3px',
+                          flex: 1,
+                          borderRadius: '999px',
+                          background: idx <= strength ? strengthColors[strength - 1] : 'rgba(255, 255, 255, 0.1)',
+                          transition: 'all 0.2s ease'
+                        }}
+                      />
                     ))}
                   </div>
-                  <span style={{ fontSize: '0.7rem', fontWeight: 600, color: strengthColors[strength - 1] || '#64748B' }}>{strength > 0 ? strengthLabels[strength - 1] : ''}</span>
+                  <span style={{ fontSize: '0.7rem', color: strengthColors[strength - 1] || '#94A3B8', fontWeight: 600 }}>
+                    {strengthLabels[strength - 1] || 'Too short'}
+                  </span>
                 </div>
               )}
             </div>
 
-            {/* Confirm password */}
+            {/* Confirm Password */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#CBD5E1', marginBottom: '0.4rem' }}>Confirm Password</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: '#CBD5E1', marginBottom: '0.35rem' }}>
+                Confirm Password
+              </label>
               <div style={{ position: 'relative' }}>
-                <Lock size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
-                <input type="password" value={form.confirm} onChange={update('confirm')} placeholder="Confirm password" required className="input-dark" style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem', background: '#1C1C1C', border: '1px solid #2E2E2E' }} />
-                {form.confirm && (
-                  <div style={{ position: 'absolute', right: '0.9rem', top: '50%', transform: 'translateY(-50%)' }}>
-                    {form.confirm === form.password
-                      ? <CheckCircle size={16} color="#4ADE80" />
-                      : <AlertCircle size={16} color="#FB7185" />}
-                  </div>
-                )}
+                <Lock size={16} color="#64748B" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  required
+                  placeholder="••••••••••••"
+                  value={form.confirm}
+                  onChange={update('confirm')}
+                  className="input-dark"
+                  style={{ paddingLeft: '2.5rem' }}
+                />
               </div>
             </div>
 
-            <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%', marginTop: '0.5rem', padding: '0.8rem', opacity: loading ? 0.75 : 1, fontSize: '0.9rem' }}>
-              {loading ? 'Creating account...' : 'Create Account →'}
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="pill-btn-blue"
+              style={{ width: '100%', marginTop: '0.5rem', opacity: loading ? 0.7 : 1 }}
+            >
+              {loading ? 'Registering...' : 'Create Account'}
             </button>
           </form>
 
-          <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.85rem', color: '#94A3B8' }}>
-            Already have an account?{' '}
-            <Link to="/login" style={{ color: '#4ADE80', textDecoration: 'none', fontWeight: 700 }}>Log in</Link>
-          </p>
+          {/* Card footer */}
+          <div style={{ textAlign: 'center', marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <span style={{ color: '#94A3B8', fontSize: '0.825rem' }}>
+              Already registered?{' '}
+              <Link to="/login" style={{ color: '#60A5FA', fontWeight: 600, textDecoration: 'none' }}>
+                Sign in
+              </Link>
+            </span>
+          </div>
         </motion.div>
       </main>
 
       {/* Footer */}
-      <footer style={{ padding: '1.5rem', textAlign: 'center', borderTop: '1px solid #242424', background: '#1A1A1A' }}>
-        <p style={{ fontSize: '0.775rem', color: '#64748B' }}>© 2026 MindForge. All rights reserved.</p>
+      <footer style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', padding: '1.25rem 2rem', textAlign: 'center', zIndex: 10 }}>
+        <p style={{ fontSize: '0.75rem', color: '#64748B' }}>
+          &copy; {new Date().getFullYear()} AlgoArena. Algorithmic Arena Platform.
+        </p>
       </footer>
     </div>
   );

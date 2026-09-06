@@ -59,6 +59,7 @@ export default function NumberDetective() {
   const scoreRef = useRef(0);
   const mistakesRef = useRef(0);
   const durationRef = useRef(0);
+  const isSubmittingRef = useRef(false);
 
   const clearMatchStorage = useCallback((matchId) => {
     localStorage.removeItem('activeMatchId_number-detective');
@@ -78,7 +79,7 @@ export default function NumberDetective() {
     }
   });
 
-  // Poll for match completion while waiting for opponent (as bulletproof fallback)
+  // Poll for match completion while waiting for opponent (fallback)
   useEffect(() => {
     if (!waitingForOpponent || !currentMatch?.id) return;
     
@@ -129,7 +130,6 @@ export default function NumberDetective() {
             if (finished) {
               setWaitingForOpponent(true);
             } else {
-              // Restore questions and progress
               handleMatchReady(match);
               
               const savedIndex = localStorage.getItem('activeMatchIndex_' + match.id);
@@ -159,133 +159,25 @@ export default function NumberDetective() {
     checkActiveMatch();
   }, [user, clearMatchStorage]);
 
-  // Save active match progress in localStorage
-  useEffect(() => {
-    if (currentMatch && currentMatch.status !== 'FINISHED' && puzzles.length > 0) {
-      localStorage.setItem('activeMatchId_number-detective', currentMatch.id);
-      localStorage.setItem('activeMatchIndex_' + currentMatch.id, index);
-      localStorage.setItem('activeMatchScore_' + currentMatch.id, score);
-      localStorage.setItem('activeMatchMistakes_' + currentMatch.id, mistakes);
-    }
-  }, [index, score, mistakes, currentMatch, puzzles]);
+  const handleTimeout = useCallback(() => {
+    if (isSubmittingRef.current || showResult || result !== null) return;
+    isSubmittingRef.current = true;
+    setResult('wrong');
+    setShowResult(true);
+    setMistakes(m => {
+      mistakesRef.current = m + 1;
+      return m + 1;
+    });
+  }, [showResult, result]);
 
-  const puzzle = puzzles[index];
-  const timerLimit = difficulty ? TIMER_SECONDS[difficulty.toUpperCase()] || 90 : 90;
-
-  const { timeLeft, formattedTime, urgency, start, reset } = useTimer(
-    timerLimit,
-    { onComplete: () => handleSubmit(true) }
+  const { timeLeft, formatted: formattedTime, urgency, reset, start, pause } = useTimer(
+    TIMER_SECONDS[difficulty] || 90,
+    handleTimeout
   );
 
-  // Auto-start match if accepted from invite (go through countdown lobby first)
-  useEffect(() => {
-    if (location.state?.acceptedMatch) {
-      const match = location.state.acceptedMatch;
-      setCurrentMatch(match);
-      setPlayMode('FRIEND');
-      setShowModeModal(false);
-      setShowMatchmaking(true);
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
-
-  const handleSelectMode = (mode) => {
-    setPlayMode(mode);
-    setShowModeModal(false);
-    if (mode === 'RANKED') {
-      setInvitedFriend(null);
-      setShowMatchmaking(true);
-    } else if (mode === 'FRIEND') {
-      setShowSocialDrawer(true);
-    }
-  };
-
-  const handleExitGame = async () => {
-    setShowExitModal(false);
-    if (currentMatch?.id) {
-      try {
-        await api.post(`/api/matches/${currentMatch.id}/abandon`);
-      } catch (e) {}
-      clearMatchStorage(currentMatch.id);
-    } else if (showMatchmaking) {
-      try {
-        await api.post('/api/matches/queue/cancel?gameSlug=number-detective');
-      } catch (e) {}
-    }
-    navigate('/games');
-  };
-
-  const handleMatchReady = (match) => {
-    setShowMatchmaking(false);
-    setShowSocialDrawer(false);
-    setShowModeModal(false);
-    setCurrentMatch(match);
-    startTimeRef.current = Date.now();
-
-    // Parse challenge data if present
-    let challengeQuestions = [];
-    try {
-      if (match.challengeData) {
-        const parsed = typeof match.challengeData === 'string' ? JSON.parse(match.challengeData) : match.challengeData;
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          challengeQuestions = parsed.map((p, idx) => {
-            let contentObj = {};
-            if (typeof p.content === 'string') {
-              try { contentObj = JSON.parse(p.content); } catch (e) {}
-            } else if (typeof p.content === 'object' && p.content !== null) {
-              contentObj = p.content;
-            }
-
-            let correctAns = p.correctAnswer || p.answer || '';
-            if (typeof correctAns === 'string' && correctAns.trim().startsWith('{')) {
-              try {
-                const parsedAns = JSON.parse(correctAns);
-                correctAns = parsedAns.answer || correctAns;
-              } catch (e) {}
-            }
-
-            return {
-              id: p.id || idx + 1,
-              question: p.question || contentObj.question || p.title || '',
-              correctAnswer: correctAns,
-              options: p.options || contentObj.options || contentObj.choices || [],
-              hint: p.hint || contentObj.hint || '',
-              explanation: p.explanation || contentObj.explanation || 'Mathematical logic pattern.'
-            };
-          }).filter(q => q.question);
-        }
-      }
-    } catch (e) {
-      console.warn("Could not parse match challengeData, falling back to generated set", e);
-    }
-
-    if (challengeQuestions.length === 0) {
-      challengeQuestions = getDailyQuestionSet({
-        gameType: 'number-detective',
-        difficulty: 'MEDIUM',
-        questionBank: numberDetectiveQuestions,
-        count: 5,
-        userShuffle: false
-      });
-    }
-
-    setPuzzles(challengeQuestions);
-    const matchDiff = match.difficulty || 'MEDIUM';
-    setDifficulty(matchDiff);
-    setIndex(0);
-    setScore(0);
-    setMistakes(0);
-    setTotalXP(0);
-    setAnswer('');
-    setHintUsed(false);
-    setResult(null);
-    setShowResult(false);
-    setShowComplete(false);
-    setCompetitiveResult(null);
-  };
-
-  const startGame = async (diff) => {
+  const startGame = useCallback(async (diff) => {
     setLoadingDifficulty(diff);
+    isSubmittingRef.current = false;
     try {
       const selected = await selectQuestionsForGame({
         gameSlug: 'number-detective',
@@ -294,59 +186,101 @@ export default function NumberDetective() {
         count: 10,
         userShuffle: true
       });
-
-      const activeList = Array.isArray(selected) && selected.length > 0
-        ? selected
-        : numberDetectiveQuestions.filter(q => q.difficulty && q.difficulty.toLowerCase() === diff.toLowerCase());
-
+      let activeList = Array.isArray(selected) && selected.length > 0 ? selected : [];
+      if (activeList.length === 0) {
+        const fallback = numberDetectiveQuestions.filter(q => q.difficulty.toLowerCase() === diff.toLowerCase());
+        activeList = fallback.length > 0 ? fallback.slice(0, 10) : numberDetectiveQuestions.slice(0, 10);
+      }
       setPuzzles(activeList);
       setDifficulty(diff);
       setIndex(0);
-      setScore(0);
-      setMistakes(0);
-      setTotalXP(0);
       setAnswer('');
       setHintUsed(false);
       setResult(null);
       setShowResult(false);
+      setScore(0);
+      setMistakes(0);
+      setTotalXP(0);
       setShowComplete(false);
-      setLatestUser(null);
-      setCompetitiveResult(null);
+      scoreRef.current = 0;
+      mistakesRef.current = 0;
+      startTimeRef.current = Date.now();
+      reset(TIMER_SECONDS[diff] || 90);
+      start();
     } catch (e) {
-      console.warn("Could not start game via service, falling back to local pool", e);
-      const activeList = numberDetectiveQuestions.filter(q => q.difficulty && q.difficulty.toLowerCase() === diff.toLowerCase());
-      setPuzzles(activeList.slice(0, 10));
+      console.warn("Failed to load questions, using fallback set:", e);
+      const fallback = numberDetectiveQuestions.filter(q => q.difficulty.toLowerCase() === diff.toLowerCase());
+      const activeList = fallback.length > 0 ? fallback.slice(0, 10) : numberDetectiveQuestions.slice(0, 10);
+      setPuzzles(activeList);
       setDifficulty(diff);
+      reset(TIMER_SECONDS[diff] || 90);
+      start();
     } finally {
       setLoadingDifficulty(null);
     }
-  };
+  }, [reset, start]);
 
-  // Guarantee clean answer state and fresh timer on every question index change
-  useEffect(() => {
+  const handleMatchReady = useCallback((matchData) => {
+    setCurrentMatch(matchData);
+    setShowMatchmaking(false);
+    setShowModeModal(false);
+
+    let parsedQuestions = [];
+    if (matchData.puzzleSet) {
+      try {
+        parsedQuestions = JSON.parse(matchData.puzzleSet);
+      } catch (e) {
+        console.warn("Could not parse match puzzleSet JSON", e);
+      }
+    }
+
+    if (!parsedQuestions || parsedQuestions.length === 0) {
+      const matchDiff = matchData.difficulty ? matchData.difficulty.toLowerCase() : 'medium';
+      parsedQuestions = numberDetectiveQuestions.filter(q => q.difficulty.toLowerCase() === matchDiff).slice(0, 10);
+    }
+
+    setPuzzles(parsedQuestions);
+    setDifficulty((matchData.difficulty || 'MEDIUM').toUpperCase());
+    setIndex(0);
     setAnswer('');
     setHintUsed(false);
     setResult(null);
     setShowResult(false);
-    if (puzzles.length > 0 && !showComplete) {
-      const currentDiff = (puzzles[index]?.difficulty || difficulty || 'MEDIUM').toUpperCase();
-      reset(TIMER_SECONDS[currentDiff] || 90);
-      start();
-    }
-  }, [index, puzzles, showComplete]);
+    setScore(0);
+    setMistakes(0);
+    setTotalXP(0);
+    setShowComplete(false);
+    scoreRef.current = 0;
+    mistakesRef.current = 0;
+    startTimeRef.current = Date.now();
+    reset(TIMER_SECONDS[(matchData.difficulty || 'MEDIUM').toUpperCase()] || 90);
+    start();
+  }, [reset, start]);
 
-  const handleSubmit = useCallback(async (timedOut = false) => {
-    if (!puzzle || result) return;
-    const isCorrect = !timedOut && answer.trim().toLowerCase() === String(puzzle.correctAnswer || puzzle.answer).toLowerCase();
+  const handleExitGame = () => {
+    setShowExitModal(false);
+    if (currentMatch) {
+      clearMatchStorage(currentMatch.id);
+    }
+    navigate('/games');
+  };
+
+  const puzzle = puzzles[index];
+
+  const handleSubmit = useCallback(async () => {
+    if (isSubmittingRef.current || !puzzle || !answer.trim() || result !== null) return;
+    isSubmittingRef.current = true;
+
+    pause();
+
+    const expectedAnswer = String(puzzle.answer !== undefined ? puzzle.answer : (puzzle.correctAnswer !== undefined ? puzzle.correctAnswer : '')).trim().toLowerCase();
+    const isCorrect = answer.trim().toLowerCase() === expectedAnswer;
+
     setResult(isCorrect ? 'correct' : 'wrong');
     setShowResult(true);
 
-    if (!isCorrect) {
-      setMistakes(m => m + 1);
-    }
-
     if (playMode === 'PRACTICE') {
-      const baseXP = XP_PER_DIFFICULTY[(puzzle.difficulty || difficulty || 'MEDIUM').toUpperCase()] || 15;
+      const baseXP = XP_PER_DIFFICULTY[difficulty] || 25;
       const earned = isCorrect ? (hintUsed ? Math.floor(baseXP * 0.7) : baseXP) : 0;
 
       if (isCorrect) {
@@ -370,7 +304,6 @@ export default function NumberDetective() {
         // Offline / fallback mode
       }
     } else {
-      // In competitive mode: track score directly
       if (isCorrect) {
         setScore(s => {
           scoreRef.current = s + 1;
@@ -382,9 +315,10 @@ export default function NumberDetective() {
         return m + (!isCorrect ? 1 : 0);
       });
     }
-  }, [puzzle, answer, hintUsed, result, difficulty, playMode, showXPPopup]);
+  }, [puzzle, answer, hintUsed, result, difficulty, playMode, showXPPopup, pause]);
 
   const handleNext = async () => {
+    isSubmittingRef.current = false;
     setAnswer('');
     setHintUsed(false);
     setResult(null);
@@ -420,7 +354,6 @@ export default function NumberDetective() {
           setWaitingForOpponent(false);
         }
 
-        // Offline / fallback simulation if server was unreachable
         if (currentMatch.player2Id === 999999 || currentMatch.isBotMatch) {
           const botScore = Math.max(0, scoreRef.current + (Math.random() > 0.4 ? (Math.random() > 0.5 ? 0 : -1) : 1));
           const botDelta = scoreRef.current >= botScore ? -16 : 16;
@@ -438,6 +371,8 @@ export default function NumberDetective() {
       }
     } else {
       setIndex(i => i + 1);
+      reset(TIMER_SECONDS[difficulty] || 90);
+      start();
     }
   };
 
@@ -449,33 +384,22 @@ export default function NumberDetective() {
         gameTitle="Number Detective"
         gameIcon="🔢"
         onClose={() => navigate('/games')}
-        onSelectMode={handleSelectMode}
-      />
-    );
-  }
-
-  // === MATCHMAKING RADAR / LOBBY ===
-  if (showMatchmaking) {
-    return (
-      <MatchmakingLobby
-        isOpen={showMatchmaking}
-        gameSlug="number-detective"
-        gameTitle="Number Detective"
-        mode={playMode === 'FRIEND' ? 'FRIEND' : 'RANKED'}
-        friendTarget={invitedFriend}
-        difficulty={difficulty}
-        initialMatch={currentMatch}
-        onClose={() => {
-          setShowMatchmaking(false);
-          setInvitedFriend(null);
-          setShowModeModal(true);
+        onSelectMode={(mode) => {
+          setPlayMode(mode);
+          setShowModeModal(false);
+          if (mode === 'PRACTICE') {
+            setDifficulty(null);
+          } else if (mode === 'RANKED') {
+            setShowMatchmaking(true);
+          } else if (mode === 'FRIEND') {
+            setShowSocialDrawer(true);
+          }
         }}
-        onMatchReady={handleMatchReady}
       />
     );
   }
 
-  // === SOCIAL DRAWER (PLAY WITH FRIEND) ===
+  // === SOCIAL DRAWER ===
   if (showSocialDrawer) {
     return (
       <SocialDrawer
@@ -494,10 +418,30 @@ export default function NumberDetective() {
     );
   }
 
+  // === MATCHMAKING LOBBY ===
+  if (showMatchmaking) {
+    return (
+      <MatchmakingLobby
+        isOpen={showMatchmaking}
+        onClose={() => {
+          setShowMatchmaking(false);
+          setShowModeModal(true);
+        }}
+        gameSlug="number-detective"
+        gameTitle="Number Detective"
+        mode={playMode === 'FRIEND' ? 'FRIEND' : 'RANKED'}
+        friendTarget={invitedFriend}
+        difficulty={difficulty || 'MEDIUM'}
+        onMatchReady={handleMatchReady}
+      />
+    );
+  }
+
   // === COMPETITIVE MATCH RESULTS SCREEN ===
   if (competitiveResult) {
     return (
-      <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', paddingBottom: '3rem', color: '#F8FAFC' }}>
+      <div style={{ minHeight: '100vh', background: '#020617', paddingTop: '6.5rem', paddingBottom: '3rem', color: '#F8FAFC', position: 'relative' }}>
+        <div className="star-field" />
         <CompetitiveResults
           matchResult={competitiveResult}
           currentUserId={user?.id || currentMatch?.player1Id}
@@ -525,18 +469,13 @@ export default function NumberDetective() {
   // === WAITING FOR OPPONENT TO FINISH ===
   if (waitingForOpponent) {
     return (
-      <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
+      <div style={{ minHeight: '100vh', background: '#020617', paddingTop: '6.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <div className="star-field" />
+        <div style={{ textAlign: 'center', padding: '2.5rem', background: 'rgba(8, 14, 33, 0.85)', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(20px)', boxShadow: '0 12px 35px rgba(0, 0, 0, 0.5)', zIndex: 1 }}>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#F8FAFC', marginBottom: '0.5rem' }}>You finished!</h2>
-          <p style={{ color: '#94A3B8', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Your score: <strong style={{ color: '#4ADE80' }}>{scoreRef.current} / {puzzles.length}</strong></p>
-          <p style={{ color: '#64748B', fontSize: '0.875rem' }}>Waiting for your opponent to finish...</p>
-          <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center', gap: '0.4rem' }}>
-            {[0,1,2].map(i => (
-              <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#22C55E', animation: `bounce 1.2s ${i * 0.2}s infinite` }} />
-            ))}
-          </div>
-          <style>{`@keyframes bounce { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }`}</style>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#F8FAFC', marginBottom: '0.5rem', fontFamily: 'var(--font-display)' }}>Challenge Completed</h2>
+          <p style={{ color: '#94A3B8', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Your score: <strong className="font-mono" style={{ color: '#38bdf8' }}>{scoreRef.current} / {puzzles.length}</strong></p>
+          <p className="font-mono" style={{ color: '#38bdf8', fontSize: '0.8rem' }}>Waiting for opponent synchronization...</p>
         </div>
       </div>
     );
@@ -572,9 +511,11 @@ export default function NumberDetective() {
   if (!puzzle) return null;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', color: '#F8FAFC' }}>
+    <div style={{ minHeight: '100vh', background: '#020617', paddingTop: '6.5rem', color: '#F8FAFC', position: 'relative', overflow: 'hidden' }}>
       <XPPopup popups={xpPopups} />
-      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+      <div className="star-field" />
+
+      <div style={{ maxWidth: '740px', margin: '0 auto', padding: '1.5rem 1.5rem 4rem', position: 'relative', zIndex: 1 }}>
         
         {/* Reusable Header Progress Bar */}
         <GameProgress
@@ -602,31 +543,32 @@ export default function NumberDetective() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.25 }}
             style={{
-              background: '#242424',
-              border: '1px solid #2E2E2E',
+              background: 'rgba(8, 14, 33, 0.85)',
+              backdropFilter: 'blur(24px)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
               borderRadius: '1.25rem',
-              padding: '2rem',
+              padding: '2.25rem',
               marginBottom: '1.5rem',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)'
+              boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(59, 130, 246, 0.08)'
             }}
           >
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              <p style={{ fontSize: '0.8rem', color: '#94A3B8', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>
-                Find the missing number in the sequence
-              </p>
+              <span className="font-mono" style={{ fontSize: '0.75rem', color: '#38bdf8', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700, display: 'block' }}>
+                // SEQUENCE RECOGNITION
+              </span>
               <div
-                className="font-display"
+                className="font-mono"
                 style={{
                   fontSize: 'clamp(1.5rem, 4vw, 2.3rem)',
                   fontWeight: 800,
-                  color: '#4ADE80',
+                  color: '#FFFFFF',
                   letterSpacing: '0.05em',
                   padding: '1.5rem',
-                  background: '#1A1A1A',
+                  background: 'rgba(10, 18, 42, 0.65)',
                   borderRadius: '1rem',
-                  border: '1px solid #333333'
+                  border: '1px solid rgba(59, 130, 246, 0.25)'
                 }}
               >
                 {puzzle.question}
@@ -641,15 +583,15 @@ export default function NumberDetective() {
                 style={{
                   display: 'flex',
                   gap: '0.5rem',
-                  background: 'rgba(34, 197, 94, 0.08)',
-                  border: '1px solid rgba(34, 197, 94, 0.25)',
+                  background: 'rgba(59, 130, 246, 0.08)',
+                  border: '1px solid rgba(59, 130, 246, 0.25)',
                   borderRadius: '0.75rem',
                   padding: '0.85rem 1rem',
                   marginBottom: '1.25rem'
                 }}
               >
-                <Lightbulb size={16} color="#4ADE80" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <p style={{ fontSize: '0.85rem', color: '#4ADE80', lineHeight: 1.5, fontWeight: 500 }}>{puzzle.hint}</p>
+                <Lightbulb size={16} color="#60a5fa" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <p style={{ fontSize: '0.85rem', color: '#93c5fd', lineHeight: 1.5, fontWeight: 500 }}>{puzzle.hint}</p>
               </motion.div>
             )}
 
@@ -665,14 +607,14 @@ export default function NumberDetective() {
                         style={{
                           padding: '1.1rem',
                           borderRadius: '0.875rem',
-                          border: answer === opt ? '2px solid #22C55E' : '1px solid #2E2E2E',
-                          background: answer === opt ? 'rgba(34, 197, 94, 0.15)' : '#1C1C1C',
-                          color: answer === opt ? '#4ADE80' : '#F8FAFC',
+                          border: answer === opt ? '1px solid #3b82f6' : '1px solid rgba(255, 255, 255, 0.08)',
+                          background: answer === opt ? 'rgba(59, 130, 246, 0.15)' : 'rgba(10, 18, 42, 0.65)',
+                          color: answer === opt ? '#FFFFFF' : '#CBD5E1',
                           fontSize: '1.25rem',
-                          fontFamily: 'var(--font-display)',
+                          fontFamily: 'var(--font-mono)',
                           fontWeight: 800,
                           cursor: 'pointer',
-                          boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
+                          boxShadow: answer === opt ? '0 0 20px rgba(59, 130, 246, 0.3)' : '0 2px 6px rgba(0, 0, 0, 0.2)',
                           transition: 'all 0.15s ease'
                         }}
                       >
@@ -687,9 +629,9 @@ export default function NumberDetective() {
                       value={answer}
                       onChange={e => setAnswer(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && answer && handleSubmit()}
-                      placeholder="Enter your answer..."
+                      placeholder="Enter solution number..."
                       className="input-dark"
-                      style={{ flex: 1, textAlign: 'center', fontSize: '1.25rem', fontFamily: 'var(--font-display)', fontWeight: 800, background: '#1C1C1C', border: '1px solid #2E2E2E', borderRadius: '0.75rem', padding: '0.85rem', color: '#F8FAFC' }}
+                      style={{ flex: 1, textAlign: 'center', fontSize: '1.25rem', fontFamily: 'var(--font-mono)', fontWeight: 800, padding: '0.85rem' }}
                       autoFocus
                     />
                   </div>
@@ -698,10 +640,23 @@ export default function NumberDetective() {
                 <button
                   onClick={() => answer && handleSubmit()}
                   disabled={!answer}
-                  className="btn-primary"
-                  style={{ width: '100%', marginTop: '1.25rem', padding: '0.85rem', justifyContent: 'center', opacity: answer ? 1 : 0.5, fontSize: '0.95rem' }}
+                  style={{
+                    width: '100%',
+                    marginTop: '1.25rem',
+                    padding: '0.85rem',
+                    borderRadius: '999px',
+                    background: answer ? 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)' : 'rgba(255, 255, 255, 0.08)',
+                    color: answer ? '#ffffff' : 'rgba(255, 255, 255, 0.3)',
+                    border: 'none',
+                    fontWeight: 700,
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '0.95rem',
+                    cursor: answer ? 'pointer' : 'not-allowed',
+                    boxShadow: answer ? '0 0 20px rgba(59, 130, 246, 0.4)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
                 >
-                  Submit Answer
+                  Submit Solution &rarr;
                 </button>
               </div>
             ) : (
@@ -715,26 +670,43 @@ export default function NumberDetective() {
                     padding: '1rem 1.25rem',
                     borderRadius: '0.85rem',
                     background: result === 'correct' ? 'rgba(34, 197, 94, 0.12)' : 'rgba(244, 63, 94, 0.12)',
-                    border: `1px solid ${result === 'correct' ? 'rgba(34, 197, 94, 0.25)' : 'rgba(244, 63, 94, 0.25)'}`,
+                    border: `1px solid ${result === 'correct' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`,
                     marginBottom: '1rem'
                   }}
                 >
-                  {result === 'correct' ? <CheckCircle size={22} color="#4ADE80" /> : <XCircle size={22} color="#FB7185" />}
+                  {result === 'correct' ? <CheckCircle size={22} color="#22c55e" /> : <XCircle size={22} color="#f43f5e" />}
                   <div>
-                    <div style={{ fontWeight: 800, color: result === 'correct' ? '#4ADE80' : '#FB7185', fontSize: '0.95rem' }}>
-                      {result === 'correct' ? '🎉 Correct!' : `Incorrect — The correct answer was ${puzzle.correctAnswer || puzzle.answer}`}
+                    <div className="font-mono" style={{ fontWeight: 800, color: result === 'correct' ? '#22c55e' : '#f43f5e', fontSize: '0.95rem' }}>
+                      {result === 'correct' ? '🎉 Correct Number Found!' : `Incorrect — The correct answer was ${puzzle.correctAnswer || puzzle.answer}`}
                     </div>
                   </div>
                 </div>
 
                 {/* Explanation */}
-                <div style={{ padding: '1rem 1.25rem', borderRadius: '0.85rem', background: '#1C1C1C', border: '1px solid #2E2E2E', marginBottom: '1.25rem' }}>
-                  <p style={{ fontSize: '0.725rem', fontWeight: 800, color: '#38BDF8', marginBottom: '0.3rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Explanation</p>
-                  <p style={{ fontSize: '0.875rem', color: '#CBD5E1', lineHeight: 1.6, fontWeight: 500 }}>{puzzle.explanation}</p>
-                </div>
+                {puzzle.explanation && (
+                  <div style={{ padding: '1.15rem', borderRadius: '0.85rem', background: 'rgba(10, 18, 42, 0.65)', border: '1px solid rgba(255, 255, 255, 0.08)', marginBottom: '1.25rem' }}>
+                    <p className="font-mono" style={{ fontSize: '0.725rem', fontWeight: 700, color: '#38BDF8', marginBottom: '0.35rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>// SEQUENCE RULE</p>
+                    <p style={{ fontSize: '0.875rem', color: '#CBD5E1', lineHeight: 1.6, fontWeight: 400 }}>{puzzle.explanation}</p>
+                  </div>
+                )}
 
-                <button onClick={handleNext} className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}>
-                  {index + 1 >= puzzles.length ? 'See Results 🏆' : 'Next Puzzle →'}
+                <button
+                  onClick={handleNext}
+                  style={{
+                    width: '100%',
+                    padding: '0.85rem',
+                    borderRadius: '999px',
+                    background: 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    fontWeight: 700,
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)'
+                  }}
+                >
+                  {index + 1 >= puzzles.length ? 'Final Summary & Rewards 🏆' : 'Next Puzzle &rarr;'}
                 </button>
               </motion.div>
             )}
@@ -747,17 +719,17 @@ export default function NumberDetective() {
             {!hintUsed && puzzle.hint && (
               <button
                 onClick={() => setHintUsed(true)}
-                className="btn-secondary"
+                className="pill-btn-ghost"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  padding: '0.5rem 1rem',
-                  fontSize: '0.825rem',
+                  padding: '0.45rem 1rem',
+                  fontSize: '0.8rem',
                   fontWeight: 600
                 }}
               >
-                <Lightbulb size={14} /> Use Hint (-30% XP)
+                <Lightbulb size={14} /> Hint (-30% XP)
               </button>
             )}
           </div>

@@ -30,33 +30,35 @@ export default function IncomingInviteModal({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
           style={{
-            background: '#242424',
-            borderRadius: '1.25rem',
-            border: '1px solid #2E2E2E',
-            boxShadow: '0 20px 35px -10px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.4)',
-            padding: '1.25rem 1.5rem',
+            background: 'rgba(8, 14, 33, 0.95)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            borderRadius: '1.5rem',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(59, 130, 246, 0.2)',
+            padding: '1.35rem 1.5rem',
             position: 'relative',
             overflow: 'hidden',
-            color: '#F8FAFC'
+            color: '#FFFFFF'
           }}
         >
-          {/* Top lime accent */}
+          {/* Top accent stream */}
           <div style={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             height: '3px',
-            background: 'linear-gradient(90deg, #10B981, #22C55E)'
+            background: 'linear-gradient(90deg, #3b82f6, #38bdf8)'
           }} />
 
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
             <div style={{
               width: '46px',
               height: '46px',
               borderRadius: '12px',
-              background: '#1C1C1C',
-              border: '1px solid #333333',
+              background: 'rgba(59, 130, 246, 0.12)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -69,60 +71,84 @@ export default function IncomingInviteModal({
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
                 <span style={{
-                  fontSize: '0.75rem',
+                  fontSize: '0.65rem',
                   fontWeight: 800,
-                  color: '#4ADE80',
+                  color: '#38bdf8',
+                  fontFamily: 'var(--font-mono)',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
+                  letterSpacing: '0.08em'
                 }}>
-                  Friend Match Request
+                  INCOMING 1V1 CHALLENGE
                 </span>
               </div>
 
               <h4 style={{
-                fontSize: '1rem',
+                fontSize: '0.95rem',
                 fontWeight: 800,
-                color: '#F8FAFC',
+                color: '#FFFFFF',
+                fontFamily: 'var(--font-display)',
                 marginBottom: '0.25rem',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis'
               }}>
-                {invite.player1Username} invited you!
+                @{invite.player1Username}
               </h4>
 
               <p style={{
-                fontSize: '0.825rem',
-                color: '#94A3B8',
+                fontSize: '0.8rem',
+                color: 'rgba(255, 255, 255, 0.6)',
                 lineHeight: 1.4,
                 marginBottom: '1rem'
               }}>
-                To a live 1v1 match in <strong style={{ color: '#F8FAFC' }}>{gameInfo.title}</strong>
+                Dispatched challenge for <strong style={{ color: '#ffffff' }}>{gameInfo.title}</strong>
               </p>
 
               {/* Action buttons */}
-              <div style={{ display: 'flex', gap: '0.6rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
                   onClick={() => onAccept(invite)}
-                  className="btn-primary"
                   style={{
                     flex: 1,
                     padding: '0.55rem 0.85rem',
-                    fontSize: '0.825rem'
+                    borderRadius: '999px',
+                    background: 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    fontWeight: 700,
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.3rem',
+                    boxShadow: '0 0 15px rgba(59, 130, 246, 0.4)'
                   }}
                 >
-                  <Check size={15} /> Accept
+                  <Check size={13} /> ACCEPT
                 </button>
 
                 <button
                   onClick={() => onDecline(invite)}
-                  className="btn-secondary"
                   style={{
+                    flex: 1,
                     padding: '0.55rem 0.85rem',
-                    fontSize: '0.825rem'
+                    borderRadius: '999px',
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    fontWeight: 700,
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.3rem'
                   }}
                 >
-                  <X size={15} /> Decline
+                  <X size={13} /> DECLINE
                 </button>
               </div>
             </div>

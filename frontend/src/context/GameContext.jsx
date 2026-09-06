@@ -8,19 +8,19 @@ export function GameProvider({ children }) {
   const [activeGame, setActiveGame] = useState(null);
 
   const showXPPopup = useCallback((amount) => {
-    const id = Date.now();
-    setXpPopups(prev => [...prev, { id, amount }]);
+    const id = Date.now() + Math.random();
+    setXpPopups(prev => [...prev.slice(-2), { id, amount }]);
     setTimeout(() => {
       setXpPopups(prev => prev.filter(p => p.id !== id));
-    }, 1600);
+    }, 1500);
   }, []);
 
   const showCoinPopup = useCallback((amount) => {
-    const id = Date.now();
-    setCoinPopups(prev => [...prev, { id, amount }]);
+    const id = Date.now() + Math.random();
+    setCoinPopups(prev => [...prev.slice(-2), { id, amount }]);
     setTimeout(() => {
       setCoinPopups(prev => prev.filter(p => p.id !== id));
-    }, 1600);
+    }, 1500);
   }, []);
 
   return (

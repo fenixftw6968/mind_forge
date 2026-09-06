@@ -56,6 +56,7 @@ export default function MemoryChallenge() {
   const startTimeRef = useRef(Date.now());
   const scoreRef = useRef(0);
   const mistakesRef = useRef(0);
+  const isSubmittingRef = useRef(false);
 
   const clearMatchStorage = useCallback((matchId) => {
     localStorage.removeItem('activeMatchId_memory-challenge');
@@ -66,7 +67,7 @@ export default function MemoryChallenge() {
     }
   }, []);
 
-  // Listen for MATCH_FINISHED / MATCH_COMPLETED from opponent
+  // Listen for MATCH_FINISHED from opponent
   useMatchSocket(currentMatch?.id, (event) => {
     if (event.type === 'MATCH_FINISHED' || event.type === 'MATCH_COMPLETED' || event.data?.status === 'FINISHED') {
       setWaitingForOpponent(false);
@@ -75,7 +76,7 @@ export default function MemoryChallenge() {
     }
   });
 
-  // Poll for match completion while waiting for opponent (as bulletproof fallback)
+  // Poll for match completion while waiting for opponent (fallback)
   useEffect(() => {
     if (!waitingForOpponent || !currentMatch?.id) return;
     
@@ -98,9 +99,6 @@ export default function MemoryChallenge() {
       clearInterval(interval);
     };
   }, [waitingForOpponent, currentMatch?.id, clearMatchStorage]);
-
-  const intervalRef = useRef(null);
-  const scene = scenes[sceneIndex];
 
   // Check for active match on mount
   useEffect(() => {
@@ -129,7 +127,6 @@ export default function MemoryChallenge() {
             if (finished) {
               setWaitingForOpponent(true);
             } else {
-              // Restore questions and progress
               handleMatchReady(match);
               
               const savedIndex = localStorage.getItem('activeMatchIndex_' + match.id);
@@ -159,232 +156,151 @@ export default function MemoryChallenge() {
     checkActiveMatch();
   }, [user, clearMatchStorage]);
 
-  // Save active match progress in localStorage
-  useEffect(() => {
-    if (currentMatch && currentMatch.status !== 'FINISHED' && scenes.length > 0) {
-      localStorage.setItem('activeMatchId_memory-challenge', currentMatch.id);
-      localStorage.setItem('activeMatchIndex_' + currentMatch.id, sceneIndex);
-      localStorage.setItem('activeMatchScore_' + currentMatch.id, score);
-      localStorage.setItem('activeMatchMistakes_' + currentMatch.id, mistakes);
-    }
-  }, [sceneIndex, score, mistakes, currentMatch, scenes]);
+  const scene = scenes[sceneIndex];
 
-  // Auto-start match if accepted from invite (go through countdown lobby first)
+  // Reveal countdown timer
   useEffect(() => {
-    if (location.state?.acceptedMatch) {
-      const match = location.state.acceptedMatch;
-      setCurrentMatch(match);
-      setPlayMode('FRIEND');
-      setShowModeModal(false);
-      setShowMatchmaking(true);
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
+    if (phase !== 'reveal' || !scene) return;
+    const t = scene.revealTime || 8;
+    setTimeLeft(t);
 
-  const handleSelectMode = (mode) => {
-    setPlayMode(mode);
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setPhase('recall');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [phase, sceneIndex, scene]);
+
+  const startGame = useCallback(async (diff) => {
+    setLoadingDifficulty(diff);
+    try {
+      const selected = await selectQuestionsForGame({
+        gameSlug: 'memory-challenge',
+        difficulty: diff,
+        questionBank: memoryChallengeQuestions,
+        count: 5,
+        userShuffle: true
+      });
+      let activeList = Array.isArray(selected) && selected.length > 0 ? selected : [];
+      if (activeList.length === 0) {
+        const fallback = memoryChallengeQuestions.filter(q => q.difficulty.toLowerCase() === diff.toLowerCase());
+        activeList = fallback.length > 0 ? fallback.slice(0, 5) : memoryChallengeQuestions.slice(0, 5);
+      }
+      setScenes(activeList);
+      setDifficulty(diff);
+      setSceneIndex(0);
+      setPhase('reveal');
+      setSelected(null);
+      setShowResult(false);
+      setScore(0);
+      setMistakes(0);
+      setTotalXP(0);
+      setShowComplete(false);
+      scoreRef.current = 0;
+      mistakesRef.current = 0;
+      startTimeRef.current = Date.now();
+    } catch (e) {
+      console.warn("Failed to load questions, using fallback set:", e);
+      const fallback = memoryChallengeQuestions.filter(q => q.difficulty.toLowerCase() === diff.toLowerCase());
+      const activeList = fallback.length > 0 ? fallback.slice(0, 5) : memoryChallengeQuestions.slice(0, 5);
+      setScenes(activeList);
+      setDifficulty(diff);
+      setPhase('reveal');
+      setSceneIndex(0);
+    } finally {
+      setLoadingDifficulty(null);
+    }
+  }, []);
+
+  const handleMatchReady = useCallback((matchData) => {
+    setCurrentMatch(matchData);
+    setShowMatchmaking(false);
     setShowModeModal(false);
-    if (mode === 'RANKED') {
-      setInvitedFriend(null);
-      setShowMatchmaking(true);
-    } else if (mode === 'FRIEND') {
-      setShowSocialDrawer(true);
-    }
-  };
 
-  const handleExitGame = async () => {
+    let parsedQuestions = [];
+    if (matchData.puzzleSet) {
+      try {
+        parsedQuestions = JSON.parse(matchData.puzzleSet);
+      } catch (e) {
+        console.warn("Could not parse match puzzleSet JSON", e);
+      }
+    }
+
+    if (!parsedQuestions || parsedQuestions.length === 0) {
+      const matchDiff = matchData.difficulty ? matchData.difficulty.toLowerCase() : 'medium';
+      parsedQuestions = memoryChallengeQuestions.filter(q => q.difficulty.toLowerCase() === matchDiff).slice(0, 5);
+    }
+
+    setScenes(parsedQuestions);
+    setDifficulty((matchData.difficulty || 'MEDIUM').toUpperCase());
+    setSceneIndex(0);
+    setPhase('reveal');
+    setSelected(null);
+    setShowResult(false);
+    setScore(0);
+    setMistakes(0);
+    setTotalXP(0);
+    setShowComplete(false);
+    scoreRef.current = 0;
+    mistakesRef.current = 0;
+    startTimeRef.current = Date.now();
+  }, []);
+
+  const handleExitGame = () => {
     setShowExitModal(false);
-    if (currentMatch?.id) {
-      try {
-        await api.post(`/api/matches/${currentMatch.id}/abandon`);
-      } catch (e) {}
+    if (currentMatch) {
       clearMatchStorage(currentMatch.id);
-    } else if (showMatchmaking) {
-      try {
-        await api.post('/api/matches/queue/cancel?gameSlug=memory-challenge');
-      } catch (e) {}
     }
     navigate('/games');
   };
 
-  const handleMatchReady = (match) => {
-    setShowMatchmaking(false);
-    setShowSocialDrawer(false);
-    setCurrentMatch(match);
-    startTimeRef.current = Date.now();
-
-    let challengeScenes = [];
-    try {
-      if (match.challengeData) {
-        const parsed = typeof match.challengeData === 'string' ? JSON.parse(match.challengeData) : match.challengeData;
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          challengeScenes = parsed.map((p, idx) => {
-            let contentObj = {};
-            if (typeof p.content === 'string') {
-              try { contentObj = JSON.parse(p.content); } catch (e) {}
-            } else if (typeof p.content === 'object' && p.content !== null) {
-              contentObj = p.content;
-            }
-
-            let correctAns = p.correctAnswer || p.answer || '';
-            if (typeof correctAns === 'string' && correctAns.trim().startsWith('{')) {
-              try {
-                const parsedAns = JSON.parse(correctAns);
-                correctAns = parsedAns.answer || correctAns;
-              } catch (e) {}
-            }
-
-            const items = p.items || contentObj.items || ['Red Bag', 'Silver Key', 'Laptop', 'Notebook', 'Coffee Mug', 'Pen'];
-            const question = p.question || contentObj.question || 'Which item was located in the scene?';
-            const options = p.options || contentObj.options || contentObj.choices || ['Silver Key', 'Golden Watch', 'Blue Folder', 'USB Flash'];
-
-            return {
-              id: p.id || idx + 1,
-              title: p.title || contentObj.title || 'Memory Crime Scene',
-              revealTime: p.revealTime || contentObj.revealTime || 6,
-              items: items,
-              question: question,
-              options: options,
-              correctAnswer: correctAns || (typeof options[0] === 'string' ? options[0] : 'Silver Key'),
-              explanation: p.explanation || contentObj.explanation || 'Visual observation test.'
-            };
-          });
-        }
-      }
-    } catch (e) {
-      console.warn("Could not parse match challengeData, falling back to local set", e);
-    }
-
-    if (challengeScenes.length === 0) {
-      challengeScenes = getDailyQuestionSet({
-        gameType: 'memory-challenge',
-        difficulty: 'MEDIUM',
-        questionBank: memoryChallengeQuestions,
-        count: 5,
-        userShuffle: false
-      });
-    }
-
-    setScenes(challengeScenes);
-    const matchDiff = match.difficulty || 'MEDIUM';
-    setDifficulty(matchDiff);
-    setSceneIndex(0);
-    setScore(0);
-    setMistakes(0);
-    setTotalXP(0);
-    setSelected(null);
-    setShowResult(false);
-    setShowComplete(false);
-    setPhase('reveal');
-    setTimeLeft(challengeScenes[0]?.revealTime || 6);
-    setCompetitiveResult(null);
-  };
-
-  const startGame = async (diff) => {
-    setLoadingDifficulty(diff);
-    try {
-      const selectedList = await selectQuestionsForGame({
-        gameSlug: 'memory-challenge',
-        difficulty: diff,
-        questionBank: memoryChallengeQuestions,
-        count: 10,
-        userShuffle: true
-      });
-
-      const activeList = Array.isArray(selectedList) && selectedList.length > 0
-        ? selectedList
-        : memoryChallengeQuestions.filter(q => q.difficulty && q.difficulty.toLowerCase() === diff.toLowerCase());
-
-      setScenes(activeList);
-      setDifficulty(diff);
-      setSceneIndex(0);
-      setScore(0);
-      setMistakes(0);
-      setTotalXP(0);
-      setSelected(null);
-      setShowResult(false);
-      setShowComplete(false);
-      setLatestUser(null);
-      setPhase('reveal');
-      setTimeLeft(activeList[0]?.revealTime || 8);
-      setCompetitiveResult(null);
-    } catch (e) {
-      console.warn("Could not start memory challenge via service, using local pool", e);
-      const activeList = memoryChallengeQuestions.filter(q => q.difficulty && q.difficulty.toLowerCase() === diff.toLowerCase());
-      setScenes(activeList.slice(0, 10));
-      setDifficulty(diff);
-      setPhase('reveal');
-      setTimeLeft(activeList[0]?.revealTime || 8);
-    } finally {
-      setLoadingDifficulty(null);
-    }
-  };
-
-  useEffect(() => {
-    if (difficulty && !showComplete && scene) {
-      setPhase('reveal');
-      setTimeLeft(scene.revealTime || 8);
-      setSelected(null);
-      setShowResult(false);
-    }
-  }, [sceneIndex, difficulty, showComplete]);
-
-  useEffect(() => {
-    if (phase === 'reveal' && timeLeft > 0) {
-      intervalRef.current = setTimeout(() => setTimeLeft(t => t - 1), 1000);
-    } else if (phase === 'reveal' && timeLeft === 0) {
-      setPhase('recall');
-    }
-    return () => clearTimeout(intervalRef.current);
-  }, [phase, timeLeft]);
-
   const handleAnswer = async (choice) => {
-    if (selected || showResult) return;
+    if (isSubmittingRef.current || selected || phase !== 'recall') return;
+    isSubmittingRef.current = true;
     setSelected(choice);
-    const isCorrect = choice === scene.correctAnswer;
     setShowResult(true);
 
-    if (!isCorrect) {
+    const isCorrect = choice === scene.correctAnswer;
+    if (isCorrect) {
+      const baseXP = XP_PER_DIFFICULTY[difficulty] || 25;
+      scoreRef.current += 1;
+      setScore(s => s + 1);
+      setTotalXP(t => t + baseXP);
+      showXPPopup(baseXP);
+    } else {
+      mistakesRef.current += 1;
       setMistakes(m => m + 1);
     }
 
     if (playMode === 'PRACTICE') {
-      const baseXP = XP_PER_DIFFICULTY[(scene.difficulty || difficulty || 'MEDIUM').toUpperCase()] || 20;
-      const earned = isCorrect ? baseXP : 0;
-
-      if (isCorrect) {
-        setScore(s => s + 1);
-        setTotalXP(t => t + earned);
-        showXPPopup(earned);
-      }
-
       try {
         const res = await api.post('/api/games/memory-challenge/attempts', {
           puzzleId: scene.id,
           userAnswer: choice,
           hintUsed: false,
-          timeTakenSeconds: (scene.revealTime || 8) - timeLeft
+          timeTakenSeconds: 8
         });
 
         if (res.data?.user) {
           setLatestUser(res.data.user);
         }
       } catch (e) {
-        // Offline fallback
-      }
-    } else {
-      if (isCorrect) {
-        setScore(s => {
-          scoreRef.current = s + 1;
-          return s + 1;
-        });
-      } else {
-        mistakesRef.current = mistakesRef.current + 1;
+        // Offline / fallback mode
       }
     }
   };
 
   const handleNext = async () => {
+    isSubmittingRef.current = false;
+    setSelected(null);
+    setShowResult(false);
     if (sceneIndex + 1 >= scenes.length) {
       if (playMode === 'PRACTICE') {
         if (latestUser) {
@@ -411,27 +327,28 @@ export default function MemoryChallenge() {
             }
           }
         } catch (e) {
-          console.warn("Memory match submit error, using offline fallback", e);
+          console.warn("Match result submit error, using offline simulation fallback", e);
           setWaitingForOpponent(false);
         }
 
         if (currentMatch.player2Id === 999999 || currentMatch.isBotMatch) {
-          const botScore = Math.max(0, score + (Math.random() > 0.4 ? (Math.random() > 0.5 ? 0 : -1) : 1));
-          const botDelta = score >= botScore ? -16 : 16;
-          const myDelta = score > botScore ? 24 : (score === botScore ? 0 : -18);
+          const botScore = Math.max(0, scoreRef.current + (Math.random() > 0.4 ? 0 : -1));
+          const botDelta = scoreRef.current >= botScore ? -16 : 16;
+          const myDelta = scoreRef.current > botScore ? 24 : (scoreRef.current === botScore ? 0 : -18);
           const simResult = {
             ...currentMatch,
-            player1Score: score,
+            player1Score: scoreRef.current,
             player2Score: botScore,
             player1RatingChange: myDelta,
             player2RatingChange: botDelta,
-            winnerId: score > botScore ? currentMatch.player1Id : (score < botScore ? 999999 : null)
+            winnerId: scoreRef.current > botScore ? currentMatch.player1Id : (scoreRef.current < botScore ? 999999 : null)
           };
           setCompetitiveResult(simResult);
         }
       }
     } else {
       setSceneIndex(i => i + 1);
+      setPhase('reveal');
     }
   };
 
@@ -443,32 +360,22 @@ export default function MemoryChallenge() {
         gameTitle="Memory Challenge"
         gameIcon="👁️"
         onClose={() => navigate('/games')}
-        onSelectMode={handleSelectMode}
-      />
-    );
-  }
-
-  // === MATCHMAKING LOBBY ===
-  if (showMatchmaking) {
-    return (
-      <MatchmakingLobby
-        isOpen={showMatchmaking}
-        gameSlug="memory-challenge"
-        gameTitle="Memory Challenge"
-        mode={playMode === 'FRIEND' ? 'FRIEND' : 'RANKED'}
-        friendTarget={invitedFriend}
-        initialMatch={currentMatch}
-        onClose={() => {
-          setShowMatchmaking(false);
-          setInvitedFriend(null);
-          setShowModeModal(true);
+        onSelectMode={(mode) => {
+          setPlayMode(mode);
+          setShowModeModal(false);
+          if (mode === 'PRACTICE') {
+            setDifficulty(null);
+          } else if (mode === 'RANKED') {
+            setShowMatchmaking(true);
+          } else if (mode === 'FRIEND') {
+            setShowSocialDrawer(true);
+          }
         }}
-        onMatchReady={handleMatchReady}
       />
     );
   }
 
-  // === SOCIAL DRAWER (PLAY WITH FRIEND) ===
+  // === SOCIAL DRAWER ===
   if (showSocialDrawer) {
     return (
       <SocialDrawer
@@ -487,21 +394,35 @@ export default function MemoryChallenge() {
     );
   }
 
+  // === MATCHMAKING LOBBY ===
+  if (showMatchmaking) {
+    return (
+      <MatchmakingLobby
+        isOpen={showMatchmaking}
+        onClose={() => {
+          setShowMatchmaking(false);
+          setShowModeModal(true);
+        }}
+        gameSlug="memory-challenge"
+        gameTitle="Memory Challenge"
+        mode={playMode === 'FRIEND' ? 'FRIEND' : 'RANKED'}
+        friendTarget={invitedFriend}
+        difficulty={difficulty || 'MEDIUM'}
+        onMatchReady={handleMatchReady}
+      />
+    );
+  }
+
   // === WAITING FOR OPPONENT TO FINISH ===
   if (waitingForOpponent) {
     return (
-      <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
+      <div style={{ minHeight: '100vh', background: '#020617', paddingTop: '6.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <div className="star-field" />
+        <div style={{ textAlign: 'center', padding: '2.5rem', background: 'rgba(8, 14, 33, 0.85)', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(20px)', boxShadow: '0 12px 35px rgba(0, 0, 0, 0.5)', zIndex: 1 }}>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>You finished!</h2>
-          <p style={{ color: '#64748B', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Your score: <strong style={{ color: '#4F46E5' }}>{scoreRef.current} / {scenes.length}</strong></p>
-          <p style={{ color: '#94A3B8', fontSize: '0.875rem' }}>Waiting for your opponent to finish...</p>
-          <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'center', gap: '0.4rem' }}>
-            {[0,1,2].map(i => (
-              <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#6366F1', animation: `bounce 1.2s ${i * 0.2}s infinite` }} />
-            ))}
-          </div>
-          <style>{`@keyframes bounce { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }`}</style>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#F8FAFC', marginBottom: '0.5rem', fontFamily: 'var(--font-display)' }}>Challenge Completed</h2>
+          <p style={{ color: '#94A3B8', fontSize: '0.95rem', marginBottom: '0.5rem' }}>Your score: <strong className="font-mono" style={{ color: '#38bdf8' }}>{scoreRef.current} / {scenes.length}</strong></p>
+          <p className="font-mono" style={{ color: '#38bdf8', fontSize: '0.8rem' }}>Waiting for opponent synchronization...</p>
         </div>
       </div>
     );
@@ -510,7 +431,8 @@ export default function MemoryChallenge() {
   // === COMPETITIVE MATCH RESULTS SCREEN ===
   if (competitiveResult) {
     return (
-      <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingTop: '64px', paddingBottom: '3rem' }}>
+      <div style={{ minHeight: '100vh', background: '#020617', paddingTop: '6.5rem', paddingBottom: '3rem', color: '#F8FAFC', position: 'relative' }}>
+        <div className="star-field" />
         <CompetitiveResults
           matchResult={competitiveResult}
           currentUserId={user?.id || currentMatch?.player1Id}
@@ -541,7 +463,7 @@ export default function MemoryChallenge() {
       <DifficultySelector
         title="Memory Challenge"
         subtitle="Study the complex scene carefully before it disappears. Then answer from memory."
-        icon="🧠"
+        icon="👁️"
         loadingTier={loadingDifficulty}
         onSelectDifficulty={(diff) => startGame(diff)}
         onBack={() => setShowModeModal(true)}
@@ -566,9 +488,11 @@ export default function MemoryChallenge() {
   const choicesList = scene.options || (scene.questions?.[0]?.choices) || [];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', color: '#F8FAFC' }}>
+    <div style={{ minHeight: '100vh', background: '#020617', paddingTop: '6.5rem', color: '#F8FAFC', position: 'relative' }}>
       <XPPopup popups={xpPopups} />
-      <div style={{ maxWidth: '750px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+      <div className="star-field" />
+
+      <div style={{ maxWidth: '780px', margin: '0 auto', padding: '1.5rem 1.5rem 4rem', position: 'relative', zIndex: 1 }}>
         
         {/* Progress Header */}
         <GameProgress
@@ -594,16 +518,24 @@ export default function MemoryChallenge() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <Eye size={20} color="#4ADE80" />
-                <span className="font-accent" style={{ fontSize: '1.2rem', fontWeight: 800, color: '#4ADE80' }}>
+                <Eye size={20} color="#38bdf8" />
+                <span className="font-mono" style={{ fontSize: '1.15rem', fontWeight: 800, color: '#38bdf8' }}>
                   {scene.title}
                 </span>
               </div>
-              <p style={{ color: '#94A3B8', fontSize: '0.9rem', fontWeight: 500 }}>{scene.description}</p>
+              <p style={{ color: '#94A3B8', fontSize: '0.9rem', fontWeight: 400 }}>{scene.description}</p>
             </div>
 
             {/* Scene Matrix Display */}
-            <div style={{ background: '#242424', border: '1px solid #2E2E2E', borderRadius: '1.25rem', padding: '2rem', marginBottom: '1.5rem', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
+            <div style={{
+              background: 'rgba(8, 14, 33, 0.85)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '1.25rem',
+              padding: '2rem',
+              marginBottom: '1.5rem',
+              boxShadow: '0 12px 35px rgba(0,0,0,0.5)'
+            }}>
               <div style={{ display: 'grid', gridTemplateColumns: `repeat(${scene.items.length > 6 ? 3 : 3}, 1fr)`, gap: '1rem' }}>
                 {scene.items.map((item, i) => (
                   <motion.div
@@ -616,8 +548,8 @@ export default function MemoryChallenge() {
                       flexDirection: 'column',
                       alignItems: 'center',
                       padding: '1.25rem 0.75rem',
-                      background: '#1A1A1A',
-                      border: '1px solid #333333',
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
                       borderRadius: '0.875rem',
                       gap: '0.5rem',
                       textAlign: 'center',
@@ -625,7 +557,7 @@ export default function MemoryChallenge() {
                     }}
                   >
                     <span style={{ fontSize: '2.5rem' }}>{item.emoji}</span>
-                    <span style={{ fontSize: '0.8rem', color: '#F8FAFC', fontWeight: 700, lineHeight: 1.3 }}>{item.label}</span>
+                    <span className="font-mono" style={{ fontSize: '0.8rem', color: '#F8FAFC', fontWeight: 700, lineHeight: 1.3 }}>{item.label}</span>
                   </motion.div>
                 ))}
               </div>
@@ -633,15 +565,15 @@ export default function MemoryChallenge() {
 
             {/* Countdown bar */}
             <div style={{ textAlign: 'center' }}>
-              <div style={{ height: '6px', background: '#2E2E2E', borderRadius: '999px', overflow: 'hidden', maxWidth: '300px', margin: '0 auto' }}>
+              <div style={{ height: '6px', background: 'rgba(255, 255, 255, 0.06)', borderRadius: '999px', overflow: 'hidden', maxWidth: '300px', margin: '0 auto' }}>
                 <motion.div
-                  style={{ height: '100%', borderRadius: '999px', background: timeLeft <= 2 ? '#FB7185' : 'linear-gradient(90deg, #22C55E, #4ADE80)' }}
+                  style={{ height: '100%', borderRadius: '999px', background: timeLeft <= 2 ? '#f43f5e' : 'linear-gradient(90deg, #3b82f6, #38bdf8, #60a5fa)' }}
                   initial={{ width: '100%' }}
                   animate={{ width: `${(timeLeft / (scene.revealTime || 8)) * 100}%` }}
                   transition={{ duration: 1, ease: 'linear' }}
                 />
               </div>
-              <p style={{ marginTop: '0.75rem', color: '#94A3B8', fontSize: '0.825rem', fontWeight: 600 }}>Scene hidden in {timeLeft}s...</p>
+              <p className="font-mono" style={{ marginTop: '0.75rem', color: '#94A3B8', fontSize: '0.8rem', fontWeight: 600 }}>Scene obscured in {timeLeft}s...</p>
             </div>
           </motion.div>
         )}
@@ -652,40 +584,48 @@ export default function MemoryChallenge() {
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                  <EyeOff size={18} color="#FB7185" />
-                  <span className="font-accent" style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FB7185' }}>
-                    Scene Hidden — Answer from Memory
+                  <EyeOff size={18} color="#38bdf8" />
+                  <span className="font-mono" style={{ fontSize: '1.1rem', fontWeight: 800, color: '#38bdf8' }}>
+                    // SCENE OBSCURED — RECALL FROM MEMORY
                   </span>
                 </div>
               </div>
 
-              <div style={{ background: '#242424', border: '1px solid #2E2E2E', borderRadius: '1.25rem', padding: '2rem', marginBottom: '1.25rem', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}>
-                <p style={{ fontSize: '1.15rem', fontWeight: 800, color: '#F8FAFC', marginBottom: '1.75rem', textAlign: 'center' }}>
+              <div style={{
+                background: 'rgba(8, 14, 33, 0.85)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '1.25rem',
+                padding: '2rem',
+                marginBottom: '1.25rem',
+                boxShadow: '0 12px 35px rgba(0,0,0,0.5)'
+              }}>
+                <p className="font-mono" style={{ fontSize: '1.15rem', fontWeight: 700, color: '#F8FAFC', marginBottom: '1.75rem', textAlign: 'center', lineHeight: 1.6 }}>
                   {scene.question}
                 </p>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
                   {choicesList.map(choice => {
-                    let borderColor = '#2E2E2E';
-                    let bg = '#1C1C1C';
+                    let borderColor = 'rgba(255, 255, 255, 0.08)';
+                    let bg = 'rgba(255, 255, 255, 0.02)';
                     let color = '#F8FAFC';
 
                     if (selected) {
                       if (choice === scene.correctAnswer) {
-                        borderColor = 'rgba(34, 197, 94, 0.5)';
-                        bg = 'rgba(34, 197, 94, 0.15)';
-                        color = '#4ADE80';
+                        borderColor = 'rgba(56, 189, 248, 0.5)';
+                        bg = 'rgba(56, 189, 248, 0.12)';
+                        color = '#38bdf8';
                       } else if (selected === choice) {
                         borderColor = 'rgba(244, 63, 94, 0.5)';
-                        bg = 'rgba(244, 63, 94, 0.15)';
-                        color = '#FB7185';
+                        bg = 'rgba(244, 63, 94, 0.12)';
+                        color = '#f43f5e';
                       }
                     }
 
                     return (
                       <motion.button
                         key={choice}
-                        whileHover={!selected ? { scale: 1.01 } : {}}
+                        whileHover={!selected ? { scale: 1.01, borderColor: 'rgba(59, 130, 246, 0.4)' } : {}}
                         onClick={() => handleAnswer(choice)}
                         disabled={!!selected}
                         style={{
@@ -696,6 +636,7 @@ export default function MemoryChallenge() {
                           color,
                           cursor: selected ? 'default' : 'pointer',
                           fontSize: '0.95rem',
+                          fontFamily: 'var(--font-mono)',
                           fontWeight: 700,
                           textAlign: 'center',
                           boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
@@ -719,21 +660,39 @@ export default function MemoryChallenge() {
                       gap: '0.75rem',
                       padding: '1rem 1.25rem',
                       borderRadius: '0.85rem',
-                      background: selected === scene.correctAnswer ? 'rgba(34, 197, 94, 0.12)' : 'rgba(244, 63, 94, 0.12)',
-                      border: `1px solid ${selected === scene.correctAnswer ? 'rgba(34, 197, 94, 0.25)' : 'rgba(244, 63, 94, 0.25)'}`,
+                      background: selected === scene.correctAnswer ? 'rgba(56, 189, 248, 0.12)' : 'rgba(244, 63, 94, 0.12)',
+                      border: `1px solid ${selected === scene.correctAnswer ? 'rgba(56, 189, 248, 0.25)' : 'rgba(244, 63, 94, 0.25)'}`,
                       marginBottom: '1rem'
                     }}
                   >
-                    {selected === scene.correctAnswer ? <CheckCircle size={22} color="#4ADE80" /> : <XCircle size={22} color="#FB7185" />}
+                    {selected === scene.correctAnswer ? <CheckCircle size={22} color="#38bdf8" /> : <XCircle size={22} color="#f43f5e" />}
                     <div>
-                      <div style={{ fontWeight: 800, color: selected === scene.correctAnswer ? '#4ADE80' : '#FB7185', fontSize: '0.95rem' }}>
+                      <div className="font-mono" style={{ fontWeight: 800, color: selected === scene.correctAnswer ? '#38bdf8' : '#f43f5e', fontSize: '0.95rem' }}>
                         {selected === scene.correctAnswer ? '🎉 Perfect Recall!' : `Incorrect — The correct item was: ${scene.correctAnswer}`}
                       </div>
                     </div>
                   </div>
 
-                  <button onClick={handleNext} className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}>
-                    {sceneIndex + 1 >= scenes.length ? 'See Results 🏆' : 'Next Scene →'}
+                  <button
+                    onClick={handleNext}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding: '0.9rem',
+                      borderRadius: '9999px',
+                      background: 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '0.95rem',
+                      boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {sceneIndex + 1 >= scenes.length ? 'Final Summary & Rewards 🏆' : 'Next Scene →'}
                   </button>
                 </motion.div>
               )}

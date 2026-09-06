@@ -26,7 +26,7 @@ export default function Login() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#151515',
+      background: '#020617',
       position: 'relative',
       overflowX: 'hidden',
       display: 'flex',
@@ -34,13 +34,18 @@ export default function Login() {
       justifyContent: 'space-between',
       color: '#F8FAFC'
     }}>
+      {/* Background Starfield & Mesh Glow */}
+      <div className="star-field" />
+      <div className="binary-texture" />
+      <div className="mesh-glow" style={{ top: '50%', opacity: 0.6 }} />
+
       {/* Top Header Navbar */}
       <header style={{
-        padding: '1.25rem 2rem',
+        padding: '1.5rem 2rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        maxWidth: '1280px',
+        maxWidth: '1200px',
         margin: '0 auto',
         width: '100%',
         boxSizing: 'border-box',
@@ -49,16 +54,16 @@ export default function Login() {
         {/* Brand Logo */}
         <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
           <div style={{
-            width: '36px', height: '36px', borderRadius: '10px',
-            background: '#242424',
-            border: '1px solid #383838',
+            width: '32px', height: '32px', borderRadius: '8px',
+            background: 'rgba(59, 130, 246, 0.12)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 0 10px rgba(34, 197, 94, 0.15)',
+            boxShadow: '0 0 15px rgba(59, 130, 246, 0.35)',
           }}>
-            <Brain size={20} color="#22C55E" />
+            <Brain size={18} color="#60A5FA" />
           </div>
-          <span className="font-display" style={{ fontSize: '1.2rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.02em' }}>
-            Mind<span style={{ color: '#22C55E' }}>Forge</span>
+          <span className="font-display" style={{ fontSize: '1.1rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '-0.02em' }}>
+            Algo<span style={{ color: '#60A5FA' }}>Arena</span>
           </span>
         </Link>
 
@@ -66,8 +71,8 @@ export default function Login() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           <Link
             to="/signup"
-            className="btn-primary"
-            style={{ padding: '0.45rem 1.15rem', fontSize: '0.85rem' }}
+            className="pill-btn-ghost"
+            style={{ padding: '0.4rem 1.15rem', fontSize: '0.825rem' }}
           >
             Create Account
           </Link>
@@ -76,9 +81,9 @@ export default function Login() {
 
       {/* Main Login Viewport */}
       <main style={{
-        maxWidth: '460px',
+        maxWidth: '440px',
         margin: '0 auto',
-        padding: '2rem 1.5rem 4rem',
+        padding: '1.5rem 1.5rem 4rem',
         width: '100%',
         boxSizing: 'border-box',
         position: 'relative',
@@ -93,21 +98,26 @@ export default function Login() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
           style={{
-            background: '#242424',
-            border: '1px solid #2E2E2E',
+            background: 'rgba(8, 14, 33, 0.85)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '1.25rem',
-            padding: '2.25rem 2rem',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
+            padding: '2.5rem 2rem',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(59, 130, 246, 0.12)',
             width: '100%',
             boxSizing: 'border-box'
           }}
         >
           <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-            <h1 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 800, color: '#F8FAFC', marginBottom: '0.35rem', letterSpacing: '-0.02em' }}>
-              Welcome back
+            <span style={{ fontSize: '0.75rem', color: '#60A5FA', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              // AUTHENTICATION PROTOCOL
+            </span>
+            <h1 className="font-display" style={{ fontSize: '1.65rem', fontWeight: 700, color: '#FFFFFF', marginTop: '0.35rem', marginBottom: '0.35rem' }}>
+              Welcome Back
             </h1>
-            <p style={{ color: '#94A3B8', fontSize: '0.875rem', fontWeight: 500 }}>
-              Enter your credentials to access your account
+            <p style={{ color: '#94A3B8', fontSize: '0.85rem', fontWeight: 400 }}>
+              Enter your credentials to access the cognitive network
             </p>
           </div>
 
@@ -119,34 +129,34 @@ export default function Login() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                background: 'rgba(244, 63, 94, 0.12)',
-                border: '1px solid rgba(244, 63, 94, 0.3)',
-                borderRadius: '0.625rem',
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '0.5rem',
                 padding: '0.65rem 0.85rem',
                 marginBottom: '1.25rem'
               }}
             >
-              <AlertCircle size={15} color="#FB7185" />
-              <span style={{ color: '#FB7185', fontSize: '0.825rem', fontWeight: 500 }}>{error}</span>
+              <AlertCircle size={15} color="#f87171" />
+              <span style={{ color: '#f87171', fontSize: '0.825rem', fontWeight: 500 }}>{error}</span>
             </motion.div>
           )}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
             {/* Email Address */}
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#CBD5E1', marginBottom: '0.4rem' }}>
+              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: '#CBD5E1', marginBottom: '0.4rem' }}>
                 Email Address
               </label>
               <div style={{ position: 'relative' }}>
-                <Mail size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
+                <Mail size={16} color="#64748B" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="you@example.com"
                   required
+                  placeholder="solver@algoarena.ai"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="input-dark"
-                  style={{ paddingLeft: '2.5rem', background: '#1C1C1C', border: '1px solid #2E2E2E' }}
+                  style={{ paddingLeft: '2.5rem' }}
                 />
               </div>
             </div>
@@ -154,48 +164,28 @@ export default function Login() {
             {/* Password */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: '#CBD5E1' }}>
+                <label style={{ fontSize: '0.8rem', fontWeight: 500, color: '#CBD5E1' }}>
                   Password
                 </label>
-                <Link
-                  to="/forgot-password"
-                  style={{
-                    fontSize: '0.785rem',
-                    color: '#4ADE80',
-                    textDecoration: 'none',
-                    fontWeight: 600
-                  }}
-                >
-                  Forgot Password?
+                <Link to="/forgot-password" style={{ fontSize: '0.75rem', color: '#60A5FA', textDecoration: 'none', fontWeight: 500 }}>
+                  Forgot password?
                 </Link>
               </div>
               <div style={{ position: 'relative' }}>
-                <Lock size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
+                <Lock size={16} color="#64748B" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
                   type={showPass ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
                   required
+                  placeholder="••••••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="input-dark"
-                  style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem', background: '#1C1C1C', border: '1px solid #2E2E2E' }}
+                  style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPass(!showPass)}
-                  style={{
-                    position: 'absolute',
-                    right: '0.9rem',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: '#64748B',
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: 0
-                  }}
+                  style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748B', cursor: 'pointer' }}
                 >
                   {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -206,32 +196,30 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary"
-              style={{
-                width: '100%',
-                marginTop: '0.5rem',
-                padding: '0.8rem 1.25rem',
-                fontSize: '0.9rem',
-                opacity: loading ? 0.75 : 1
-              }}
+              className="pill-btn-blue"
+              style={{ width: '100%', marginTop: '0.5rem', opacity: loading ? 0.7 : 1 }}
             >
-              {loading ? 'Signing in...' : 'Sign In →'}
+              {loading ? 'Authenticating...' : 'Sign In'}
             </button>
           </form>
 
-          {/* Bottom Link */}
-          <p style={{ textAlign: 'center', fontSize: '0.85rem', color: '#94A3B8', marginTop: '1.5rem', fontWeight: 500 }}>
-            Don't have an account?{' '}
-            <Link to="/signup" style={{ color: '#4ADE80', textDecoration: 'none', fontWeight: 700 }}>
-              Sign up free
-            </Link>
-          </p>
+          {/* Card footer */}
+          <div style={{ textAlign: 'center', marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <span style={{ color: '#94A3B8', fontSize: '0.825rem' }}>
+              Don't have an account?{' '}
+              <Link to="/signup" style={{ color: '#60A5FA', fontWeight: 600, textDecoration: 'none' }}>
+                Sign up free
+              </Link>
+            </span>
+          </div>
         </motion.div>
       </main>
 
       {/* Footer */}
-      <footer style={{ padding: '1.5rem', textAlign: 'center', borderTop: '1px solid #242424', background: '#1A1A1A' }}>
-        <p style={{ fontSize: '0.775rem', color: '#64748B' }}>© 2026 MindForge. All rights reserved.</p>
+      <footer style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', padding: '1.25rem 2rem', textAlign: 'center', zIndex: 10 }}>
+        <p style={{ fontSize: '0.75rem', color: '#64748B' }}>
+          &copy; {new Date().getFullYear()} AlgoArena. Algorithmic Arena Platform.
+        </p>
       </footer>
     </div>
   );

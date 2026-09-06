@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Flame, Star, Coins, Lightbulb, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Flame, Star, Coins, Lightbulb, CheckCircle, XCircle, Clock, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useGame } from '../../context/GameContext';
 import XPPopup from '../../components/XPPopup/XPPopup';
@@ -13,7 +13,7 @@ const GAME_TYPE_LABELS = {
   'logic-puzzle':        { label: 'Logic & Reasoning', icon: '🧩' },
   'brain-teaser-battle': { label: 'Brain Teaser Battle', icon: '⚡' },
   'number-detective':    { label: 'Number Sequence', icon: '🔢' },
-  'memory-challenge':    { label: 'Memory & Recall', icon: '🧠' },
+  'memory-challenge':    { label: 'Memory & Recall', icon: '👁️' },
   'code-breaker':        { label: 'Code Breaker', icon: '🔐' },
 };
 
@@ -30,6 +30,7 @@ export default function DailyChallenge() {
   const [submitted, setSubmitted] = useState(false);
   const [result, setResult]       = useState(null);
   const [timeLeft, setTimeLeft]   = useState(() => getDailyCountdown().formatted);
+  const isSubmittingRef           = useRef(false);
 
   const fetchChallenge = async () => {
     try {
@@ -54,6 +55,7 @@ export default function DailyChallenge() {
         setAnswer('');
         setShowHint(false);
         setHintUsed(false);
+        isSubmittingRef.current = false;
       }
     } catch (e) {
       console.error("Failed to load daily challenge", e);
@@ -84,7 +86,9 @@ export default function DailyChallenge() {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (!answer.trim() || submitted) return;
+    if (isSubmittingRef.current || !answer.trim() || submitted) return;
+    isSubmittingRef.current = true;
+    setSubmitted(true);
 
     try {
       const res = await api.post('/api/games/daily/attempts', {
@@ -95,122 +99,157 @@ export default function DailyChallenge() {
 
       let parsedPuzzle = {};
       try {
-        parsedPuzzle = JSON.parse(challenge.puzzle);
+        parsedPuzzle = typeof challenge?.puzzle === 'string' ? JSON.parse(challenge.puzzle) : (challenge?.puzzle || {});
       } catch (err) {}
 
+      const isCorrect = res.data.correct;
+      const xpEarned = isCorrect ? (hintUsed ? Math.floor(challenge.xpReward / 2) : challenge.xpReward) : 0;
+      const coinEarned = isCorrect ? challenge.coinReward : 0;
+
       setResult({
-        correct: res.data.isCorrect,
-        xpEarned: res.data.xpEarned,
-        coinEarned: res.data.coinEarned,
-        explanation: parsedPuzzle.explanation
+        correct: isCorrect,
+        xpEarned,
+        coinEarned,
+        explanation: parsedPuzzle.explanation || ""
       });
 
-      if (res.data.isCorrect && res.data.xpEarned > 0) {
-        showXPPopup(res.data.xpEarned);
+      if (isCorrect) {
+        showXPPopup(xpEarned, 'Daily Mission Complete!');
       }
 
-      setSubmitted(true);
-
-      if (res.data.user) {
-        refreshUser(res.data.user);
-      }
-    } catch (err) {
-      console.error("Failed to submit daily challenge attempt", err);
+      await refreshUser();
+    } catch (e) {
+      console.error("Failed to submit daily challenge attempt", e);
+      setResult({
+        correct: false,
+        xpEarned: 0,
+        coinEarned: 0,
+        explanation: "Network verification error. Please retry."
+      });
     }
   };
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: '#94A3B8', fontSize: '1rem', fontWeight: 600 }}>Loading Today's Challenge...</div>
+      <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8', fontFamily: 'var(--font-mono)' }}>
+        Loading synchronized challenge...
       </div>
     );
   }
 
   if (!challenge) {
     return (
-      <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', padding: '2.5rem', background: '#242424', borderRadius: '1rem', border: '1px solid #2E2E2E', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>⚠️</div>
-          <div style={{ color: '#94A3B8', marginBottom: '1.25rem', fontWeight: 500 }}>No daily challenge available for today. Check back later!</div>
-          <button onClick={() => navigate('/dashboard')} className="btn-primary" style={{ padding: '0.65rem 1.25rem' }}>Go to Dashboard</button>
-        </div>
+      <div style={{ minHeight: '100vh', background: '#020617', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#F8FAFC', padding: '2rem' }}>
+        <h2 className="font-display" style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>No Active Daily Challenge</h2>
+        <p style={{ color: '#94A3B8', marginBottom: '1.5rem' }}>Check back later for the next daily synchronization.</p>
+        <button onClick={() => navigate('/dashboard')} className="pill-btn-blue">
+          Return to Dashboard
+        </button>
       </div>
     );
   }
 
+  const typeConfig = GAME_TYPE_LABELS[challenge.gameSlug] || { label: 'Daily Cognitive Challenge', icon: '🧠' };
+
   let puzzleData = {};
   try {
-    puzzleData = JSON.parse(challenge.puzzle);
-  } catch (err) {
-    puzzleData = { question: challenge.puzzle, hint: "" };
+    puzzleData = typeof challenge.puzzle === 'string' ? JSON.parse(challenge.puzzle) : (challenge.puzzle || {});
+  } catch (e) {
+    puzzleData = { question: challenge.description };
   }
 
-  const typeConfig = GAME_TYPE_LABELS[challenge.type] || { label: 'Daily Challenge', icon: '🎮' };
   const hasOptions = Array.isArray(puzzleData.options) && puzzleData.options.length > 0;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F8FAFC' }}>
-      <XPPopup popups={xpPopups} />
-      
-      <div style={{ maxWidth: '620px', width: '100%', padding: '2rem 1.5rem' }}>
-        <button onClick={() => navigate('/dashboard')} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '1.5rem', fontSize: '0.85rem', fontWeight: 600 }}>
-          <ArrowLeft size={16} /> Back to Dashboard
-        </button>
+    <div style={{ minHeight: '100vh', background: '#020617', paddingTop: '6rem', color: '#F8FAFC', position: 'relative' }}>
+      {/* Background Starfield & Texture */}
+      <div className="star-field" />
+      <div className="binary-texture" />
 
+      {/* Top back navigation */}
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1rem 1.5rem 0', position: 'relative', zIndex: 10 }}>
+        <button
+          onClick={() => navigate('/dashboard')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '999px',
+            padding: '0.4rem 1rem',
+            color: '#CBD5E1',
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: 'var(--font-display)',
+            transition: 'all 0.15s ease'
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.background = 'rgba(59, 130, 246, 0.12)'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = '#CBD5E1'; e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; }}
+        >
+          <ArrowLeft size={14} /> Back to Dashboard
+        </button>
+      </div>
+
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1.5rem 1.5rem 5rem', position: 'relative', zIndex: 1 }}>
+        
+        {/* Main Challenge Card */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           style={{
-            background: '#242424',
-            border: '1px solid #2E2E2E',
-            borderRadius: '1.25rem',
+            background: 'rgba(8, 14, 33, 0.85)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '1.75rem',
             padding: '2.25rem',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(59, 130, 246, 0.12)',
             position: 'relative',
             overflow: 'hidden'
           }}
         >
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '1.1rem' }}>{typeConfig.icon}</span>
-            <span style={{ fontSize: '0.725rem', fontWeight: 800, color: '#FB7185', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-              Daily Challenge • {typeConfig.label}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '1.2rem' }}>{typeConfig.icon}</span>
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#38BDF8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              // DAILY SEED • {typeConfig.label}
             </span>
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'rgba(244, 63, 94, 0.12)', padding: '0.2rem 0.55rem', borderRadius: '999px', border: '1px solid rgba(244, 63, 94, 0.25)' }}>
-              <Clock size={12} color="#FB7185" />
-              <span style={{ fontSize: '0.7rem', color: '#FB7185', fontWeight: 700 }}>Resets in {timeLeft}</span>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'rgba(59, 130, 246, 0.12)', padding: '0.3rem 0.75rem', borderRadius: '999px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+              <Clock size={12} color="#60A5FA" />
+              <span className="font-mono" style={{ fontSize: '0.7rem', color: '#60A5FA', fontWeight: 700 }}>RESETS {timeLeft}</span>
             </div>
           </div>
 
-          <h1 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 800, color: '#F8FAFC', marginBottom: '0.35rem', letterSpacing: '-0.02em' }}>
+          <h1 className="font-display" style={{ fontSize: '1.65rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '0.4rem', letterSpacing: '-0.02em' }}>
             {challenge.title}
           </h1>
-          <p style={{ color: '#94A3B8', fontSize: '0.875rem', lineHeight: 1.55, marginBottom: '1.25rem' }}>
+          <p style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
             {challenge.description}
           </p>
 
           {/* Rewards Panel */}
-          <div style={{ display: 'flex', gap: '1rem', background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.2)', padding: '0.65rem 0.85rem', borderRadius: '0.75rem', marginBottom: '1.5rem', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', background: 'rgba(13, 23, 56, 0.65)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '0.75rem 1rem', borderRadius: '1rem', marginBottom: '1.75rem', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <Star size={15} color="#FBBF24" fill="#FBBF24" />
-              <span style={{ fontSize: '0.8rem', color: '#FBBF24', fontWeight: 800 }}>+{challenge.xpReward} XP</span>
+              <span className="font-mono" style={{ fontSize: '0.8rem', color: '#FBBF24', fontWeight: 800 }}>+{challenge.xpReward} XP</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <Coins size={15} color="#FBBF24" />
-              <span style={{ fontSize: '0.8rem', color: '#FBBF24', fontWeight: 800 }}>+{challenge.coinReward} Coins</span>
+              <span className="font-mono" style={{ fontSize: '0.8rem', color: '#FBBF24', fontWeight: 800 }}>+{challenge.coinReward} COINS</span>
             </div>
-            <div style={{ marginLeft: 'auto', background: 'rgba(34, 197, 94, 0.12)', padding: '0.15rem 0.55rem', borderRadius: '4px', border: '1px solid rgba(34, 197, 94, 0.25)' }}>
-              <span style={{ fontSize: '0.675rem', color: '#4ADE80', fontWeight: 800 }}>{challenge.difficulty}</span>
+            <div style={{ marginLeft: 'auto', background: 'rgba(59, 130, 246, 0.15)', padding: '0.2rem 0.65rem', borderRadius: '999px', border: '1px solid rgba(59, 130, 246, 0.35)' }}>
+              <span className="font-mono" style={{ fontSize: '0.675rem', color: '#60A5FA', fontWeight: 800 }}>{challenge.difficulty}</span>
             </div>
           </div>
 
           {/* Puzzle Challenge Area */}
-          <div style={{ background: '#1C1C1C', border: '1px solid #2E2E2E', borderRadius: '0.875rem', padding: '1.35rem', marginBottom: '1.5rem', textAlign: 'center' }}>
-            <div style={{ fontSize: '0.7rem', color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem', fontWeight: 700 }}>
-              Challenge Puzzle
+          <div style={{ background: 'rgba(13, 23, 56, 0.65)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '1rem', padding: '1.5rem', marginBottom: '1.75rem', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.65rem', color: '#60A5FA', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.6rem', fontWeight: 700 }}>
+              // PROBLEM STATEMENT
             </div>
-            <div className="font-accent" style={{ fontSize: '1.15rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1.5, wordBreak: 'break-word' }}>
+            <div className="font-display" style={{ fontSize: '1.15rem', fontWeight: 600, color: '#FFFFFF', lineHeight: 1.6, wordBreak: 'break-word' }}>
               {puzzleData.question}
             </div>
           </div>
@@ -229,14 +268,16 @@ export default function DailyChallenge() {
                         onClick={() => setAnswer(opt)}
                         style={{
                           padding: '1rem',
-                          borderRadius: '0.75rem',
-                          background: isSelected ? 'rgba(34, 197, 94, 0.15)' : '#1C1C1C',
-                          border: `1px solid ${isSelected ? '#22C55E' : '#2E2E2E'}`,
-                          color: isSelected ? '#4ADE80' : '#F8FAFC',
-                          fontWeight: 700,
-                          fontSize: '0.95rem',
+                          borderRadius: '1rem',
+                          background: isSelected ? 'rgba(59, 130, 246, 0.2)' : 'rgba(13, 23, 56, 0.65)',
+                          border: `1px solid ${isSelected ? '#3B82F6' : 'rgba(255, 255, 255, 0.08)'}`,
+                          color: isSelected ? '#FFFFFF' : 'rgba(255, 255, 255, 0.85)',
+                          fontWeight: 600,
+                          fontSize: '0.9rem',
+                          fontFamily: 'var(--font-display)',
                           cursor: 'pointer',
                           textAlign: 'center',
+                          boxShadow: isSelected ? '0 0 15px rgba(59, 130, 246, 0.25)' : 'none',
                           transition: 'all 0.15s ease'
                         }}
                       >
@@ -249,12 +290,20 @@ export default function DailyChallenge() {
                 <div>
                   <input
                     type="text"
-                    placeholder="Enter your solution..."
+                    placeholder="Enter your sequence answer..."
                     value={answer}
                     onChange={(e) => setAnswer(e.target.value)}
                     required
                     className="input-dark"
-                    style={{ textAlign: 'center', fontSize: '1rem', fontWeight: 600, padding: '0.85rem', background: '#1C1C1C', border: '1px solid #2E2E2E' }}
+                    style={{
+                      width: '100%',
+                      padding: '0.85rem',
+                      borderRadius: '1rem',
+                      textAlign: 'center',
+                      fontSize: '1rem',
+                      fontWeight: 700,
+                      outline: 'none'
+                    }}
                   />
                 </div>
               )}
@@ -267,37 +316,53 @@ export default function DailyChallenge() {
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     style={{
-                      background: 'rgba(34, 197, 94, 0.08)',
-                      border: '1px solid rgba(34, 197, 94, 0.2)',
-                      borderRadius: '0.625rem',
-                      padding: '0.75rem',
-                      display: 'flex', gap: '0.45rem', alignItems: 'flex-start'
+                      background: 'rgba(59, 130, 246, 0.12)',
+                      border: '1px solid rgba(59, 130, 246, 0.3)',
+                      borderRadius: '1rem',
+                      padding: '0.85rem 1.15rem',
+                      display: 'flex', gap: '0.5rem', alignItems: 'flex-start'
                     }}
                   >
-                    <Lightbulb size={15} color="#4ADE80" style={{ flexShrink: 0, marginTop: '0.15rem' }} />
-                    <span style={{ fontSize: '0.8rem', color: '#4ADE80', lineHeight: 1.4, fontWeight: 500 }}>{puzzleData.hint}</span>
+                    <Lightbulb size={15} color="#60A5FA" style={{ flexShrink: 0, marginTop: '0.15rem' }} />
+                    <span style={{ fontSize: '0.825rem', color: '#93C5FD', lineHeight: 1.4, fontWeight: 500 }}>{puzzleData.hint}</span>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              <div style={{ display: 'flex', gap: '0.65rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
                 {!showHint && puzzleData.hint && (
                   <button
                     type="button"
                     onClick={() => { setShowHint(true); setHintUsed(true); }}
-                    className="btn-secondary"
-                    style={{ flex: 1, padding: '0.75rem', fontSize: '0.85rem' }}
+                    className="pill-btn-ghost"
+                    style={{
+                      flex: 1,
+                      padding: '0.8rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.35rem',
+                      fontSize: '0.8rem',
+                      fontWeight: 600
+                    }}
                   >
-                    <Lightbulb size={14} /> Use Hint
+                    <Lightbulb size={13} color="#FBBF24" /> HINT
                   </button>
                 )}
                 <button
                   type="submit"
                   disabled={!answer.trim()}
-                  className="btn-primary"
-                  style={{ flex: 2, padding: '0.75rem', fontSize: '0.875rem', opacity: answer.trim() ? 1 : 0.5 }}
+                  className="pill-btn-blue"
+                  style={{
+                    flex: 2,
+                    padding: '0.8rem',
+                    fontSize: '0.875rem',
+                    fontWeight: 700,
+                    opacity: answer.trim() ? 1 : 0.5,
+                    cursor: answer.trim() ? 'pointer' : 'not-allowed'
+                  }}
                 >
-                  Submit Solution →
+                  SUBMIT SOLUTION →
                 </button>
               </div>
             </form>
@@ -305,41 +370,46 @@ export default function DailyChallenge() {
             /* Results View */
             <div style={{ textAlign: 'center' }}>
               <div style={{
-                padding: '1.25rem',
-                borderRadius: '0.875rem',
-                background: result?.correct ? 'rgba(34, 197, 94, 0.12)' : 'rgba(244, 63, 94, 0.12)',
-                border: `1px solid ${result?.correct ? 'rgba(34, 197, 94, 0.25)' : 'rgba(244, 63, 94, 0.25)'}`,
+                padding: '1.35rem',
+                borderRadius: '1.25rem',
+                background: result?.correct ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                border: `1px solid ${result?.correct ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)'}`,
                 marginBottom: '1.5rem'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                  {result?.correct ? <CheckCircle size={20} color="#4ADE80" /> : <XCircle size={20} color="#FB7185" />}
-                  <span className="font-display" style={{ fontSize: '1.15rem', fontWeight: 800, color: result?.correct ? '#4ADE80' : '#FB7185' }}>
-                    {result?.correct ? 'Correct! Puzzle Solved' : 'Incorrect Attempt'}
+                  {result?.correct ? <CheckCircle size={22} color="#34d399" /> : <XCircle size={22} color="#f87171" />}
+                  <span className="font-display" style={{ fontSize: '1.15rem', fontWeight: 800, color: result?.correct ? '#34d399' : '#f87171' }}>
+                    {result?.correct ? 'CORRECT SOLUTION VERIFIED' : 'INCORRECT ATTEMPT'}
                   </span>
                 </div>
 
                 {result?.correct && (
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '0.5rem' }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4ADE80' }}>+{result.xpEarned} XP</span>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4ADE80' }}>+{result.coinEarned} Coins</span>
+                    <span className="font-mono" style={{ fontSize: '0.85rem', fontWeight: 800, color: '#34d399' }}>+{result.xpEarned} XP</span>
+                    <span className="font-mono" style={{ fontSize: '0.85rem', fontWeight: 800, color: '#34d399' }}>+{result.coinEarned} COINS</span>
                   </div>
                 )}
               </div>
 
               {/* Explanation */}
               {result?.explanation && (
-                <div style={{ textAlign: 'left', background: '#1C1C1C', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #2E2E2E', marginBottom: '1.5rem' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Explanation</div>
-                  <div style={{ fontSize: '0.85rem', color: '#CBD5E1', lineHeight: 1.5 }}>{result.explanation}</div>
+                <div style={{ textAlign: 'left', background: 'rgba(13, 23, 56, 0.65)', padding: '1.25rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.08)', marginBottom: '1.5rem' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#38BDF8', textTransform: 'uppercase', marginBottom: '0.35rem' }}>// DECRYPTED ANALYSIS</div>
+                  <div style={{ fontSize: '0.875rem', color: 'rgba(255, 255, 255, 0.8)', lineHeight: 1.6 }}>{result.explanation}</div>
                 </div>
               )}
 
               <button
                 onClick={() => navigate('/dashboard')}
-                className="btn-primary"
-                style={{ width: '100%', padding: '0.75rem' }}
+                className="pill-btn-blue"
+                style={{
+                  width: '100%',
+                  padding: '0.85rem',
+                  fontSize: '0.85rem',
+                  fontWeight: 700
+                }}
               >
-                Return to Dashboard
+                RETURN TO DASHBOARD
               </button>
             </div>
           )}

@@ -14,22 +14,27 @@ export function isAuthenticated() {
 /**
  * Selects questions for a game session using the server database as the source of truth.
  * Ensures cross-device and cross-computer question synchronization.
- * 
- * @param {Object} params
- * @param {string} params.gameSlug - e.g. 'dsa-master-quiz', 'number-detective', etc.
- * @param {string} [params.difficulty='all'] - 'easy' | 'medium' | 'hard' | 'all'
- * @param {Array} [params.questionBank=[]] - All available questions in the pool
- * @param {number} [params.count=10] - Number of questions to return
- * @param {boolean} [params.userShuffle=true] - Whether to shuffle questions
- * @returns {Promise<Array>} Selected questions with balanced options
+ * Supports both object params and positional arguments.
  */
-export async function selectQuestionsForGame({
-  gameSlug,
-  difficulty = 'all',
-  questionBank = [],
-  count = 10,
-  userShuffle = true
-} = {}) {
+export async function selectQuestionsForGame(optionsOrSlug, optDifficulty, optBank, optCount, optShuffle) {
+  let gameSlug, difficulty, questionBank, count, userShuffle;
+
+  if (typeof optionsOrSlug === 'object' && optionsOrSlug !== null) {
+    ({
+      gameSlug,
+      difficulty = 'all',
+      questionBank = [],
+      count = 10,
+      userShuffle = true
+    } = optionsOrSlug);
+  } else {
+    gameSlug = optionsOrSlug;
+    difficulty = optDifficulty || 'all';
+    questionBank = optBank || [];
+    count = optCount || 10;
+    userShuffle = optShuffle !== undefined ? optShuffle : true;
+  }
+
   if (!Array.isArray(questionBank) || questionBank.length === 0) {
     return [];
   }
@@ -46,6 +51,10 @@ export async function selectQuestionsForGame({
     if (matching.length > 0) {
       eligible = matching;
     }
+  }
+
+  if (eligible.length === 0) {
+    eligible = questionBank;
   }
 
   // Create lookup map by string ID
@@ -77,7 +86,7 @@ export async function selectQuestionsForGame({
           if (q) selected.push(q);
         }
 
-        // If server selected fewer than needed (e.g. pool size smaller than count), fill remainder
+        // If server selected fewer than needed, fill remainder
         if (selected.length < count) {
           const selectedSet = new Set(selected.map(q => String(q.id)));
           const remainder = eligible.filter(q => !selectedSet.has(String(q.id)));

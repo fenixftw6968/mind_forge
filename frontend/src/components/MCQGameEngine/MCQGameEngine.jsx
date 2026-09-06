@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Lightbulb, CheckCircle, XCircle, Clock, Swords, Code2, BookOpen, Target, Sparkles } from 'lucide-react';
+import { Lightbulb, CheckCircle, XCircle, Clock, Swords, Code2, BookOpen, Target, Sparkles, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useGame } from '../../context/GameContext';
 import { useTimer } from '../../hooks/useTimer';
@@ -65,6 +65,7 @@ export default function MCQGameEngine({
   const [showComplete, setShowComplete] = useState(false);
   const [latestUser, setLatestUser] = useState(null);
 
+  const isSubmittingRef = useRef(false);
   const startTimeRef = useRef(Date.now());
   const scoreRef = useRef(0);
   const mistakesRef = useRef(0);
@@ -100,53 +101,64 @@ export default function MCQGameEngine({
           setCompetitiveResult(res.data);
           clearMatchStorage(currentMatch.id);
         }
-      } catch (e) {
-        console.warn('Match poll check:', e);
+      } catch (err) {
+        console.warn("Polling match status fallback failed:", err);
       }
-    }, 1500);
+    }, 2000);
 
     return () => {
       isCancelled = true;
       clearInterval(interval);
     };
-  }, [waitingForOpponent, currentMatch?.id, clearMatchStorage]);
+  }, [waitingForOpponent, currentMatch, clearMatchStorage]);
 
-  // Timer hook
-  const { timeLeft, formattedTime: formatted, urgency, reset, pause, start } = useTimer(
-    TIMER_SECONDS.MEDIUM,
-    {
-      autoStart: false,
-      onComplete: () => {
-        handleTimeout();
-      }
-    }
+  // Handle timeout on a question
+  const handleTimeout = () => {
+    if (isSubmittingRef.current || showResult || result) return;
+    isSubmittingRef.current = true;
+    pause();
+    mistakesRef.current += 1;
+    setMistakes(mistakesRef.current);
+    setResult('wrong');
+    setShowResult(true);
+  };
+
+  // Setup question timer
+  const puzzle = puzzles[index];
+  const { timeLeft, formatted, urgency, reset, start, pause } = useTimer(
+    TIMER_SECONDS[difficulty?.toUpperCase()] || 60,
+    () => handleTimeout()
   );
 
-  const puzzle = puzzles[index];
-
-  // Initialize practice game session
+  // Initialize a practice session with questions
   const initGameSession = useCallback(async (selectedDiff) => {
     setLoadingDifficulty(selectedDiff);
+    isSubmittingRef.current = false;
     try {
-      const questions = await selectQuestionsForGame({
-        gameSlug: gameSlug,
+      const selected = await selectQuestionsForGame({
+        gameSlug,
         difficulty: selectedDiff,
-        questionBank: questionBank,
+        questionBank,
         count: 10,
         userShuffle: true
       });
 
-      const activeList = Array.isArray(questions) && questions.length > 0
-        ? questions
-        : questionBank.filter(q => q.difficulty && q.difficulty.toLowerCase() === selectedDiff.toLowerCase());
+      let activeList = Array.isArray(selected) && selected.length > 0 ? selected : [];
+
+      if (activeList.length === 0 && Array.isArray(questionBank) && questionBank.length > 0) {
+        const matching = questionBank.filter(q => q.difficulty && q.difficulty.toLowerCase() === selectedDiff.toLowerCase());
+        activeList = matching.length > 0 ? matching.slice(0, 10) : questionBank.slice(0, 10);
+      }
 
       setPuzzles(activeList);
       setDifficulty(selectedDiff);
       setIndex(0);
+      setSelectedOption('');
       setScore(0);
       setMistakes(0);
-      setSelectedOption(null);
+      setTotalXP(0);
       setShowResult(false);
+      setResult(null);
       setHintUsed(false);
       setShowHint(false);
       setShowComplete(false);
@@ -158,7 +170,8 @@ export default function MCQGameEngine({
     } catch (err) {
       console.warn("Failed to load questions, using fallback set:", err);
       const fallback = questionBank.filter(q => q.difficulty && q.difficulty.toLowerCase() === selectedDiff.toLowerCase());
-      setPuzzles(fallback.slice(0, 10));
+      const activeList = fallback.length > 0 ? fallback.slice(0, 10) : questionBank.slice(0, 10);
+      setPuzzles(activeList);
       setDifficulty(selectedDiff);
       reset(TIMER_SECONDS[selectedDiff?.toUpperCase()] || 60);
       start();
@@ -167,18 +180,10 @@ export default function MCQGameEngine({
     }
   }, [gameSlug, questionBank, reset, start]);
 
-  // Handle timeout on a question
-  const handleTimeout = () => {
-    pause();
-    mistakesRef.current += 1;
-    setMistakes(mistakesRef.current);
-    setResult('wrong');
-    setShowResult(true);
-  };
-
-  // Submit selected option
+  // Submit selected option (Protected against duplicate triggers)
   const handleSubmit = async () => {
-    if (!selectedOption || showResult || !puzzle) return;
+    if (isSubmittingRef.current || showResult || result || !selectedOption || !puzzle) return;
+    isSubmittingRef.current = true;
     pause();
 
     const isCorrect = selectedOption.trim().toLowerCase() === puzzle.correctAnswer.trim().toLowerCase();
@@ -187,11 +192,13 @@ export default function MCQGameEngine({
     const earnedXP = isCorrect ? (hintUsed ? Math.round(baseXP * 0.7) : baseXP) : 0;
     const earnedCoins = isCorrect ? Math.max(1, Math.round(earnedXP / 2.5)) : 0;
 
+    setResult(isCorrect ? 'correct' : 'wrong');
+    setShowResult(true);
+
     if (isCorrect) {
       scoreRef.current += 1;
       setScore(scoreRef.current);
       setTotalXP(prev => prev + earnedXP);
-      setResult('correct');
       showXPPopup(earnedXP);
 
       if (playMode === 'PRACTICE') {
@@ -213,14 +220,12 @@ export default function MCQGameEngine({
     } else {
       mistakesRef.current += 1;
       setMistakes(mistakesRef.current);
-      setResult('wrong');
     }
-
-    setShowResult(true);
   };
 
   // Progress to next question or show completion screen
   const handleNext = async () => {
+    isSubmittingRef.current = false;
     if (index + 1 >= puzzles.length) {
       pause();
       durationRef.current = Math.round((Date.now() - startTimeRef.current) / 1000);
@@ -252,41 +257,40 @@ export default function MCQGameEngine({
       setResult(null);
       setShowHint(false);
       setHintUsed(false);
-      const nextDiff = (puzzles[index + 1]?.difficulty || difficulty || 'MEDIUM').toUpperCase();
-      reset(TIMER_SECONDS[nextDiff] || 60);
+      reset(TIMER_SECONDS[(puzzle?.difficulty || difficulty || 'MEDIUM').toUpperCase()] || 60);
       start();
     }
   };
 
-  // Handle multiplayer match ready event
+  // Handle competitive match start from MatchmakingLobby
   const handleMatchReady = (matchData) => {
-    setShowMatchmaking(false);
+    isSubmittingRef.current = false;
     setCurrentMatch(matchData);
-    localStorage.setItem(`activeMatchId_${gameSlug}`, matchData.id);
+    setShowMatchmaking(false);
+    setShowModeModal(false);
 
-    let matchPuzzles = [];
-    if (matchData.challengeData) {
+    let parsedQuestions = [];
+    if (matchData.puzzleSet) {
       try {
-        matchPuzzles = JSON.parse(matchData.challengeData);
-      } catch (e) {}
-    }
-    if (!matchPuzzles || matchPuzzles.length === 0) {
-      matchPuzzles = getRandomQuestionSet({
-        gameType: gameSlug,
-        difficulty: matchData.difficulty || 'MEDIUM',
-        questionBank: questionBank,
-        count: 10,
-        userShuffle: false
-      });
+        parsedQuestions = JSON.parse(matchData.puzzleSet);
+      } catch (err) {
+        console.warn("Could not parse match puzzleSet JSON", err);
+      }
     }
 
-    setPuzzles(matchPuzzles);
+    if (!parsedQuestions || parsedQuestions.length === 0) {
+      parsedQuestions = questionBank.filter(q => q.difficulty?.toUpperCase() === (matchData.difficulty || 'MEDIUM').toUpperCase()).slice(0, 10);
+      if (parsedQuestions.length === 0) {
+        parsedQuestions = questionBank.slice(0, 10);
+      }
+    }
+
+    setPuzzles(parsedQuestions);
     setDifficulty(matchData.difficulty || 'MEDIUM');
     setIndex(0);
     setScore(0);
     setMistakes(0);
     setTotalXP(0);
-    setShowComplete(false);
     setShowResult(false);
     setSelectedOption('');
     setShowHint(false);
@@ -303,29 +307,28 @@ export default function MCQGameEngine({
     if (!text) return null;
     const parts = text.split('```');
     if (parts.length === 1) {
-      return <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1.55 }}>{text}</div>;
+      return <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#FFFFFF', lineHeight: 1.6, fontFamily: 'var(--font-mono)' }}>{text}</div>;
     }
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', textAlign: 'left' }}>
         {parts.map((part, idx) => {
           if (idx % 2 === 1) {
-            // Code snippet segment
             const lines = part.replace(/^cpp\n|^c\n|^python\n|^java\n/, '');
             return (
               <div
                 key={idx}
                 style={{
-                  background: '#0D0D0D',
-                  border: '1px solid #2A2A2A',
-                  borderRadius: '0.75rem',
-                  padding: '1rem 1.25rem',
-                  fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+                  background: 'rgba(2, 6, 23, 0.95)',
+                  border: '1px solid rgba(59, 130, 246, 0.25)',
+                  borderRadius: '0.85rem',
+                  padding: '1.1rem 1.25rem',
+                  fontFamily: 'var(--font-mono)',
                   fontSize: '0.875rem',
-                  color: '#4ADE80',
+                  color: '#38bdf8',
                   lineHeight: 1.5,
                   overflowX: 'auto',
-                  boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.5)'
+                  boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.6)'
                 }}
               >
                 <pre style={{ margin: 0, fontFamily: 'inherit' }}>{lines.trim()}</pre>
@@ -333,7 +336,7 @@ export default function MCQGameEngine({
             );
           }
           return part.trim() ? (
-            <div key={idx} style={{ fontSize: '1.05rem', fontWeight: 700, color: '#F8FAFC', lineHeight: 1.55 }}>
+            <div key={idx} style={{ fontSize: '1.05rem', fontWeight: 700, color: '#FFFFFF', lineHeight: 1.6, fontFamily: 'var(--font-mono)' }}>
               {part.trim()}
             </div>
           ) : null;
@@ -406,7 +409,9 @@ export default function MCQGameEngine({
   // 3. Competitive 1v1 Final Results Screen
   if (competitiveResult) {
     return (
-      <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', padding: '2rem 1.5rem', color: '#F8FAFC' }}>
+      <div style={{ minHeight: '100vh', background: '#020617', paddingTop: '6.5rem', padding: '2rem 1.5rem', color: '#FFFFFF', position: 'relative' }}>
+        <div className="star-field" />
+        <div className="binary-texture" />
         <CompetitiveResults
           matchResult={competitiveResult}
           currentUserId={user?.id}
@@ -450,8 +455,11 @@ export default function MCQGameEngine({
 
   // 6. Active MCQ Question Gameplay Screen
   return (
-    <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', color: '#F8FAFC' }}>
+    <div style={{ minHeight: '100vh', background: '#020617', paddingTop: '6.5rem', color: '#FFFFFF', position: 'relative', overflow: 'hidden' }}>
       <XPPopup popups={xpPopups} />
+      <div className="star-field" />
+      <div className="binary-texture" />
+      <div className="mesh-glow" style={{ top: '25%', left: '50%', transform: 'translate(-50%, -50%)', opacity: 0.15 }} />
 
       <ExitModal
         isOpen={showExitModal}
@@ -459,11 +467,11 @@ export default function MCQGameEngine({
         onConfirm={() => navigate('/games')}
       />
 
-      <div style={{ maxWidth: '780px', margin: '0 auto', padding: '2rem 1.5rem 4rem' }}>
+      <div style={{ maxWidth: '820px', margin: '0 auto', padding: '1rem 1.5rem 4rem', position: 'relative', zIndex: 10 }}>
         {/* Progress & Header Bar */}
         <GameProgress
           current={index + 1}
-          total={puzzles.length}
+          total={puzzles.length || 1}
           score={score}
           difficulty={difficulty}
           onExit={() => setShowExitModal(true)}
@@ -472,185 +480,229 @@ export default function MCQGameEngine({
           scoreLabel="Correct"
         />
 
-        <AnimatePresence mode="wait">
-          {puzzle && (
-            <motion.div
-              key={puzzle.id || index}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.25 }}
-              style={{
-                background: '#242424',
-                border: '1px solid #2E2E2E',
-                borderRadius: '1.25rem',
-                padding: '2rem 2.25rem',
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-                marginBottom: '1.5rem'
-              }}
-            >
-              {/* Formatted Question Body */}
-              <div style={{ marginBottom: '1.75rem' }}>
-                {renderFormattedQuestion(puzzle.question)}
-              </div>
+        {puzzles.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '4rem 2rem', background: 'rgba(8, 14, 33, 0.75)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '1.75rem' }}>
+            <Loader2 size={32} className="animate-spin" color="#3b82f6" style={{ margin: '0 auto 1rem' }} />
+            <p style={{ fontFamily: 'var(--font-mono)', color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.85rem' }}>
+              SYNCHRONIZING PROBLEM SET...
+            </p>
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            {puzzle && (
+              <motion.div
+                key={puzzle.id || index}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.2 }}
+                style={{
+                  background: 'rgba(8, 14, 33, 0.75)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '1.75rem',
+                  padding: '2rem 2.25rem',
+                  boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6)',
+                  marginBottom: '1.5rem',
+                  position: 'relative'
+                }}
+              >
+                {/* Formatted Question Body */}
+                <div style={{ marginBottom: '2rem' }}>
+                  {renderFormattedQuestion(puzzle.question)}
+                </div>
 
-              {/* Four Multiple-Choice Options */}
-              {!showResult ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.75rem' }}>
-                  {puzzle.options?.map((opt, optIdx) => {
-                    const isSelected = selectedOption === opt;
-                    const optionLetter = String.fromCharCode(65 + optIdx); // A, B, C, D
+                {/* Four Multiple-Choice Options */}
+                {!showResult ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.75rem' }}>
+                    {puzzle.options?.map((opt, optIdx) => {
+                      const isSelected = selectedOption === opt;
+                      const optionLetter = String.fromCharCode(65 + optIdx); // A, B, C, D
 
-                    return (
-                      <motion.button
-                        key={optIdx}
-                        whileHover={{ y: -2 }}
-                        whileTap={{ scale: 0.99 }}
-                        type="button"
-                        onClick={() => setSelectedOption(opt)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.85rem',
-                          padding: '1.1rem 1.25rem',
-                          borderRadius: '0.875rem',
-                          background: isSelected ? 'rgba(34, 197, 94, 0.15)' : '#1C1C1C',
-                          border: `1px solid ${isSelected ? '#22C55E' : '#2E2E2E'}`,
-                          color: isSelected ? '#4ADE80' : '#F8FAFC',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          transition: 'all 0.15s ease',
-                          boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
-                        }}
-                      >
-                        <span
+                      return (
+                        <motion.button
+                          key={optIdx}
+                          whileHover={{ y: -2 }}
+                          whileTap={{ scale: 0.99 }}
+                          type="button"
+                          onClick={() => setSelectedOption(opt)}
                           style={{
-                            width: '28px',
-                            height: '28px',
-                            borderRadius: '50%',
-                            background: isSelected ? '#22C55E' : '#282828',
-                            color: isSelected ? '#05200C' : '#94A3B8',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '0.8rem',
-                            fontWeight: 800,
-                            flexShrink: 0
+                            gap: '1rem',
+                            padding: '1.1rem 1.25rem',
+                            borderRadius: '1rem',
+                            background: isSelected ? 'rgba(59, 130, 246, 0.15)' : 'rgba(10, 18, 42, 0.65)',
+                            border: isSelected ? '1px solid #3b82f6' : '1px solid rgba(255, 255, 255, 0.08)',
+                            color: '#FFFFFF',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all 0.15s ease',
+                            boxShadow: isSelected ? '0 0 20px rgba(59, 130, 246, 0.3)' : 'none'
                           }}
                         >
-                          {optionLetter}
-                        </span>
-                        <span style={{ fontSize: '0.925rem', fontWeight: isSelected ? 700 : 500, lineHeight: 1.4 }}>
-                          {opt}
-                        </span>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              ) : (
-                /* Post-Submission Result & Explanation Card */
-                <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      padding: '1rem 1.25rem',
-                      borderRadius: '0.85rem',
-                      background: result === 'correct' ? 'rgba(34, 197, 94, 0.12)' : 'rgba(244, 63, 94, 0.12)',
-                      border: `1px solid ${result === 'correct' ? 'rgba(34, 197, 94, 0.25)' : 'rgba(244, 63, 94, 0.25)'}`,
-                      marginBottom: '1rem'
-                    }}
-                  >
-                    {result === 'correct' ? <CheckCircle size={22} color="#4ADE80" /> : <XCircle size={22} color="#FB7185" />}
-                    <div>
-                      <div style={{ fontWeight: 800, color: result === 'correct' ? '#4ADE80' : '#FB7185', fontSize: '0.95rem' }}>
-                        {result === 'correct' ? '🎉 Correct Answer!' : `Incorrect — The correct answer is: ${puzzle.correctAnswer}`}
+                          <span
+                            style={{
+                              width: '30px',
+                              height: '30px',
+                              borderRadius: '8px',
+                              background: isSelected ? '#3b82f6' : 'rgba(255, 255, 255, 0.06)',
+                              border: isSelected ? 'none' : '1px solid rgba(255, 255, 255, 0.12)',
+                              color: '#FFFFFF',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.8rem',
+                              fontWeight: 800,
+                              fontFamily: 'var(--font-mono)',
+                              flexShrink: 0
+                            }}
+                          >
+                            {optionLetter}
+                          </span>
+                          <span style={{ fontSize: '0.9rem', fontWeight: isSelected ? 700 : 500, lineHeight: 1.4, color: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.85)' }}>
+                            {opt}
+                          </span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  /* Post-Submission Result & Explanation Card */
+                  <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        padding: '1.1rem 1.35rem',
+                        borderRadius: '1rem',
+                        background: result === 'correct' ? 'rgba(34, 197, 94, 0.12)' : 'rgba(244, 63, 94, 0.12)',
+                        border: `1px solid ${result === 'correct' ? 'rgba(34, 197, 94, 0.35)' : 'rgba(244, 63, 94, 0.35)'}`,
+                        marginBottom: '1.25rem'
+                      }}
+                    >
+                      {result === 'correct' ? <CheckCircle size={22} color="#22c55e" /> : <XCircle size={22} color="#f43f5e" />}
+                      <div>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: result === 'correct' ? '#22c55e' : '#f43f5e', fontSize: '0.95rem' }}>
+                          {result === 'correct' ? 'CORRECT EVALUATION' : `INCORRECT — EXPECTED: ${puzzle.correctAnswer}`}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {puzzle.explanation && (
-                    <div style={{ padding: '1rem 1.25rem', borderRadius: '0.85rem', background: '#1C1C1C', border: '1px solid #2E2E2E', marginBottom: '1.25rem' }}>
-                      <p style={{ fontSize: '0.725rem', fontWeight: 800, color: '#38BDF8', marginBottom: '0.3rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                        Explanation
-                      </p>
-                      <p style={{ fontSize: '0.875rem', color: '#CBD5E1', lineHeight: 1.6, fontWeight: 500 }}>
-                        {puzzle.explanation}
-                      </p>
-                    </div>
-                  )}
-
-                  <button
-                    onClick={handleNext}
-                    className="btn-primary"
-                    style={{ width: '100%', padding: '0.85rem', fontSize: '0.95rem' }}
-                  >
-                    {index + 1 >= puzzles.length ? 'See Final Results 🏆' : 'Next Question →'}
-                  </button>
-                </motion.div>
-              )}
-
-              {/* Submit & Hint Actions */}
-              {!showResult && (
-                <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                  {/* Hint Card */}
-                  <AnimatePresence>
-                    {showHint && puzzle.hint && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        style={{
-                          background: 'rgba(34, 197, 94, 0.08)',
-                          border: '1px solid rgba(34, 197, 94, 0.2)',
-                          borderRadius: '0.625rem',
-                          padding: '0.85rem 1rem',
-                          display: 'flex',
-                          gap: '0.5rem',
-                          alignItems: 'flex-start'
-                        }}
-                      >
-                        <Lightbulb size={16} color="#4ADE80" style={{ flexShrink: 0, marginTop: '2px' }} />
-                        <span style={{ fontSize: '0.825rem', color: '#4ADE80', lineHeight: 1.5, fontWeight: 500 }}>
-                          {puzzle.hint}
-                        </span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                    {!showHint && puzzle.hint && (
-                      <button
-                        type="button"
-                        onClick={() => { setShowHint(true); setHintUsed(true); }}
-                        className="btn-secondary"
-                        style={{ padding: '0.75rem 1.25rem', fontSize: '0.85rem' }}
-                      >
-                        <Lightbulb size={15} /> Use Hint (-30% XP)
-                      </button>
+                    {puzzle.explanation && (
+                      <div style={{ padding: '1.25rem', borderRadius: '1rem', background: 'rgba(10, 18, 42, 0.65)', border: '1px solid rgba(255, 255, 255, 0.08)', marginBottom: '1.5rem' }}>
+                        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 700, color: '#38bdf8', marginBottom: '0.4rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                          // DECRYPTED ANALYSIS
+                        </p>
+                        <p style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.75)', lineHeight: 1.6, fontWeight: 400, margin: 0 }}>
+                          {puzzle.explanation}
+                        </p>
+                      </div>
                     )}
 
                     <button
-                      type="button"
-                      disabled={!selectedOption}
-                      onClick={handleSubmit}
-                      className="btn-primary"
+                      onClick={handleNext}
                       style={{
-                        flex: 1,
-                        padding: '0.8rem 1.25rem',
-                        fontSize: '0.95rem',
-                        opacity: selectedOption ? 1 : 0.5
+                        width: '100%',
+                        padding: '0.85rem',
+                        borderRadius: '999px',
+                        background: 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontFamily: 'var(--font-display)',
+                        fontWeight: 700,
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                        letterSpacing: '0.02em',
+                        boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)'
                       }}
                     >
-                      Submit Answer →
+                      {index + 1 >= puzzles.length ? 'VIEW FINAL CLASSIFICATION →' : 'NEXT CHALLENGE →'}
                     </button>
+                  </motion.div>
+                )}
+
+                {/* Submit & Hint Actions */}
+                {!showResult && (
+                  <div style={{ marginTop: '1.75rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                    {/* Hint Card */}
+                    <AnimatePresence>
+                      {showHint && puzzle.hint && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          style={{
+                            background: 'rgba(59, 130, 246, 0.08)',
+                            border: '1px solid rgba(59, 130, 246, 0.25)',
+                            borderRadius: '1rem',
+                            padding: '0.9rem 1.25rem',
+                            display: 'flex',
+                            gap: '0.65rem',
+                            alignItems: 'flex-start'
+                          }}
+                        >
+                          <Lightbulb size={16} color="#60a5fa" style={{ flexShrink: 0, marginTop: '2px' }} />
+                          <span style={{ fontSize: '0.825rem', color: '#93c5fd', lineHeight: 1.5, fontWeight: 500 }}>
+                            {puzzle.hint}
+                          </span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                      {!showHint && puzzle.hint && (
+                        <button
+                          type="button"
+                          onClick={() => { setShowHint(true); setHintUsed(true); }}
+                          style={{
+                            padding: '0.75rem 1.25rem',
+                            borderRadius: '999px',
+                            background: 'rgba(255, 255, 255, 0.06)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            fontFamily: 'var(--font-mono)',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem'
+                          }}
+                        >
+                          <Lightbulb size={14} color="#FBBF24" /> HINT (-30% XP)
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        disabled={!selectedOption || showResult || !!result}
+                        onClick={handleSubmit}
+                        style={{
+                          flex: 1,
+                          padding: '0.85rem 1.25rem',
+                          borderRadius: '999px',
+                          background: selectedOption && !showResult && !result ? 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)' : 'rgba(255, 255, 255, 0.08)',
+                          color: selectedOption && !showResult && !result ? '#ffffff' : 'rgba(255, 255, 255, 0.3)',
+                          border: 'none',
+                          fontFamily: 'var(--font-display)',
+                          fontWeight: 700,
+                          fontSize: '0.875rem',
+                          cursor: selectedOption && !showResult && !result ? 'pointer' : 'not-allowed',
+                          boxShadow: selectedOption && !showResult && !result ? '0 0 20px rgba(59, 130, 246, 0.4)' : 'none',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        CONFIRM CHOICE →
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
       </div>
     </div>
   );

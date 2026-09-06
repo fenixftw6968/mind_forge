@@ -29,32 +29,35 @@ export default function CompetitiveResults({
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
+      initial={{ opacity: 0, scale: 0.95, y: 15 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
       style={{
         maxWidth: '560px',
         margin: '2rem auto',
-        background: '#242424',
-        border: '1px solid #2E2E2E',
-        borderRadius: '1.5rem',
-        padding: '2.5rem 2rem',
-        boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.5)',
+        background: 'rgba(8, 14, 33, 0.85)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: '1.75rem',
+        padding: '2.5rem 2.25rem',
+        boxShadow: '0 30px 70px rgba(0, 0, 0, 0.7), 0 0 30px rgba(59, 130, 246, 0.1)',
         textAlign: 'center',
-        color: '#F8FAFC'
+        color: '#FFFFFF',
+        position: 'relative',
+        zIndex: 10
       }}
     >
       {/* Header banner */}
-      <div style={{ marginBottom: '1.75rem' }}>
+      <div style={{ marginBottom: '2rem' }}>
         <div style={{
           width: '76px',
           height: '76px',
           borderRadius: '50%',
           background: isWinner ? 'rgba(34, 197, 94, 0.15)' : (isDraw ? 'rgba(56, 189, 248, 0.15)' : 'rgba(244, 63, 94, 0.15)'),
-          border: `2px solid ${isWinner ? 'rgba(34, 197, 94, 0.35)' : (isDraw ? 'rgba(56, 189, 248, 0.35)' : 'rgba(244, 63, 94, 0.35)')}`,
+          border: `1px solid ${isWinner ? 'rgba(34, 197, 94, 0.4)' : (isDraw ? 'rgba(56, 189, 248, 0.4)' : 'rgba(244, 63, 94, 0.4)')}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          margin: '0 auto 1rem',
+          margin: '0 auto 1.25rem',
           fontSize: '2.2rem'
         }}>
           {isWinner ? '🏆' : (isDraw ? '🤝' : '⚔️')}
@@ -63,16 +66,17 @@ export default function CompetitiveResults({
         <h1 style={{
           fontSize: '2rem',
           fontWeight: 800,
-          color: isWinner ? '#4ADE80' : (isDraw ? '#38BDF8' : '#F8FAFC'),
+          color: isWinner ? '#22c55e' : (isDraw ? '#38bdf8' : '#f43f5e'),
           fontFamily: 'var(--font-display)',
-          marginBottom: '0.35rem'
+          marginBottom: '0.4rem',
+          letterSpacing: '-0.02em'
         }}>
-          {isWinner ? 'YOU WON!' : (isDraw ? 'DRAW MATCH' : 'DEFEAT')}
+          {isWinner ? 'VICTORY' : (isDraw ? 'DRAW PROTOCOL' : 'DEFEAT')}
         </h1>
-        <p style={{ color: '#94A3B8', fontSize: '0.9rem' }}>
+        <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.875rem' }}>
           {isWinner
-            ? 'Exceptional focus and problem-solving speed!'
-            : (isDraw ? 'Well played! Both players performed with equal skill.' : 'Good effort! Review mistakes and challenge again.')}
+            ? 'Superior deduction speed and accuracy verified.'
+            : (isDraw ? 'Equal cognitive performance registered across both nodes.' : 'Review mistake analysis to recalibrate your competitive strategy.')}
         </p>
       </div>
 
@@ -81,26 +85,26 @@ export default function CompetitiveResults({
         display: 'grid',
         gridTemplateColumns: '1fr auto 1fr',
         alignItems: 'center',
-        background: '#1C1C1C',
-        border: '1px solid #2E2E2E',
+        background: 'rgba(10, 18, 42, 0.65)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
         borderRadius: '1.25rem',
         padding: '1.25rem 1.5rem',
         marginBottom: '1.5rem'
       }}>
-        <div>
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Your Score</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#4ADE80', fontFamily: 'var(--font-display)' }}>
+        <div style={{ textAlign: 'left' }}>
+          <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.4)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase' }}>YOUR SCORE</div>
+          <div style={{ fontSize: '2rem', fontWeight: 900, color: '#22c55e', fontFamily: 'var(--font-mono)' }}>
             {myScore ?? 0}
           </div>
         </div>
 
-        <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#64748B', padding: '0 0.5rem' }}>
+        <div style={{ fontSize: '0.9rem', fontWeight: 900, color: '#38bdf8', fontFamily: 'var(--font-mono)', padding: '0 0.5rem' }}>
           VS
         </div>
 
-        <div>
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>{oppName}</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#94A3B8', fontFamily: 'var(--font-display)' }}>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'rgba(255, 255, 255, 0.4)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{oppName}</div>
+          <div style={{ fontSize: '2rem', fontWeight: 900, color: 'rgba(255, 255, 255, 0.8)', fontFamily: 'var(--font-mono)' }}>
             {oppScore ?? 0}
           </div>
         </div>
@@ -109,8 +113,8 @@ export default function CompetitiveResults({
       {/* Rating Delta Box */}
       {matchResult.mode !== 'RANKED' && matchResult.isBotMatch ? (
         <div style={{
-          background: '#1C1C1C',
-          border: '1px solid #2E2E2E',
+          background: 'rgba(10, 18, 42, 0.65)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '1rem',
           padding: '0.85rem 1.25rem',
           marginBottom: '2rem',
@@ -118,27 +122,27 @@ export default function CompetitiveResults({
           alignItems: 'center',
           justifyContent: 'center',
           gap: '0.5rem',
-          color: '#94A3B8',
-          fontSize: '0.875rem',
-          fontWeight: 600
+          color: 'rgba(255, 255, 255, 0.55)',
+          fontSize: '0.8rem',
+          fontFamily: 'var(--font-mono)'
         }}>
-          🤖 <span>Custom Bot Match — Competitive Elo rating was not modified.</span>
+          🤖 <span>Custom Bot Simulation — Ranked Elo rating unaffected.</span>
         </div>
       ) : (
         <div style={{
-          background: myDelta > 0 ? 'rgba(34, 197, 94, 0.1)' : (myDelta < 0 ? 'rgba(244, 63, 94, 0.1)' : '#1C1C1C'),
-          border: `1px solid ${myDelta > 0 ? 'rgba(34, 197, 94, 0.25)' : (myDelta < 0 ? 'rgba(244, 63, 94, 0.25)' : '#2E2E2E')}`,
-          borderRadius: '1rem',
-          padding: '1rem 1.25rem',
+          background: myDelta > 0 ? 'rgba(34, 197, 94, 0.08)' : (myDelta < 0 ? 'rgba(244, 63, 94, 0.08)' : 'rgba(10, 18, 42, 0.65)'),
+          border: `1px solid ${myDelta > 0 ? 'rgba(34, 197, 94, 0.25)' : (myDelta < 0 ? 'rgba(244, 63, 94, 0.25)' : 'rgba(255, 255, 255, 0.08)')}`,
+          borderRadius: '1.25rem',
+          padding: '1.1rem 1.35rem',
           marginBottom: '2rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
             <div style={{
-              width: '40px',
-              height: '40px',
+              width: '42px',
+              height: '42px',
               borderRadius: '10px',
               background: currentRank.bg,
               border: `1px solid ${currentRank.border}`,
@@ -150,11 +154,11 @@ export default function CompetitiveResults({
               {currentRank.badge}
             </div>
             <div style={{ textAlign: 'left' }}>
-              <div style={{ fontSize: '0.875rem', fontWeight: 800, color: '#F8FAFC' }}>
-                {currentRank.name} Tier
+              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#ffffff', fontFamily: 'var(--font-mono)' }}>
+                {currentRank.name} TIER
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
-                Rating: {myBefore} → <strong style={{ color: '#F8FAFC' }}>{myAfter}</strong>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', fontFamily: 'var(--font-mono)' }}>
+                {myBefore} → <strong style={{ color: '#ffffff' }}>{myAfter}</strong> Elo
               </div>
             </div>
           </div>
@@ -165,7 +169,8 @@ export default function CompetitiveResults({
             gap: '0.35rem',
             fontSize: '1.15rem',
             fontWeight: 800,
-            color: myDelta > 0 ? '#4ADE80' : (myDelta < 0 ? '#FB7185' : '#94A3B8')
+            fontFamily: 'var(--font-mono)',
+            color: myDelta > 0 ? '#22c55e' : (myDelta < 0 ? '#f43f5e' : 'rgba(255, 255, 255, 0.6)')
           }}>
             {myDelta > 0 ? <TrendingUp size={18} /> : (myDelta < 0 ? <TrendingDown size={18} /> : null)}
             {myDelta > 0 ? `+${myDelta}` : myDelta} Elo
@@ -174,29 +179,50 @@ export default function CompetitiveResults({
       )}
 
       {/* Action Buttons */}
-      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', gap: '0.85rem', justifyContent: 'center' }}>
         <button
           onClick={onRematch}
-          className="btn-primary"
           style={{
             flex: 1,
             padding: '0.85rem 1.25rem',
-            fontSize: '0.9rem'
+            borderRadius: '999px',
+            background: 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)',
+            color: '#ffffff',
+            border: 'none',
+            fontWeight: 700,
+            fontFamily: 'var(--font-display)',
+            fontSize: '0.85rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.4rem',
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.4)'
           }}
         >
-          <RotateCcw size={16} /> Play Again / Rematch
+          <RotateCcw size={15} /> REMATCH / REQUEUE
         </button>
 
         <button
           onClick={() => onDashboard ? onDashboard() : navigate('/dashboard')}
-          className="btn-secondary"
           style={{
             flex: 1,
             padding: '0.85rem 1.25rem',
-            fontSize: '0.9rem'
+            borderRadius: '999px',
+            background: 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            color: '#ffffff',
+            fontWeight: 700,
+            fontFamily: 'var(--font-display)',
+            fontSize: '0.85rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.4rem'
           }}
         >
-          <Home size={16} /> Dashboard
+          <Home size={15} /> DASHBOARD
         </button>
       </div>
     </motion.div>

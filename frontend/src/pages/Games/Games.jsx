@@ -39,19 +39,26 @@ export default function Games() {
   });
 
   return (
-    <div style={{ minHeight: '100vh', background: '#151515', paddingTop: '64px', color: '#F8FAFC' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
+    <div style={{ minHeight: '100vh', background: '#020617', paddingTop: '6rem', color: '#F8FAFC', position: 'relative' }}>
+      
+      {/* Background Starfield & Texture */}
+      <div className="star-field" />
+      <div className="binary-texture" />
+
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem 5rem', position: 'relative', zIndex: 1 }}>
 
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-            <Gamepad2 size={22} color="#22C55E" />
-            <h1 className="font-display" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.15rem)', fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.02em' }}>
-              Games & Training Library
-            </h1>
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: '2.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.4rem' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#38BDF8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              // DISCIPLINE LIBRARY
+            </span>
           </div>
-          <p style={{ color: '#94A3B8', fontSize: '0.925rem' }}>
-            Select your discipline. Each game trains a distinct cognitive skill set.
+          <h1 className="font-display" style={{ fontSize: 'clamp(2rem, 4vw, 2.75rem)', fontWeight: 700, color: '#FFFFFF', letterSpacing: '-0.02em', marginBottom: '0.5rem' }}>
+            Cognitive Arenas
+          </h1>
+          <p style={{ color: '#94A3B8', fontSize: '0.95rem' }}>
+            Select your discipline. Each arena targets specific algorithmic and analytical faculties.
           </p>
         </motion.div>
 
@@ -60,23 +67,30 @@ export default function Games() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          style={{ marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}
+          style={{ marginBottom: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}
         >
           {/* Search bar */}
-          <div style={{ position: 'relative', maxWidth: '420px' }}>
+          <div style={{ position: 'relative', maxWidth: '440px' }}>
             <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
             <input
               type="text"
-              placeholder="Search games or skills..."
+              placeholder="Search arenas or algorithmic topics..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="input-dark"
-              style={{ paddingLeft: '2.5rem', background: '#1C1C1C', border: '1px solid #2E2E2E', borderRadius: '0.625rem', fontSize: '0.9rem', color: '#F8FAFC' }}
+              style={{
+                paddingLeft: '2.5rem',
+                background: 'rgba(8, 14, 33, 0.8)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '999px',
+                fontSize: '0.875rem',
+                color: '#F8FAFC'
+              }}
             />
           </div>
 
           {/* Category tabs */}
-          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {CATEGORIES.map(cat => {
               const active = category === cat;
               return (
@@ -84,27 +98,30 @@ export default function Games() {
                   key={cat}
                   onClick={() => setCategory(cat)}
                   style={{
-                    padding: '0.4rem 0.95rem',
+                    padding: '0.45rem 1.15rem',
                     borderRadius: '999px',
-                    border: active ? '1px solid #22C55E' : '1px solid #2E2E2E',
-                    background: active ? '#242424' : '#1C1C1C',
-                    color: active ? '#4ADE80' : '#94A3B8',
-                    fontSize: '0.8rem',
+                    border: active ? '1px solid rgba(96, 165, 250, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    background: active ? 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)' : 'rgba(255, 255, 255, 0.04)',
+                    color: active ? '#FFFFFF' : '#94A3B8',
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '0.825rem',
                     fontWeight: active ? 700 : 500,
+                    boxShadow: active ? '0 0 15px rgba(59, 130, 246, 0.4)' : 'none',
                     cursor: 'pointer',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
                     transition: 'all 0.15s ease',
                   }}
                   onMouseEnter={e => {
                     if (!active) {
                       e.currentTarget.style.color = '#F8FAFC';
-                      e.currentTarget.style.borderColor = '#3D3D3D';
+                      e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)';
+                      e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.25)';
                     }
                   }}
                   onMouseLeave={e => {
                     if (!active) {
                       e.currentTarget.style.color = '#94A3B8';
-                      e.currentTarget.style.borderColor = '#2E2E2E';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
                     }
                   }}
                 >
@@ -114,67 +131,55 @@ export default function Games() {
             })}
           </div>
 
-          {/* Difficulty filter */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#94A3B8', fontSize: '0.8rem', fontWeight: 600 }}>
-              <Filter size={13} />
-              Difficulty:
-            </div>
-            <div style={{ display: 'flex', gap: '0.4rem' }}>
-              {DIFFICULTIES.map(d => {
-                const color = d === 'EASY' ? '#4ADE80' : d === 'MEDIUM' ? '#FBBF24' : d === 'HARD' ? '#FB7185' : '#CBD5E1';
-                const bg = d === 'EASY' ? 'rgba(34, 197, 94, 0.12)' : d === 'MEDIUM' ? 'rgba(245, 158, 11, 0.12)' : d === 'HARD' ? 'rgba(244, 63, 94, 0.12)' : '#242424';
-                const border = d === 'EASY' ? 'rgba(34, 197, 94, 0.25)' : d === 'MEDIUM' ? 'rgba(245, 158, 11, 0.25)' : d === 'HARD' ? 'rgba(244, 63, 94, 0.25)' : '#2E2E2E';
-                const isActive = difficulty === d;
-                return (
-                  <button
-                    key={d}
-                    onClick={() => setDifficulty(d)}
-                    style={{
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '999px',
-                      border: isActive ? `1px solid ${border}` : '1px solid #2E2E2E',
-                      background: isActive ? bg : '#1C1C1C',
-                      color: isActive ? color : '#94A3B8',
-                      fontSize: '0.75rem',
-                      fontWeight: isActive ? 700 : 500,
-                      cursor: 'pointer',
-                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
-                      transition: 'all 0.15s ease',
-                    }}
-                  >
-                    {d === 'All' ? 'All' : d.charAt(0) + d.slice(1).toLowerCase()}
-                  </button>
-                );
-              })}
-            </div>
+          {/* Difficulty filter row */}
+          <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.725rem', color: '#64748B', marginRight: '0.35rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Complexity:
+            </span>
+            {DIFFICULTIES.map(d => {
+              const active = difficulty === d;
+              return (
+                <button
+                  key={d}
+                  onClick={() => setDifficulty(d)}
+                  style={{
+                    padding: '0.25rem 0.8rem',
+                    borderRadius: '999px',
+                    border: active ? '1px solid #3B82F6' : '1px solid rgba(255, 255, 255, 0.08)',
+                    background: active ? 'rgba(59, 130, 246, 0.18)' : 'transparent',
+                    color: active ? '#60A5FA' : '#94A3B8',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.725rem',
+                    fontWeight: 700,
+                    boxShadow: active ? '0 0 12px rgba(59, 130, 246, 0.25)' : 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {d}
+                </button>
+              );
+            })}
           </div>
         </motion.div>
 
-        {/* Results count */}
-        <p style={{ fontSize: '0.8rem', color: '#94A3B8', marginBottom: '1.25rem' }}>
-          Showing <strong style={{ color: '#F8FAFC' }}>{filtered.length}</strong> challenges
-        </p>
-
-        {/* Games grid */}
-        {filtered.length > 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
-            {filtered.map((game, i) => (
-              <GameCard key={game.id} game={game} index={i} activeDifficulty={difficulty} />
-            ))}
+        {/* Game grid */}
+        {filtered.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '4rem 2rem',
+            background: 'rgba(8, 14, 33, 0.6)',
+            borderRadius: '1rem',
+            border: '1px solid rgba(255, 255, 255, 0.08)'
+          }}>
+            <p style={{ color: '#94A3B8', fontSize: '0.95rem' }}>No arenas found matching your current filter criteria.</p>
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            style={{ textAlign: 'center', padding: '4rem 2rem', background: '#242424', borderRadius: '1rem', border: '1px solid #2E2E2E' }}
-          >
-            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🔍</div>
-            <p style={{ color: '#94A3B8', fontSize: '0.95rem' }}>No games found matching your filters.</p>
-            <button onClick={() => { setCategory('All'); setDifficulty('All'); setSearch(''); }} style={{ marginTop: '0.75rem', background: 'none', border: 'none', color: '#22C55E', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'underline' }}>
-              Clear filters
-            </button>
-          </motion.div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
+            {filtered.map((game, i) => (
+              <GameCard key={game.slug} game={game} index={i} activeDifficulty={difficulty} />
+            ))}
+          </div>
         )}
       </div>
     </div>

@@ -14,14 +14,14 @@ export default function RankCard({ rating = 500, matchesPlayed = 0, matchesWon =
         display: 'inline-flex',
         alignItems: 'center',
         gap: '0.45rem',
-        padding: '0.3rem 0.75rem',
+        padding: '0.25rem 0.75rem',
         borderRadius: '999px',
-        background: currentRank.bg,
-        border: `1px solid ${currentRank.border}`,
+        background: 'rgba(59, 130, 246, 0.12)',
+        border: '1px solid rgba(59, 130, 246, 0.3)',
       }}>
         <span style={{ fontSize: '0.85rem' }}>{currentRank.badge}</span>
-        <span style={{ fontSize: '0.8rem', fontWeight: 800, color: currentRank.color }}>{currentRank.name}</span>
-        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8' }}>• {rating} pts</span>
+        <span className="font-mono" style={{ fontSize: '0.8rem', fontWeight: 700, color: '#60A5FA' }}>{currentRank.name}</span>
+        <span className="font-mono" style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8' }}>• {rating} pts</span>
       </div>
     );
   }
@@ -31,11 +31,13 @@ export default function RankCard({ rating = 500, matchesPlayed = 0, matchesWon =
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       style={{
-        background: '#242424',
-        border: '1px solid #2E2E2E',
+        background: 'rgba(8, 14, 33, 0.75)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
         borderRadius: '1.15rem',
         padding: '1.75rem',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -52,26 +54,27 @@ export default function RankCard({ rating = 500, matchesPlayed = 0, matchesWon =
             width: '42px',
             height: '42px',
             borderRadius: '10px',
-            background: currentRank.bg,
-            border: `1px solid ${currentRank.border}`,
+            background: 'rgba(59, 130, 246, 0.12)',
+            border: '1px solid rgba(59, 130, 246, 0.25)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '1.35rem'
+            fontSize: '1.35rem',
+            boxShadow: '0 0 15px rgba(59, 130, 246, 0.25)'
           }}>
             {currentRank.badge}
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-              <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#F8FAFC', fontFamily: 'var(--font-display)' }}>
+              <span className="font-display" style={{ fontSize: '1.05rem', fontWeight: 700, color: '#F8FAFC' }}>
                 {currentRank.name}
               </span>
               <span style={{
                 fontSize: '0.625rem',
-                fontWeight: 800,
-                color: currentRank.color,
-                background: currentRank.bg,
-                border: `1px solid ${currentRank.border}`,
+                fontWeight: 700,
+                color: '#60A5FA',
+                background: 'rgba(59, 130, 246, 0.12)',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
                 padding: '0.1rem 0.45rem',
                 borderRadius: '999px',
                 textTransform: 'uppercase',
@@ -80,7 +83,7 @@ export default function RankCard({ rating = 500, matchesPlayed = 0, matchesWon =
                 1v1 Ranked
               </span>
             </div>
-            <p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 500 }}>
+            <p style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 400 }}>
               {currentRank.desc}
             </p>
           </div>
@@ -88,55 +91,70 @@ export default function RankCard({ rating = 500, matchesPlayed = 0, matchesWon =
 
         {/* Rating display */}
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F8FAFC', fontFamily: 'var(--font-display)', lineHeight: 1.1 }}>
+          <div className="font-mono" style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F8FAFC', lineHeight: 1.1 }}>
             {rating}
           </div>
-          <div style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          <div className="font-mono" style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
             Rating Elo
           </div>
         </div>
       </div>
 
       {/* Progress to next tier */}
-      <div style={{ marginBottom: '1.25rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8', marginBottom: '0.4rem' }}>
-          <span>Tier Progress</span>
-          {nextRank ? (
-            <span>Next: <strong style={{ color: nextRank.color }}>{nextRank.name} ({nextRank.minRating} pts)</strong></span>
-          ) : (
-            <span style={{ color: currentRank.color, fontWeight: 700 }}>Max Tier Reached 👑</span>
-          )}
+      {nextRank && (
+        <div style={{ marginBottom: '1.25rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', fontSize: '0.75rem' }}>
+            <span style={{ color: '#94A3B8' }}>
+              Next Tier: <span className="font-display" style={{ color: '#FFFFFF', fontWeight: 700 }}>{nextRank.name}</span>
+            </span>
+            <span className="font-mono" style={{ color: '#60A5FA', fontWeight: 700 }}>
+              {rating} / {nextRank.minRating} Elo ({progress}%)
+            </span>
+          </div>
+          <div style={{
+            height: '6px',
+            background: 'rgba(255, 255, 255, 0.04)',
+            borderRadius: '999px',
+            overflow: 'hidden',
+            border: '1px solid rgba(255, 255, 255, 0.08)'
+          }}>
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              style={{
+                height: '100%',
+                background: 'linear-gradient(90deg, #2563eb, #3b82f6, #38bdf8)',
+                borderRadius: '999px',
+                boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)'
+              }}
+            />
+          </div>
         </div>
-        <div style={{ width: '100%', height: '7px', background: '#1A1A1A', borderRadius: '999px', overflow: 'hidden', border: '1px solid #2E2E2E' }}>
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-            style={{ height: '100%', background: `linear-gradient(90deg, ${currentRank.color}, #22C55E)`, borderRadius: '999px', boxShadow: '0 0 8px rgba(34, 197, 94, 0.3)' }}
-          />
-        </div>
-      </div>
+      )}
 
-      {/* Record statistics */}
+      {/* Quick stats footer: Win rate & matches */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '0.5rem',
-        paddingTop: '0.85rem',
-        borderTop: '1px solid #2E2E2E',
+        gridTemplateColumns: '1fr 1fr 1fr',
+        gap: '0.65rem',
+        background: 'rgba(255, 255, 255, 0.02)',
+        border: '1px solid rgba(255, 255, 255, 0.06)',
+        borderRadius: '0.75rem',
+        padding: '0.75rem 1rem',
         textAlign: 'center'
       }}>
         <div>
-          <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#F8FAFC' }}>{matchesPlayed}</div>
-          <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 600 }}>Matches</div>
+          <div className="font-mono" style={{ fontSize: '1rem', fontWeight: 800, color: '#F8FAFC' }}>{matchesPlayed}</div>
+          <div className="font-mono" style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600, textTransform: 'uppercase' }}>Played</div>
         </div>
         <div>
-          <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#4ADE80' }}>{matchesWon}</div>
-          <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 600 }}>Victories</div>
+          <div className="font-mono" style={{ fontSize: '1rem', fontWeight: 800, color: '#34D399' }}>{matchesWon}</div>
+          <div className="font-mono" style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600, textTransform: 'uppercase' }}>Victories</div>
         </div>
         <div>
-          <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#38BDF8' }}>{winRate}%</div>
-          <div style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 600 }}>Win Rate</div>
+          <div className="font-mono" style={{ fontSize: '1rem', fontWeight: 800, color: '#60A5FA' }}>{winRate}%</div>
+          <div className="font-mono" style={{ fontSize: '0.65rem', color: '#64748B', fontWeight: 600, textTransform: 'uppercase' }}>Win Rate</div>
         </div>
       </div>
     </motion.div>

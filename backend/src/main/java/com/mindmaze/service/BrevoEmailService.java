@@ -20,10 +20,10 @@ public class BrevoEmailService implements EmailService {
     @Value("${brevo.api-key:}")
     private String brevoApiKey;
 
-    @Value("${brevo.sender.email:no-reply@mindforge.com}")
+    @Value("${brevo.sender.email:no-reply@algoarena.com}")
     private String senderEmail;
 
-    @Value("${brevo.sender.name:MindForge}")
+    @Value("${brevo.sender.name:AlgoArena}")
     private String senderName;
 
     private final RestTemplate restTemplate;
@@ -62,7 +62,7 @@ public class BrevoEmailService implements EmailService {
             body.put("to", List.of(to));
 
             // Subject & Content
-            body.put("subject", "Reset Your MindForge Password");
+            body.put("subject", "Reset Your AlgoArena Password");
             body.put("htmlContent", buildHtmlTemplate(recipientName, resetUrl));
 
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
@@ -81,7 +81,7 @@ public class BrevoEmailService implements EmailService {
     }
 
     private String buildHtmlTemplate(String recipientName, String resetUrl) {
-        String name = (recipientName != null && !recipientName.isBlank()) ? recipientName : "MindForge User";
+        String name = (recipientName != null && !recipientName.isBlank()) ? recipientName : "AlgoArena User";
         return """
             <!DOCTYPE html>
             <html lang="en">
@@ -92,23 +92,23 @@ public class BrevoEmailService implements EmailService {
               <style>
                 body { margin: 0; padding: 0; background-color: #F8FAFC; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
                 .container { max-width: 540px; margin: 40px auto; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-                .header { background: linear-gradient(135deg, #4F46E5, #7C3AED); padding: 32px 24px; text-align: center; color: #FFFFFF; }
+                .header { background: linear-gradient(135deg, #2563eb, #3b82f6); padding: 32px 24px; text-align: center; color: #FFFFFF; }
                 .content { padding: 32px 28px; color: #334155; line-height: 1.6; }
-                .btn { display: inline-block; background-color: #4F46E5; color: #FFFFFF !important; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-weight: 700; font-size: 15px; margin: 24px 0; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3); }
+                .btn { display: inline-block; background-color: #2563eb; color: #FFFFFF !important; text-decoration: none; padding: 14px 28px; border-radius: 10px; font-weight: 700; font-size: 15px; margin: 24px 0; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3); }
                 .footer { padding: 20px 28px; background-color: #F8FAFC; border-top: 1px solid #E2E8F0; font-size: 12px; color: #94A3B8; text-align: center; }
-                .note { background-color: #EEF2FF; border-left: 4px solid #4F46E5; padding: 12px 16px; border-radius: 6px; font-size: 13px; color: #4338CA; margin: 16px 0; }
+                .note { background-color: #EEF2FF; border-left: 4px solid #2563eb; padding: 12px 16px; border-radius: 6px; font-size: 13px; color: #1e40af; margin: 16px 0; }
                 .url-box { word-break: break-all; font-size: 12px; color: #64748B; background: #F1F5F9; padding: 10px; border-radius: 6px; }
               </style>
             </head>
             <body>
               <div class="container">
                 <div class="header">
-                  <h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.02em;">Mind<span style="color: #A78BFA;">Forge</span></h1>
+                  <h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.02em;">Algo<span style="color: #93C5FD;">Arena</span></h1>
                   <p style="margin: 6px 0 0; font-size: 14px; opacity: 0.9;">Password Reset Request</p>
                 </div>
                 <div class="content">
                   <p style="font-size: 16px; font-weight: 600; color: #0F172A; margin-top: 0;">Hello %s,</p>
-                  <p>We received a request to reset the password for your MindForge account.</p>
+                  <p>We received a request to reset the password for your AlgoArena account.</p>
                   <p>Click the button below to choose a new password. This link is valid for <strong>15 minutes</strong>.</p>
                   <div style="text-align: center;">
                     <a href="%s" class="btn" target="_blank">Reset Password &rarr;</a>
@@ -120,7 +120,7 @@ public class BrevoEmailService implements EmailService {
                   <div class="url-box">%s</div>
                 </div>
                 <div class="footer">
-                  &copy; 2026 MindForge. Brain-Training & Cognitive Challenges Platform.<br>
+                  &copy; 2026 AlgoArena. Brain-Training & Algorithmic Arena Platform.<br>
                   This is an automated message, please do not reply.
                 </div>
               </div>

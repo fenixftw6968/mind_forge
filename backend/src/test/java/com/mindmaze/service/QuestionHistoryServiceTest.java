@@ -43,7 +43,7 @@ public class QuestionHistoryServiceTest {
         mockUser = User.builder()
                 .id(1L)
                 .username("testcoder")
-                .email("test@mindforge.com")
+                .email("test@algoarena.com")
                 .build();
     }
 

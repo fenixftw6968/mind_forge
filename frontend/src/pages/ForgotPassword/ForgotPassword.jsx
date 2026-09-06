@@ -32,7 +32,7 @@ export default function ForgotPassword() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#151515',
+      background: '#020617',
       position: 'relative',
       overflowX: 'hidden',
       display: 'flex',
@@ -40,13 +40,18 @@ export default function ForgotPassword() {
       justifyContent: 'space-between',
       color: '#F8FAFC'
     }}>
+      {/* Background Starfield & Mesh Glow */}
+      <div className="star-field" />
+      <div className="binary-texture" />
+      <div className="mesh-glow" style={{ top: '50%', opacity: 0.6 }} />
+
       {/* Top Header Navbar */}
       <header style={{
-        padding: '1.25rem 2rem',
+        padding: '1.5rem 2rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        maxWidth: '1280px',
+        maxWidth: '1200px',
         margin: '0 auto',
         width: '100%',
         boxSizing: 'border-box',
@@ -54,35 +59,33 @@ export default function ForgotPassword() {
       }}>
         <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
           <div style={{
-            width: '36px', height: '36px', borderRadius: '10px',
-            background: '#242424',
-            border: '1px solid #383838',
+            width: '32px', height: '32px', borderRadius: '8px',
+            background: 'rgba(59, 130, 246, 0.12)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 0 10px rgba(34, 197, 94, 0.15)',
+            boxShadow: '0 0 15px rgba(59, 130, 246, 0.35)'
           }}>
-            <Brain size={20} color="#22C55E" />
+            <Brain size={18} color="#60A5FA" />
           </div>
-          <span className="font-display" style={{ fontSize: '1.2rem', fontWeight: 800, color: '#F8FAFC', letterSpacing: '-0.02em' }}>
-            Mind<span style={{ color: '#22C55E' }}>Forge</span>
+          <span className="font-display" style={{ fontSize: '1.1rem', fontWeight: 700, color: '#F8FAFC', letterSpacing: '-0.02em' }}>
+            Algo<span style={{ color: '#60A5FA' }}>Arena</span>
           </span>
         </Link>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-          <Link
-            to="/login"
-            className="btn-secondary"
-            style={{ padding: '0.45rem 1.15rem', fontSize: '0.85rem' }}
-          >
-            Back to Sign In
-          </Link>
-        </div>
+        <Link
+          to="/login"
+          className="pill-btn-ghost"
+          style={{ padding: '0.4rem 1.15rem', fontSize: '0.825rem' }}
+        >
+          Back to Login
+        </Link>
       </header>
 
-      {/* Main Container */}
+      {/* Main Form Viewport */}
       <main style={{
-        maxWidth: '460px',
+        maxWidth: '440px',
         margin: '0 auto',
-        padding: '2rem 1.5rem 4rem',
+        padding: '1.5rem 1.5rem 4rem',
         width: '100%',
         boxSizing: 'border-box',
         position: 'relative',
@@ -96,152 +99,120 @@ export default function ForgotPassword() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
           style={{
-            background: '#242424',
-            border: '1px solid #2E2E2E',
+            background: 'rgba(8, 14, 33, 0.85)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
             borderRadius: '1.25rem',
-            padding: '2.25rem 2rem',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
+            padding: '2.5rem 2rem',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(59, 130, 246, 0.12)',
             width: '100%',
             boxSizing: 'border-box'
           }}
         >
-          <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-            <div style={{
-              width: '48px', height: '48px', borderRadius: '12px',
-              background: 'rgba(34, 197, 94, 0.12)', color: '#4ADE80',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 1rem',
-              border: '1px solid rgba(34, 197, 94, 0.25)'
-            }}>
-              <Mail size={24} />
-            </div>
-            <h1 className="font-display" style={{ fontSize: '1.5rem', fontWeight: 800, color: '#F8FAFC', marginBottom: '0.35rem', letterSpacing: '-0.02em' }}>
-              Forgot password?
-            </h1>
-            <p style={{ color: '#94A3B8', fontSize: '0.875rem', fontWeight: 500 }}>
-              No worries, enter your email and we will send you password reset instructions.
-            </p>
-          </div>
-
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                background: 'rgba(244, 63, 94, 0.12)',
-                border: '1px solid rgba(244, 63, 94, 0.3)',
-                borderRadius: '0.625rem',
-                padding: '0.65rem 0.85rem',
-                marginBottom: '1.25rem'
-              }}
-            >
-              <AlertCircle size={16} color="#FB7185" style={{ flexShrink: 0 }} />
-              <span style={{ color: '#FB7185', fontSize: '0.825rem', fontWeight: 500 }}>{error}</span>
-            </motion.div>
-          )}
-
           {submitted ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              style={{
-                background: 'rgba(34, 197, 94, 0.12)',
-                border: '1px solid rgba(34, 197, 94, 0.25)',
-                borderRadius: '0.75rem',
-                padding: '1.25rem',
-                textAlign: 'center'
-              }}
-            >
+            <div style={{ textAlign: 'center' }}>
               <div style={{
-                width: '40px', height: '40px', borderRadius: '50%',
-                background: 'rgba(34, 197, 94, 0.2)', color: '#4ADE80',
+                width: '48px', height: '48px', borderRadius: '50%',
+                background: 'rgba(16, 185, 129, 0.15)',
+                border: '1px solid rgba(16, 185, 129, 0.35)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 0.75rem'
+                margin: '0 auto 1.25rem'
               }}>
-                <CheckCircle2 size={22} />
+                <CheckCircle2 size={24} color="#34D399" />
               </div>
-              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#4ADE80', marginBottom: '0.35rem' }}>
-                Instructions Dispatched
-              </h3>
-              <p style={{ color: '#CBD5E1', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '1.25rem' }}>
+              <h2 className="font-display" style={{ fontSize: '1.45rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '0.75rem' }}>
+                Check Your Inbox
+              </h2>
+              <p style={{ color: '#94A3B8', fontSize: '0.875rem', lineHeight: 1.6, marginBottom: '2rem' }}>
                 {message}
               </p>
-              <p style={{ fontSize: '0.775rem', color: '#94A3B8', marginBottom: '1.25rem' }}>
-                Please check your inbox (and spam folder) for the 15-minute secure reset link.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <Link
+                to="/login"
+                className="pill-btn-blue"
+                style={{ width: '100%', textDecoration: 'none' }}
+              >
+                Return to Login
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
+                <span style={{ fontSize: '0.75rem', color: '#60A5FA', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  // RECOVERY PROTOCOL
+                </span>
+                <h1 className="font-display" style={{ fontSize: '1.65rem', fontWeight: 700, color: '#FFFFFF', marginTop: '0.35rem', marginBottom: '0.35rem' }}>
+                  Reset Password
+                </h1>
+                <p style={{ color: '#94A3B8', fontSize: '0.85rem', fontWeight: 400 }}>
+                  Enter your email address and we will dispatch a reset link
+                </p>
+              </div>
+
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    background: 'rgba(239, 68, 68, 0.12)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: '0.5rem',
+                    padding: '0.65rem 0.85rem',
+                    marginBottom: '1.25rem'
+                  }}
+                >
+                  <AlertCircle size={15} color="#f87171" />
+                  <span style={{ color: '#f87171', fontSize: '0.825rem', fontWeight: 500 }}>{error}</span>
+                </motion.div>
+              )}
+
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 500, color: '#CBD5E1', marginBottom: '0.4rem' }}>
+                    Email Address
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <Mail size={16} color="#64748B" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+                    <input
+                      type="email"
+                      required
+                      placeholder="solver@algoarena.ai"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="input-dark"
+                      style={{ paddingLeft: '2.5rem' }}
+                    />
+                  </div>
+                </div>
+
                 <button
-                  type="button"
-                  onClick={() => { setSubmitted(false); setEmail(''); }}
-                  className="btn-secondary"
-                  style={{ width: '100%', fontSize: '0.85rem', padding: '0.6rem' }}
+                  type="submit"
+                  disabled={loading}
+                  className="pill-btn-blue"
+                  style={{ width: '100%', marginTop: '0.5rem', opacity: loading ? 0.7 : 1 }}
                 >
-                  Send to another email
+                  {loading ? 'Dispatching...' : 'Send Recovery Link'}
                 </button>
-                <Link
-                  to="/login"
-                  className="btn-primary"
-                  style={{ width: '100%', fontSize: '0.85rem', padding: '0.6rem' }}
-                >
-                  Back to Sign In
+              </form>
+
+              <div style={{ textAlign: 'center', marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <Link to="/login" style={{ color: '#60A5FA', fontSize: '0.825rem', textDecoration: 'none', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <ArrowLeft size={13} /> Back to Sign In
                 </Link>
               </div>
-            </motion.div>
-          ) : (
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#CBD5E1', marginBottom: '0.4rem' }}>
-                  Registered Email Address
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <Mail size={16} style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    required
-                    className="input-dark"
-                    style={{ paddingLeft: '2.5rem', background: '#1C1C1C', border: '1px solid #2E2E2E' }}
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-primary"
-                style={{
-                  width: '100%',
-                  marginTop: '0.5rem',
-                  padding: '0.8rem 1.25rem',
-                  fontSize: '0.9rem',
-                  opacity: loading ? 0.75 : 1
-                }}
-              >
-                {loading ? 'Sending link...' : 'Send Reset Link →'}
-              </button>
-            </form>
-          )}
-
-          {/* Bottom Link */}
-          {!submitted && (
-            <p style={{ textAlign: 'center', fontSize: '0.85rem', color: '#94A3B8', marginTop: '1.5rem', fontWeight: 500 }}>
-              Remember your password?{' '}
-              <Link to="/login" style={{ color: '#4ADE80', textDecoration: 'none', fontWeight: 700 }}>
-                Sign in
-              </Link>
-            </p>
+            </>
           )}
         </motion.div>
       </main>
 
       {/* Footer */}
-      <footer style={{ padding: '1.5rem', textAlign: 'center', borderTop: '1px solid #242424', background: '#1A1A1A' }}>
-        <p style={{ fontSize: '0.775rem', color: '#64748B' }}>© 2026 MindForge. All rights reserved.</p>
+      <footer style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)', padding: '1.25rem 2rem', textAlign: 'center', zIndex: 10 }}>
+        <p style={{ fontSize: '0.75rem', color: '#64748B' }}>
+          &copy; {new Date().getFullYear()} AlgoArena. Algorithmic Arena Platform.
+        </p>
       </footer>
     </div>
   );
